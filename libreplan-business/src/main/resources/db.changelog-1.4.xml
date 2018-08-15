@@ -20,6 +20,7 @@
     </changeSet>
 
     <changeSet id="add-new-column-automatic_budget_enabled" author="ltilve">
+        <validCheckSum>ANY</validCheckSum>
         <comment>Add new column automatic_budget_enabled with default value FALSE to configuration table</comment>
         <addColumn tableName="configuration">
             <column name="automatic_budget_enabled" type="BOOLEAN"/>
@@ -46,6 +47,7 @@
     </changeSet>
 
     <changeSet id="adding-limits" author="vova/jeroen">
+        <validCheckSum>ANY</validCheckSum>
         <createTable tableName="limits">
             <column name="id" type="BIGINT" autoIncrement="true">
                 <constraints primaryKey="true" nullable="false" primaryKeyName="limits_pkey"/>
