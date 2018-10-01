@@ -41,6 +41,8 @@
 
 <?component name="listOrderElementTaskQualityForms" inline="true" macroURI="_listOrderElementTaskQualityForms.zul"?>
 
+<?component name="listOrderElemenResourceApprovalSheet" inline="true" macroURI="_listOrderElementApprovalSheet.zul"?>
+
 <?component name="listOrderElementAuthorizations" inline="true" macroURI="_listOrderElementAuthorizations.zul"?>
 
 <?component name="listOrderElementFiles" inline="true" macroURI="_listOrderElementFiles.zul"?>
@@ -74,12 +76,25 @@
                  onSelect="controller.setupOrderFilesController();"/>
             <tab id="tabAuthorizations" label="${i18n:_('Authorizations')}"
                  onSelect = "controller.setupOrderAuthorizationController();"/>
+
+
+            <tab id="tabResourceApprovalSheet" label="Лист согласования ресурсов"/>
+            <!--Resource approval sheet Лист согласования ресурсов-->
+
+
+            <!--<tab id="tabRiskRegistr" label="${i18n:_('Risk registr')}"/> &lt;!&ndash;Реестр рисков&ndash;&gt;-->
+            <!--<tab id="tabProjectSchedule" label="${i18n:_('Project schedule')}"/> &lt;!&ndash;Календарный план проекта&ndash;&gt;-->
+            <!--<tab id="tabProjectCharter" label="${i18n:_('Project charter')}"/> &lt;!&ndash;Устав проекта&ndash;&gt;-->
+
+                 <!--onSelect = "controller.setupOrderAuthorizationController();"-->
+
         </tabs>
         <tabpanels>
             <tabpanel sclass="orderelements-tab">
                 <orderElementTree id="orderElementTree" sclass="orderElementTree" style="width: 100%;"
                                   showCreateTemplateButton="true" />
             </tabpanel>
+
             <tabpanel id="tabPanelGeneralData" fulfill="tabGeneralData.onSelect">
                 <hbox width="100%">
                     <groupbox style="margin-top: 5px" sclass="assignedresources" closable="false" hflex="1">
@@ -95,7 +110,7 @@
                             <rows>
                                 <row>
                                     <label value="${i18n:_('Name')}" />
-                                    <textbox value="@{controller.order.name}" hflex="1"
+                                    <textbox value="ko" hflex="1"
                                              constraint="@{controller.checkValidProjectName}" />
                                 </row>
                                 <row>
@@ -368,6 +383,11 @@
             </tabpanel>
             <tabpanel>
                 <listOrderElementAuthorizations id="orderElementAuthorizations" fulfill="tabAuthorizations.onSelect"/>
+            </tabpanel>
+
+
+            <tabpanel>
+                <listOrderElemenResourceApprovalSheet id="orderElementTaskQualityForms1" fulfill="tabResourceApprovalSheet.onSelect"/>
             </tabpanel>
         </tabpanels>
     </tabbox>

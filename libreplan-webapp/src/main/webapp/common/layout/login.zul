@@ -159,7 +159,8 @@
                     ${i18n:_('Supported Chrome, Firefox, Safari and Epiphany browsers')}
                 </n:span>
                 <n:div style="float:right;color:green;font-size:10px;">
-                    v${project:version()}
+                    1.6.1 develop
+                    <!--v${project:version()}-->
                 </n:div>
             </n:td>
         </n:tr>
@@ -173,7 +174,7 @@
                 <!--</div>-->
             <!--</n:td>-->
         <!--</n:tr>-->
-///
+
     </n:table>
 
     <n:table width="750" border="0" align="center" cellpadding="0" cellspacing="0">
