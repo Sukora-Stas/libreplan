@@ -387,7 +387,7 @@
 
 
             <tabpanel>
-                <listOrderElemenResourceApprovalSheet id="orderElementTaskQualityForms1" fulfill="tabResourceApprovalSheet.onSelect"/>
+                <listOrderElemenResourceApprovalSheet id="orderElementResourceApprovalSheet" fulfill="tabResourceApprovalSheet.onSelect"/>
             </tabpanel>
         </tabpanels>
     </tabbox>
