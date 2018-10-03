@@ -24,12 +24,15 @@ package org.libreplan.web.orders;
 import org.zkoss.zk.ui.Component;
 import org.zkoss.zk.ui.event.Event;
 import org.zkoss.zk.ui.util.GenericForwardComposer;
-import org.zkoss.zul.Label;
-import org.zkoss.zul.ListModelList;
+import org.zkoss.zul.Datebox;
 import org.zkoss.zul.Textbox;
+
+import java.util.Calendar;
+import java.util.Date;
 
 /**
  * libreplan
+ * Лист согласований ресурсов
  * Created by 8_Sukora_671  on 01/10/18 11:11.
  *
  * @author 8_Sukora_671
@@ -38,11 +41,25 @@ public class OrderResourceApprovalSheetController extends GenericForwardComposer
 
     private Component window;
 
-    private Textbox testSubject;
+    private Textbox textBUnit;
 
-    private Textbox textboxFIO;
+    private Textbox textBProjectRole;
 
-    private Label labFIO;
+    private Textbox textBFIO;
+
+    private Textbox textBPosition;
+
+    private Datebox dateBStart;
+
+    private Datebox dateBEnd;
+
+    private Textbox textBDuration;//auto
+
+    private Textbox textBPercentLoad;
+
+    private Textbox textBPeopleDay;//auto
+
+    // private Label labFIjkO;
 
 
     /**
@@ -59,16 +76,58 @@ public class OrderResourceApprovalSheetController extends GenericForwardComposer
         comp.setAttribute("orderResourceApprovalSheetController", this, true);
         this.window = comp;
 
-        testSubject.setValue("test work");
-        textboxFIO.setValue("test");
+        textBProjectRole.setValue("Project role");
+        textBFIO.setValue("test");
     }
 
     public void saveApprovalSheet() {
-        testSubject.setValue("it's work");
+        textBProjectRole.setValue("it's work");
     }
 
-    public void onChange$textboxFIO(Event event) {
-        labFIO.setValue("You just entered: "+ textboxFIO.getValue());
+    public void onChange$dateBEnd(Event event) {
+        textBDuration.setValue(
+                String.valueOf(
+                        getDuration(dateBEnd.getValue(),
+                                dateBStart.getValue())));
+        textBPeopleDay.setValue(
+                getPeopleDay(
+                        textBDuration.getValue(),
+                        textBPercentLoad.getValue()));
+    }
+
+    public void onChange$textBPercentLoad(Event event) {
+        textBPeopleDay.setValue(
+                getPeopleDay(
+                        textBDuration.getValue(),
+                        textBPercentLoad.getValue()));
+    }
+
+    private int getDuration(Date first, Date second) {
+        Calendar firstCal = Calendar.getInstance();
+        firstCal.setTime(first);
+
+        Calendar secondCal = Calendar.getInstance();
+        secondCal.setTime(second);
+
+        long fullMiliSecond = firstCal.getTimeInMillis() - secondCal.getTimeInMillis();
+
+        fullMiliSecond = fullMiliSecond / 1000 / 60 / 60 / 24;
+
+        return (int) fullMiliSecond;
+    }
+
+    private String getPeopleDay(String percent, String duration) {
+        if(percent.equals("") || percent.isEmpty()){
+            return null;
+        }
+        if(duration.equals("") || duration.isEmpty()){
+            return null;
+        }
+
+        double IPercent = new Double(percent);
+        double IDuratiom = new Double(duration);
+
+        return String.valueOf((IPercent * IDuratiom) / 100);
     }
 
 }

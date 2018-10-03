@@ -87,7 +87,7 @@
                 <!-- LibrePlan environment properties -->
                 <libreplan.mode>dev</libreplan.mode>
                 <!-- Hibernate properties -->
-                <hibernate.show_sql>true</hibernate.show_sql>
+                <hibernate.show_sql>false</hibernate.show_sql>
                 <hibernate.format_sql>false</hibernate.format_sql>
                 <hibernate.use_sql_comments>false</hibernate.use_sql_comments>
                 <hibernate.hbm2ddl.auto>validate</hibernate.hbm2ddl.auto>
@@ -108,7 +108,7 @@
                 <!-- LibrePlan environment properties -->
                 <libreplan.mode>prod</libreplan.mode>
                 <!-- Hibernate properties -->
-                <hibernate.show_sql>true</hibernate.show_sql>
+                <hibernate.show_sql>false</hibernate.show_sql>
                 <hibernate.format_sql>false</hibernate.format_sql>
                 <hibernate.use_sql_comments>false</hibernate.use_sql_comments>
                 <hibernate.hbm2ddl.auto>validate</hibernate.hbm2ddl.auto>

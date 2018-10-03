@@ -28,58 +28,62 @@
 
             <separator spacing="10px"/>
 
-            <grid fixedLayout="true" width="700px">
+            <grid fixedLayout="true" width="99%">
                 <columns>
-                    <column width="270px"/>
-                    <column/>
+                    <column width="25%"/>
+                    <column width="35%"/>
+                    <column width="20%"/>
+                    <column width="20%"/>
                 </columns>
                 <rows>
                     <row>
                         <label value="Подразделение (наименование подрядчика)"/>
-                        <textbox value="" width="400px"/>
+                        <textbox id="textBUnit" rows="2" width="350px"/>
+
+                        <label value="Срок начала"/>
+                        <datebox id="dateBStart" format="long"
+                                 onCreate="self.value = new Date()" width="150px"/>
                     </row>
                     <row>
                         <label value="Роль в проекте"/>
-                        <textbox id="testSubject" width="200px"/>
+                        <textbox id="textBProjectRole" width="350px"/>
+
+                        <label value="Срок окончания"/>
+                        <datebox id="dateBEnd" format="long"
+                                 onCreate="self.value = new Date()" width="150px"/>
                     </row>
                     <row>
-                        <label id="labFIO" value="ФИО"/>
-                        <textbox id="textboxFIO" width="200px"/>
+                        <label value="ФИО"/>
+                        <textbox id="textBFIO" width="350px"/>
+
+                        <label value="Длительность общая (не считая раб. дни)"/>
+                        <textbox id="textBDuration" width="50px" disabled="true"/>
                     </row>
                     <row>
                         <label value="Должность"/>
-                        <listbox mold="select" rows="1" width="200px"/>
-                    </row>
-                    <row>
-                        <label value="Срок начала"/>
-                        <datebox/>
-                    </row>
-                    <row>
-                        <label value="Срок окончания"/>
-                        <datebox/>
-                    </row>
-                    <row>
-                        <label value="Длительность общая (раб. дни)"/>
-                        <textbox value="" width="200px"/>
-                    </row>
-                    <row>
+                        <!--<listbox mold="select" rows="1" width="200px"/>-->
+                        <textbox id="textBPosition" width="350px"/>
+
                         <label value="% загрузки"/>
-                        <textbox value="" width="200px"/>
+                        <textbox id="textBPercentLoad" width="50px"/>
                     </row>
+
                     <row>
+                        <cell colspan="2" align="center">
+                            <button id="butSave" label="Сохранить(не пашет)" sclass="add-button"
+                                    onClick="orderResourceApprovalSheetController.saveApprovalSheet()"/>
+                        </cell>
+
                         <label value="Чел дни"/>
-                        <textbox value="" width="200px"/>
+                        <textbox id="textBPeopleDay" width="50px" disabled="true"/>
                     </row>
-                    <row>
-                        <button id="butSave" label="Сохранить(не пашет)" sclass="add-button"
-                                onClick="orderResourceApprovalSheetController.saveApprovalSheet()"/>
-                    </row>
+
                 </rows>
             </grid>
         </groupbox>
     </hbox>
 
-    <grid height="250px">
+    <grid height="250px" width="100%" style="margin-top: 10px">
         <columns>
             <column label="Подразделение (наименование подрятчика)" width="100px"/>
             <column label="Роль в проекте"/>
