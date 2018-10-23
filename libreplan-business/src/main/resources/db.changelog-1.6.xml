@@ -4,6 +4,57 @@
                    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
                    http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.1.xsd">
 
+
+    <changeSet id="add-new-column-resourse_approval_sheet5" author="SukoraStas">
+        <comment>Add columns to order ListResourceApprovalSheet</comment>
+
+
+        <createTable tableName="resourse_approval_sheet">
+
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true"/>
+            </column>
+
+            <column name="unit" type="VARCHAR(500)">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="project_role" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="FIO" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="position" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="date_start" type="DATETIME">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="date_end" type="DATETIME">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="duration" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="percent_load" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="people_day" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+
+        </createTable>
+    </changeSet>
+
+
     <changeSet id="add-new-column-show-reported-hours" author="lmann">
         <comment>Add columns to store user default setting of show/hide reported hours button</comment>
         <addColumn tableName="user_table">

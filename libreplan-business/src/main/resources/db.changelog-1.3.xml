@@ -224,7 +224,7 @@
     <!-- order sync info -->
     <changeSet author="miciele" id="create-table-order-sync-info">
         <comment>Create new table order_sync_info</comment>
-        <createTable tableName="order_sync_info">
+        <createTable tableName="connector_property">
             <column name="id" type="BIGINT">
                 <constraints nullable="false" primaryKey="true"/>
             </column>

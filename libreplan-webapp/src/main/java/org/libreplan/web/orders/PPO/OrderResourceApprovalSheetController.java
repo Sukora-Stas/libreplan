@@ -1,4 +1,4 @@
-package org.libreplan.web.orders;
+package org.libreplan.web.orders.PPO;
 
 /*
  * This file is part of LibrePlan
@@ -21,9 +21,11 @@ package org.libreplan.web.orders;
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+import org.libreplan.business.orders.entities.PPO.ResourceApprovalSheet;
 import org.zkoss.zk.ui.Component;
 import org.zkoss.zk.ui.event.Event;
 import org.zkoss.zk.ui.util.GenericForwardComposer;
+import org.zkoss.zkplus.spring.SpringUtil;
 import org.zkoss.zul.Datebox;
 import org.zkoss.zul.Textbox;
 
@@ -59,6 +61,8 @@ public class OrderResourceApprovalSheetController extends GenericForwardComposer
 
     private Textbox textBPeopleDay;//auto
 
+
+    private IResourceApprovalSheetModel resourceApprovalSheetModel;
     // private Label labFIjkO;
 
 
@@ -76,12 +80,30 @@ public class OrderResourceApprovalSheetController extends GenericForwardComposer
         comp.setAttribute("orderResourceApprovalSheetController", this, true);
         this.window = comp;
 
+        resourceApprovalSheetModel = (IResourceApprovalSheetModel) SpringUtil.getBean("resourceApprovalSheetModel");
+
         textBProjectRole.setValue("Project role");
         textBFIO.setValue("test");
     }
 
     public void saveApprovalSheet() {
+
+        ResourceApprovalSheet resourceApprovalSheet =
+                new ResourceApprovalSheet(
+                        textBUnit.getValue(),
+                        textBProjectRole.getValue(),
+                        textBFIO.getValue(),
+                        textBPosition.getValue(),
+                        dateBStart.getValue(),
+                        dateBEnd.getValue(),
+                        textBDuration.getValue(),
+                        textBPercentLoad.getValue(),
+                        textBPeopleDay.getValue());
+
+        resourceApprovalSheetModel.confirmSave(resourceApprovalSheet);
+
         textBProjectRole.setValue("it's work");
+
     }
 
     public void onChange$dateBEnd(Event event) {
@@ -117,10 +139,10 @@ public class OrderResourceApprovalSheetController extends GenericForwardComposer
     }
 
     private String getPeopleDay(String percent, String duration) {
-        if(percent.equals("") || percent.isEmpty()){
+        if (percent.equals("") || percent.isEmpty()) {
             return null;
         }
-        if(duration.equals("") || duration.isEmpty()){
+        if (duration.equals("") || duration.isEmpty()) {
             return null;
         }
 

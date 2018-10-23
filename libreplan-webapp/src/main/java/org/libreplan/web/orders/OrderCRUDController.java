@@ -48,6 +48,7 @@ import org.libreplan.web.common.components.bandboxsearch.BandboxSearch;
 import org.libreplan.web.common.components.finders.FilterPair;
 import org.libreplan.web.common.components.finders.OrderFilterEnum;
 import org.libreplan.web.common.components.finders.TaskGroupFilterEnum;
+import org.libreplan.web.orders.PPO.OrderResourceApprovalSheetController;
 import org.libreplan.web.orders.criterionrequirements.AssignedCriterionRequirementToOrderElementController;
 import org.libreplan.web.orders.criterionrequirements.OrderElementCriterionRequirementComponent;
 import org.libreplan.web.orders.files.OrderFilesController;

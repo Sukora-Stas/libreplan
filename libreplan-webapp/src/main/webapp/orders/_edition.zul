@@ -41,7 +41,7 @@
 
 <?component name="listOrderElementTaskQualityForms" inline="true" macroURI="_listOrderElementTaskQualityForms.zul"?>
 
-<?component name="listOrderElemenResourceApprovalSheet" inline="true" macroURI="_listOrderElementApprovalSheet.zul"?>
+<?component name="listOrderElemenResourceApprovalSheet" inline="true" macroURI="PPO/_listOrderElementApprovalSheet.zul"?>
 
 <?component name="listOrderElementAuthorizations" inline="true" macroURI="_listOrderElementAuthorizations.zul"?>
 

@@ -20,7 +20,7 @@
 -->
 
 <vbox id="test"
-      apply="org.libreplan.web.orders.OrderResourceApprovalSheetController" width="100%">
+      apply="org.libreplan.web.orders.PPO.OrderResourceApprovalSheetController" width="100%">
 
     <hbox width="100%">
         <groupbox style="margin-top: 5px" sclass="assignedresources" closable="false" hflex="1">

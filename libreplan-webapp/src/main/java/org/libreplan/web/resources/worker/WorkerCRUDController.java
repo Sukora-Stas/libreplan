@@ -408,6 +408,8 @@ public class WorkerCRUDController extends GenericForwardComposer implements IWor
             userBindingRadiogroup.setSelectedIndex(UserBindingOption.EXISTING_USER.ordinal());
         }
 
+
+
         // Reset new user fields
         loginNameTextbox.setValue("");
         emailTextbox.setValue("");
