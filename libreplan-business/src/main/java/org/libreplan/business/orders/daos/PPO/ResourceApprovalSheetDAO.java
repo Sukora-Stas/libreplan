@@ -19,7 +19,6 @@ package org.libreplan.business.orders.daos.PPO;/*
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.libreplan.business.common.daos.GenericDAOHibernate;
 import org.libreplan.business.orders.entities.PPO.ResourceApprovalSheet;
@@ -28,7 +27,6 @@ import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Repository;
 
-import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -52,32 +50,30 @@ public class ResourceApprovalSheetDAO extends GenericDAOHibernate<ResourceApprov
 
     @Override
     public List<ResourceApprovalSheet> getAll() {
-        try {
+        /*try {
 
             Session session = sessionFactory.getCurrentSession();
-            List<ResourceApprovalSheet> list = session.createCriteria(ResourceApprovalSheet.class).list();
+            List list = session.createCriteria(ResourceApprovalSheet.class).list();
 
             org.hibernate.Transaction tx = session.beginTransaction();
             list = session.createSQLQuery("SELECT * FROM resourse_approval_sheet").list();
             if (list.size() > 0) {
                 System.out.println(list.size());
+                ResourceApprovalSheet res = new ResourceApprovalSheet();
+                for (int i = 0; i < list.size(); i++) {
+                    res = (ResourceApprovalSheet) list.get(i);
+                    System.out.println(res.toString());
+                }
                 return list;
             }
             return null;
         } catch (Exception e) {
             throw e;
-        }
+        }*/
+
+
+        return list(ResourceApprovalSheet.class);
     }
-
-    /*public static void main(String[] args) {
-        List<ResourceApprovalSheet> list2 = new ArrayList<>();
-
-        ResourceApprovalSheetDAO dao = new ResourceApprovalSheetDAO();
-
-        list2 = dao.getAll();
-
-        System.out.println(list2.size());
-    }*/
 
 
 }

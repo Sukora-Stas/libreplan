@@ -70,7 +70,7 @@
 
                     <row>
                         <cell colspan="2" align="center">
-                            <button id="butSave" label="Сохранить(не пашет)" sclass="add-button"
+                            <button id="butSave" label="Сохранить" sclass="add-button"
                                     onClick="orderResourceApprovalSheetController.saveApprovalSheet()"/>
                         </cell>
 
@@ -80,10 +80,13 @@
 
                 </rows>
             </grid>
+            <button id="butLoad" label="Загрузить - тест"
+                    onClick="orderResourceApprovalSheetController.testLoad()"/>
         </groupbox>
     </hbox>
 
-    <grid height="250px" width="100%" style="margin-top: 10px">
+
+    <grid id="appSheetGrid" height="250px" width="100%" style="margin-top: 10px">
         <columns>
             <column label="Подразделение (наименование подрятчика)" width="100px"/>
             <column label="Роль в проекте"/>
@@ -95,6 +98,19 @@
             <column label="% загрузки"/>
             <column label="Чел/дни"/>
         </columns>
+        <!--<template name="model">-->
+            <!--<row>-->
+                <!--<label value="${each.unit}"/>-->
+                <!--<label value="${each.projectRole}"/>-->
+                <!--<label value="${each.FIO}"/>-->
+                <!--<label value="${each.position}"/>-->
+                <!--<label value="${each.dateStart}"/>-->
+                <!--<label value="${each.dateEnd}"/>-->
+                <!--<label value="${each.duration}"/>-->
+                <!--<label value="${each.percentLoad}"/>-->
+                <!--<label value="${each.peopleDay}"/>-->
+            <!--</row>-->
+        <!--</template>-->
     </grid>
 
 </vbox>

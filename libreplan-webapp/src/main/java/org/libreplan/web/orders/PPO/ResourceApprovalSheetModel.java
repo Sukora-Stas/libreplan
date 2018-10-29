@@ -54,6 +54,7 @@ public class ResourceApprovalSheetModel implements IResourceApprovalSheetModel {
     }
 
     @Override
+    @Transactional
     public List<ResourceApprovalSheet> getApprovalSheet() {
         return resourceApprovalSheetDAO.getAll();
     }

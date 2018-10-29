@@ -26,11 +26,12 @@ import org.zkoss.zk.ui.Component;
 import org.zkoss.zk.ui.event.Event;
 import org.zkoss.zk.ui.util.GenericForwardComposer;
 import org.zkoss.zkplus.spring.SpringUtil;
-import org.zkoss.zul.Datebox;
-import org.zkoss.zul.Textbox;
+import org.zkoss.zul.*;
 
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.List;
 
 /**
  * libreplan
@@ -61,9 +62,10 @@ public class OrderResourceApprovalSheetController extends GenericForwardComposer
 
     private Textbox textBPeopleDay;//auto
 
+    private Grid appSheetGrid;
+
 
     private IResourceApprovalSheetModel resourceApprovalSheetModel;
-    // private Label labFIjkO;
 
 
     /**
@@ -77,14 +79,36 @@ public class OrderResourceApprovalSheetController extends GenericForwardComposer
     @Override
     public void doAfterCompose(Component comp) throws Exception {
         super.doAfterCompose(comp);
+
         comp.setAttribute("orderResourceApprovalSheetController", this, true);
         this.window = comp;
 
         resourceApprovalSheetModel = (IResourceApprovalSheetModel) SpringUtil.getBean("resourceApprovalSheetModel");
 
-        textBProjectRole.setValue("Project role");
-        textBFIO.setValue("test");
+        initGrid();
     }
+
+    private void initGrid(){
+        appSheetGrid.setModel(new ListModelList<ResourceApprovalSheet>(resourceApprovalSheetModel.getApprovalSheet()));
+
+        appSheetGrid.setRowRenderer(getGridResAppRenderer());
+    }
+
+
+    private RowRenderer<ResourceApprovalSheet> getGridResAppRenderer() {
+        return (row, o, i) -> {
+            row.appendChild(new Label(o.getUnit()));
+            row.appendChild(new Label(o.getProjectRole()));
+            row.appendChild(new Label(o.getFIO()));
+            row.appendChild(new Label(o.getPosition()));
+            row.appendChild(new Label(o.getDateStart().toString()));
+            row.appendChild(new Label(o.getDateEnd().toString()));
+            row.appendChild(new Label(o.getDuration()));
+            row.appendChild(new Label(o.getPercentLoad()));
+            row.appendChild(new Label(o.getPeopleDay()));
+        };
+    }
+
 
     public void saveApprovalSheet() {
 
@@ -102,8 +126,11 @@ public class OrderResourceApprovalSheetController extends GenericForwardComposer
 
         resourceApprovalSheetModel.confirmSave(resourceApprovalSheet);
 
+        initGrid();
         textBProjectRole.setValue("it's work");
 
+
+        //TODO: add mesage "done" and clear all value in view
     }
 
     public void onChange$dateBEnd(Event event) {
@@ -136,6 +163,7 @@ public class OrderResourceApprovalSheetController extends GenericForwardComposer
         fullMiliSecond = fullMiliSecond / 1000 / 60 / 60 / 24;
 
         return (int) fullMiliSecond;
+        //TODO: add bias method
     }
 
     private String getPeopleDay(String percent, String duration) {

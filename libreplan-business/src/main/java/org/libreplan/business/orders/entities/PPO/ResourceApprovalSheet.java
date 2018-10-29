@@ -21,6 +21,7 @@ package org.libreplan.business.orders.entities.PPO;/*
 
 import org.libreplan.business.common.BaseEntity;
 
+import java.io.Serializable;
 import java.util.Date;
 
 /**
@@ -29,9 +30,7 @@ import java.util.Date;
  *
  * @author 8_Sukora_671
  */
-public class ResourceApprovalSheet extends BaseEntity {
-
-
+public class ResourceApprovalSheet extends BaseEntity implements Serializable {
 
     private String unit;
 
@@ -48,6 +47,21 @@ public class ResourceApprovalSheet extends BaseEntity {
     private String duration;
 
     private String percentLoad;
+
+    @Override
+    public String toString() {
+        return "ResourceApprovalSheet{" +
+                "unit='" + unit + '\'' +
+                ", projectRole='" + projectRole + '\'' +
+                ", FIO='" + FIO + '\'' +
+                ", position='" + position + '\'' +
+                ", dateStart=" + dateStart +
+                ", dateEnd=" + dateEnd +
+                ", duration='" + duration + '\'' +
+                ", percentLoad='" + percentLoad + '\'' +
+                ", peopleDay='" + peopleDay + '\'' +
+                '}';
+    }
 
     private String peopleDay;
 
