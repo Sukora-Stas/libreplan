@@ -43,11 +43,6 @@ import java.util.List;
 public class ResourceApprovalSheetDAO extends GenericDAOHibernate<ResourceApprovalSheet, Long>
         implements IResourceApprovalSheetDAO {
 
-    static IResourceApprovalSheetDAO res;
-
-    @Autowired
-    private SessionFactory sessionFactory;
-
     @Override
     public List<ResourceApprovalSheet> getAll() {
         /*try {

@@ -22,6 +22,7 @@ package org.libreplan.web.orders.PPO;
  */
 
 import org.libreplan.business.orders.entities.PPO.ResourceApprovalSheet;
+import org.springframework.stereotype.Controller;
 import org.zkoss.zk.ui.Component;
 import org.zkoss.zk.ui.event.Event;
 import org.zkoss.zk.ui.util.GenericForwardComposer;
@@ -40,6 +41,8 @@ import java.util.List;
  *
  * @author 8_Sukora_671
  */
+
+@Controller
 public class OrderResourceApprovalSheetController extends GenericForwardComposer {
 
     private Component window;
@@ -89,7 +92,8 @@ public class OrderResourceApprovalSheetController extends GenericForwardComposer
     }
 
     private void initGrid(){
-        appSheetGrid.setModel(new ListModelList<ResourceApprovalSheet>(resourceApprovalSheetModel.getApprovalSheet()));
+        appSheetGrid.setModel(new ListModelList<ResourceApprovalSheet>
+                (resourceApprovalSheetModel.getApprovalSheet()));
 
         appSheetGrid.setRowRenderer(getGridResAppRenderer());
     }

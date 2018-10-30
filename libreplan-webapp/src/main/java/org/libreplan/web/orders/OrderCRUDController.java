@@ -49,6 +49,7 @@ import org.libreplan.web.common.components.finders.FilterPair;
 import org.libreplan.web.common.components.finders.OrderFilterEnum;
 import org.libreplan.web.common.components.finders.TaskGroupFilterEnum;
 import org.libreplan.web.orders.PPO.OrderResourceApprovalSheetController;
+import org.libreplan.web.orders.PPO.OrderRiskRegisterController;
 import org.libreplan.web.orders.criterionrequirements.AssignedCriterionRequirementToOrderElementController;
 import org.libreplan.web.orders.criterionrequirements.OrderElementCriterionRequirementComponent;
 import org.libreplan.web.orders.files.OrderFilesController;
@@ -178,6 +179,8 @@ public class OrderCRUDController extends GenericForwardComposer {
     private OrderAuthorizationController orderAuthorizationController;
 
     private OrderResourceApprovalSheetController orderResourceApprovalSheetController;
+
+    private OrderRiskRegisterController orderRiskRegisterController;
 
     private OrderFilesController orderFilesController;
 
@@ -746,14 +749,38 @@ public class OrderCRUDController extends GenericForwardComposer {
                     orderElementResourceApprovalSheet
                             .getAttribute("orderResourceApprovalSheetController", true);
 
-           // orderResourceApprovalSheetController.setMessagesForUserComponent(messagesForUser);
-           // initOrderAuthorizations();
+            // orderResourceApprovalSheetController.setMessagesForUserComponent(messagesForUser);
+            // initOrderAuthorizations();
 
         } else {
             Util.createBindingsFor(orderElementResourceApprovalSheet);
             Util.reloadBindings(orderElementResourceApprovalSheet);
         }
+    }
 
+    public void setupOrderRiskRegisterController() {
+        if (!confirmLastTab()) {
+            return;
+        }
+        setCurrentTab();
+
+        Component orderElementRiskRegister = editWindow
+                .getFellowIfAny("orderElementRiskRegister");
+        //orderRiskRegisterController
+
+        if (orderRiskRegisterController == null) {
+
+            orderRiskRegisterController = (OrderRiskRegisterController)
+                    orderElementRiskRegister
+                            .getAttribute("orderRiskRegisterController", true);
+
+            // orderResourceApprovalSheetController.setMessagesForUserComponent(messagesForUser);
+            // initOrderAuthorizations();
+
+        } else {
+            Util.createBindingsFor(orderElementRiskRegister);
+            Util.reloadBindings(orderElementRiskRegister);
+        }
     }
 
     public void setupOrderAuthorizationController() {

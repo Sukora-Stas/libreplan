@@ -1,4 +1,4 @@
-package org.libreplan.web.orders.PPO;/*
+package org.libreplan.business.orders.daos.PPO;/*
  * This file is part of LibrePlan
  *
  * Copyright (C) 2009-2010 Fundación para o Fomento da Calidade Industrial e
@@ -19,41 +19,30 @@ package org.libreplan.web.orders.PPO;/*
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-import org.libreplan.business.orders.daos.PPO.IResourceApprovalSheetDAO;
-import org.libreplan.business.orders.entities.PPO.ResourceApprovalSheet;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.libreplan.business.common.daos.GenericDAOHibernate;
+import org.libreplan.business.orders.entities.PPO.RiskRegister;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.context.annotation.Scope;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
+import org.springframework.stereotype.Repository;
 
-import java.util.Date;
 import java.util.List;
 
 /**
  * libreplan
- * Created by 8_Sukora_671  on 05/10/18 10:38.
+ * Created by 8_Sukora_671  on 30/10/18 11:03.
  *
  * @author 8_Sukora_671
  */
 
-@Service
-@Scope(BeanDefinition.SCOPE_PROTOTYPE)
-public class ResourceApprovalSheetModel implements IResourceApprovalSheetModel {
-
-    @Autowired
-    private IResourceApprovalSheetDAO resourceApprovalSheetDAO;
+@Repository
+@Scope(BeanDefinition.SCOPE_SINGLETON)
+public class RiskRegisterDAO extends GenericDAOHibernate<RiskRegister, Long>
+        implements IRiskRegisterDAO {
 
     @Override
-    @Transactional
-    public void confirmSave(ResourceApprovalSheet resourceApprovalSheet) {
-
-        resourceApprovalSheetDAO.save(resourceApprovalSheet);
-    }
-
-    @Override
-    @Transactional
-    public List<ResourceApprovalSheet> getApprovalSheet() {
-        return resourceApprovalSheetDAO.getAll();
+    public List<RiskRegister> getAll() {
+        return list(RiskRegister.class);
     }
 }
+
+

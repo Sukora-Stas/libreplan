@@ -5,6 +5,38 @@
                    http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.1.xsd">
 
 
+    <changeSet id="add-new-table-risk-register1" author="SukoraStas">
+        <comment>Add new table to order RiskRegister</comment>
+
+        <createTable tableName="risk_register">
+
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true"/>
+            </column>
+
+            <column name="description" type="VARCHAR(500)">
+                <constraints nullable="true"/>
+            </column>
+
+            <column name="response" type="VARCHAR(500)">
+                <constraints nullable="true"/>
+            </column>
+
+            <column name="excecutor" type="VARCHAR(255)">
+                <constraints nullable="true"/>
+            </column>
+
+            <column name="date_end_risk" type="DATETIME">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="status" type="VARCHAR(100)">
+                <constraints nullable="true"/>
+            </column>
+
+        </createTable>
+    </changeSet>
+
     <changeSet id="add-new-column-resourse_approval_sheet5" author="SukoraStas">
         <comment>Add columns to order ListResourceApprovalSheet</comment>
 

@@ -19,41 +19,26 @@ package org.libreplan.web.orders.PPO;/*
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-import org.libreplan.business.orders.daos.PPO.IResourceApprovalSheetDAO;
-import org.libreplan.business.orders.entities.PPO.ResourceApprovalSheet;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.libreplan.business.orders.entities.PPO.RiskRegister;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Date;
 import java.util.List;
 
 /**
  * libreplan
- * Created by 8_Sukora_671  on 05/10/18 10:38.
+ * Created by 8_Sukora_671  on 30/10/18 16:05.
  *
  * @author 8_Sukora_671
  */
 
 @Service
 @Scope(BeanDefinition.SCOPE_PROTOTYPE)
-public class ResourceApprovalSheetModel implements IResourceApprovalSheetModel {
+public interface IRiskRegisterModel {
 
-    @Autowired
-    private IResourceApprovalSheetDAO resourceApprovalSheetDAO;
+    void confirmSave(RiskRegister riskRegister);
 
-    @Override
-    @Transactional
-    public void confirmSave(ResourceApprovalSheet resourceApprovalSheet) {
+    List<RiskRegister> getRiskRegister ();
 
-        resourceApprovalSheetDAO.save(resourceApprovalSheet);
-    }
-
-    @Override
-    @Transactional
-    public List<ResourceApprovalSheet> getApprovalSheet() {
-        return resourceApprovalSheetDAO.getAll();
-    }
 }

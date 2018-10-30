@@ -43,6 +43,8 @@
 
 <?component name="listOrderElemenResourceApprovalSheet" inline="true" macroURI="PPO/_listOrderElementApprovalSheet.zul"?>
 
+<?component name="listOrderElemenRiskRegister" inline="true" macroURI="PPO/_listOrderElementRiskRegister.zul"?>
+
 <?component name="listOrderElementAuthorizations" inline="true" macroURI="_listOrderElementAuthorizations.zul"?>
 
 <?component name="listOrderElementFiles" inline="true" macroURI="_listOrderElementFiles.zul"?>
@@ -81,8 +83,9 @@
             <tab id="tabResourceApprovalSheet" label="Лист согласования ресурсов"/>
             <!--Resource approval sheet Лист согласования ресурсов-->
 
+            <tab id="tabRiskRegistr" label="Реестр рисков"/>
+            <!--Risk Register Реестр рисков-->
 
-            <!--<tab id="tabRiskRegistr" label="${i18n:_('Risk registr')}"/> &lt;!&ndash;Реестр рисков&ndash;&gt;-->
             <!--<tab id="tabProjectSchedule" label="${i18n:_('Project schedule')}"/> &lt;!&ndash;Календарный план проекта&ndash;&gt;-->
             <!--<tab id="tabProjectCharter" label="${i18n:_('Project charter')}"/> &lt;!&ndash;Устав проекта&ndash;&gt;-->
 
@@ -388,6 +391,10 @@
 
             <tabpanel>
                 <listOrderElemenResourceApprovalSheet id="orderElementResourceApprovalSheet" fulfill="tabResourceApprovalSheet.onSelect"/>
+            </tabpanel>
+
+            <tabpanel>
+                <listOrderElemenRiskRegister id="orderElementRiskRegister" fulfill="tabRiskRegistr.onSelect"/>
             </tabpanel>
         </tabpanels>
     </tabbox>

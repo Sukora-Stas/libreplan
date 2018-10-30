@@ -1,0 +1,82 @@
+<!--
+  This file is part of LibrePlan
+
+  Copyright (C) 2009-2010 Fundación para o Fomento da Calidade Industrial e
+                          Desenvolvemento Tecnolóxico de Galicia
+  Copyright (C) 2010-2011 Igalia, S.L.
+
+  This program is free software: you can redistribute it and/or modify
+  it under the terms of the GNU Affero General Public License as published by
+  the Free Software Foundation, either version 3 of the License, or
+  (at your option) any later version.
+
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU Affero General Public License for more details.
+
+  You should have received a copy of the GNU Affero General Public License
+  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+-->
+
+<vbox id="VRiskRegister"
+      apply="org.libreplan.web.orders.PPO.OrderRiskRegisterController" width="100%">
+
+    <hbox width="100%">
+        <groupbox style="margin-top: 5px" sclass="assignedresources" closable="false" hflex="1">
+            <caption label="Реестр рисков"/>
+
+            <separator spacing="10px"/>
+
+            <grid fixedLayout="true" width="99%">
+                <columns>
+                    <column width="200px"/>
+                    <column width="55%"/>
+                    <column width="150px"/>
+                    <column width="20%"/>
+                </columns>
+                <rows>
+                    <row>
+                        <label value="Описание риска"/>
+                        <textbox id="textBDescription" rows="2" width="100%"/>
+
+                        <label value="Срок"/>
+                        <datebox id="dateBEndRisk" format="long"
+                                 onCreate="self.value = new Date()" width="150px"/>
+                    </row>
+                    <row>
+                        <label value="Задачи по реагированию"/>
+                        <textbox id="textBResponse" rows="2" width="100%"/>
+
+                        <label value="Статус риска"/>
+                        <textbox id="textBStatus" width="100%"/>
+                    </row>
+                    <row>
+                        <label value="Исполнитель"/>
+                        <textbox id="textBExecutor" width="100%"/>
+                        <cell colspan="2" align="center">
+                            <button id="butSaveRisk" label="Сохранить" sclass="add-button"
+                                    onClick="orderRiskRegisterController.saveRisk()"/>
+                        </cell>
+                    </row>
+
+                </rows>
+            </grid>
+            <!--<button id="butLoad" label="Загрузить - тест"
+                    onClick="orderResourceApprovalSheetController.testLoad()"/>-->
+        </groupbox>
+    </hbox>
+
+
+    <grid id="appRiskGrid" height="250px" width="100%" style="margin-top: 10px">
+        <columns>
+            <column label="Описание риска"/>
+            <column label="Задачи по реагированию"/>
+            <column label="Исполнитель"/>
+            <column label="Срок"/>
+            <column label="Статус риска"/>
+        </columns>
+
+    </grid>
+
+</vbox>

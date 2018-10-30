@@ -30,7 +30,7 @@ import java.util.Date;
  *
  * @author 8_Sukora_671
  */
-public class ResourceApprovalSheet extends BaseEntity implements Serializable {
+public class ResourceApprovalSheet extends BaseEntity {
 
     private String unit;
 
@@ -47,21 +47,6 @@ public class ResourceApprovalSheet extends BaseEntity implements Serializable {
     private String duration;
 
     private String percentLoad;
-
-    @Override
-    public String toString() {
-        return "ResourceApprovalSheet{" +
-                "unit='" + unit + '\'' +
-                ", projectRole='" + projectRole + '\'' +
-                ", FIO='" + FIO + '\'' +
-                ", position='" + position + '\'' +
-                ", dateStart=" + dateStart +
-                ", dateEnd=" + dateEnd +
-                ", duration='" + duration + '\'' +
-                ", percentLoad='" + percentLoad + '\'' +
-                ", peopleDay='" + peopleDay + '\'' +
-                '}';
-    }
 
     private String peopleDay;
 
@@ -153,5 +138,20 @@ public class ResourceApprovalSheet extends BaseEntity implements Serializable {
 
     public void setPeopleDay(String peopleDay) {
         this.peopleDay = peopleDay;
+    }
+
+    @Override
+    public String toString() {
+        return "ResourceApprovalSheet{" +
+                "unit='" + unit + '\'' +
+                ", projectRole='" + projectRole + '\'' +
+                ", FIO='" + FIO + '\'' +
+                ", position='" + position + '\'' +
+                ", dateStart=" + dateStart +
+                ", dateEnd=" + dateEnd +
+                ", duration='" + duration + '\'' +
+                ", percentLoad='" + percentLoad + '\'' +
+                ", peopleDay='" + peopleDay + '\'' +
+                '}';
     }
 }
