@@ -19,7 +19,7 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 -->
 
-<vbox id="test"
+<vbox id="VApprovalSheetController"
       apply="org.libreplan.web.orders.PPO.OrderResourceApprovalSheetController" width="100%">
 
     <hbox width="100%">
@@ -98,19 +98,6 @@
             <column label="% загрузки"/>
             <column label="Чел/дни"/>
         </columns>
-        <!--<template name="model">-->
-            <!--<row>-->
-                <!--<label value="${each.unit}"/>-->
-                <!--<label value="${each.projectRole}"/>-->
-                <!--<label value="${each.FIO}"/>-->
-                <!--<label value="${each.position}"/>-->
-                <!--<label value="${each.dateStart}"/>-->
-                <!--<label value="${each.dateEnd}"/>-->
-                <!--<label value="${each.duration}"/>-->
-                <!--<label value="${each.percentLoad}"/>-->
-                <!--<label value="${each.peopleDay}"/>-->
-            <!--</row>-->
-        <!--</template>-->
     </grid>
 
 </vbox>

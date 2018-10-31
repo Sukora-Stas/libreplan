@@ -48,6 +48,7 @@ import org.libreplan.web.common.components.bandboxsearch.BandboxSearch;
 import org.libreplan.web.common.components.finders.FilterPair;
 import org.libreplan.web.common.components.finders.OrderFilterEnum;
 import org.libreplan.web.common.components.finders.TaskGroupFilterEnum;
+import org.libreplan.web.orders.PPO.OrderProjectCharterController;
 import org.libreplan.web.orders.PPO.OrderProjectScheduleController;
 import org.libreplan.web.orders.PPO.OrderResourceApprovalSheetController;
 import org.libreplan.web.orders.PPO.OrderRiskRegisterController;
@@ -194,12 +195,13 @@ public class OrderCRUDController extends GenericForwardComposer {
     private boolean readOnly = true;
 
 
-
     private OrderResourceApprovalSheetController orderResourceApprovalSheetController;
 
     private OrderRiskRegisterController orderRiskRegisterController;
 
     private OrderProjectScheduleController orderProjectScheduleController;
+
+    private OrderProjectCharterController orderProjectCharterController;
 
     public void showCreateFormFromTemplate(OrderTemplate template) {
         showOrderElementFilter();
@@ -743,19 +745,15 @@ public class OrderCRUDController extends GenericForwardComposer {
             return;
         }
         setCurrentTab();
-        //orderElementResourceApprovalSheet
+
         Component orderElementResourceApprovalSheet = editWindow
                 .getFellowIfAny("orderElementResourceApprovalSheet");
-        //orderResourceApprovalSheetController
 
         if (orderResourceApprovalSheetController == null) {
 
             orderResourceApprovalSheetController = (OrderResourceApprovalSheetController)
                     orderElementResourceApprovalSheet
                             .getAttribute("orderResourceApprovalSheetController", true);
-
-            // orderResourceApprovalSheetController.setMessagesForUserComponent(messagesForUser);
-            // initOrderAuthorizations();
 
         } else {
             Util.createBindingsFor(orderElementResourceApprovalSheet);
@@ -771,16 +769,12 @@ public class OrderCRUDController extends GenericForwardComposer {
 
         Component orderElementRiskRegister = editWindow
                 .getFellowIfAny("orderElementRiskRegister");
-        //orderRiskRegisterController
 
         if (orderRiskRegisterController == null) {
 
             orderRiskRegisterController = (OrderRiskRegisterController)
                     orderElementRiskRegister
                             .getAttribute("orderRiskRegisterController", true);
-
-            // orderResourceApprovalSheetController.setMessagesForUserComponent(messagesForUser);
-            // initOrderAuthorizations();
 
         } else {
             Util.createBindingsFor(orderElementRiskRegister);
@@ -796,20 +790,36 @@ public class OrderCRUDController extends GenericForwardComposer {
 
         Component orderElementProjectSchedule = editWindow
                 .getFellowIfAny("orderElementProjectSchedule");
-        //orderProjectScheduleController
-
         if (orderProjectScheduleController == null) {
 
             orderProjectScheduleController = (OrderProjectScheduleController)
                     orderElementProjectSchedule
                             .getAttribute("orderProjectScheduleController", true);
-
-            // orderResourceApprovalSheetController.setMessagesForUserComponent(messagesForUser);
-            // initOrderAuthorizations();
-
         } else {
             Util.createBindingsFor(orderElementProjectSchedule);
             Util.reloadBindings(orderElementProjectSchedule);
+        }
+    }
+
+    public void setupOrderProjectCharterController() {
+        if (!confirmLastTab()) {
+            return;
+        }
+        setCurrentTab();
+
+        Component orderElementProjectCharter = editWindow
+                .getFellowIfAny("orderElementProjectCharter");
+        //orderProjectCharterController
+
+        if (orderProjectCharterController == null) {
+
+            orderProjectCharterController = (OrderProjectCharterController)
+                    orderElementProjectCharter
+                            .getAttribute("orderProjectCharterController", true);
+
+        } else {
+            Util.createBindingsFor(orderElementProjectCharter);
+            Util.reloadBindings(orderElementProjectCharter);
         }
     }
 

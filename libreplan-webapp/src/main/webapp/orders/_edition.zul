@@ -55,6 +55,8 @@
 
 <?component name="listOrderElemenProjectSchedule" inline="true" macroURI="PPO/_listOrderElementProjectSchedule.zul"?>
 
+<?component name="listOrderElemenProjectCharter" inline="true" macroURI="PPO/_listOrderElementProjectCharter.zul"?>
+
 <window id="${arg.top_id}">
 
     <tabbox id="tabboxOrder">
@@ -91,10 +93,8 @@
             <tab id="tabProjectSchedule" label="Календарный план проекта"/>
             <!--Project schedule Календарный план проекта-->
 
-
-            <!--<tab id="tabProjectCharter" label="${i18n:_('Project charter')}"/> &lt;!&ndash;Устав проекта&ndash;&gt;-->
-
-                 <!--onSelect = "controller.setupOrderAuthorizationController();"-->
+            <tab id="tabProjectCharter" label="Устав проекта"/>
+            <!--Project charter Устав проекта-->
 
         </tabs>
         <tabpanels>
@@ -405,6 +405,11 @@
             <tabpanel>
                 <listOrderElemenProjectSchedule id="orderElementProjectSchedule" fulfill="tabProjectSchedule.onSelect"/>
             </tabpanel>
+
+            <tabpanel>
+                <listOrderElemenProjectCharter id="orderElementProjectCharter" fulfill="tabProjectCharter.onSelect"/>
+            </tabpanel>
+
         </tabpanels>
     </tabbox>
 </window>
