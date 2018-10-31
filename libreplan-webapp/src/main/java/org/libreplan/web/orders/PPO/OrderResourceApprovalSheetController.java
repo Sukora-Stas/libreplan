@@ -131,9 +131,6 @@ public class OrderResourceApprovalSheetController extends GenericForwardComposer
         resourceApprovalSheetModel.confirmSave(resourceApprovalSheet);
 
         initGrid();
-        textBProjectRole.setValue("it's work");
-
-
         //TODO: add mesage "done" and clear all value in view
     }
 

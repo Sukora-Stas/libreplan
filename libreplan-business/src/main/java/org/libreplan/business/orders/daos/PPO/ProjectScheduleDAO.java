@@ -1,4 +1,4 @@
-package org.libreplan.web.orders.PPO;/*
+package org.libreplan.business.orders.daos.PPO;/*
  * This file is part of LibrePlan
  *
  * Copyright (C) 2009-2010 Fundación para o Fomento da Calidade Industrial e
@@ -19,24 +19,30 @@ package org.libreplan.web.orders.PPO;/*
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-import org.libreplan.business.orders.entities.PPO.RiskRegister;
+import org.libreplan.business.common.daos.GenericDAOHibernate;
+import org.libreplan.business.orders.entities.PPO.ProjectSchedule;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.context.annotation.Scope;
-import org.springframework.stereotype.Service;
+import org.springframework.stereotype.Repository;
 
 import java.util.List;
 
 /**
  * libreplan
- * Created by 8_Sukora_671  on 30/10/18 16:05.
+ * Created by 8_Sukora_671  on 30/10/18 18:50.
  *
  * @author 8_Sukora_671
  */
 
-public interface IRiskRegisterModel {
+@Repository
+@Scope(BeanDefinition.SCOPE_SINGLETON)
+public class ProjectScheduleDAO extends GenericDAOHibernate<ProjectSchedule, Long>
+        implements IProjectScheduleDAO {
 
-    void confirmSave(RiskRegister riskRegister);
+    @Override
+    public List<ProjectSchedule> getAll() {
+        return list(ProjectSchedule.class);
+    }
 
-    List<RiskRegister> getRiskRegister();
 
 }

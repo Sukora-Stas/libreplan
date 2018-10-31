@@ -19,7 +19,7 @@ package org.libreplan.web.orders.PPO;/*
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-import org.libreplan.business.orders.entities.PPO.RiskRegister;
+import org.libreplan.business.orders.entities.PPO.ProjectSchedule;
 import org.zkoss.zk.ui.Component;
 import org.zkoss.zk.ui.util.GenericForwardComposer;
 import org.zkoss.zkplus.spring.SpringUtil;
@@ -27,28 +27,28 @@ import org.zkoss.zul.*;
 
 /**
  * libreplan
- * Created by 8_Sukora_671  on 29/10/18 12:10.
+ * Created by 8_Sukora_671  on 30/10/18 17:52.
  *
  * @author 8_Sukora_671
  */
-public class OrderRiskRegisterController extends GenericForwardComposer {
+public class OrderProjectScheduleController extends GenericForwardComposer {
 
     private Component window;
 
-    private Textbox textBDescription;
+    private Textbox textBTask;
 
-    private Textbox textBResponse;
+    private Datebox dateBStartSchedule;
 
-    private Textbox textBExecutor;
+    private Datebox dateBFinishSchedule;
 
-    private Datebox dateBEndRisk;
+    private Textbox textBResponseSchedule;
 
-    private Textbox textBStatus;
-
-    private Grid appRiskGrid;
+    private Textbox textBCostSchedule;
 
 
-    private IRiskRegisterModel riskRegisterModel;
+    private Grid appScheduleGrid;
+
+    private IProjectScheduleModel projectScheduleModel;
 
     /**
      * Auto forward events and wire accessible variables of the specified
@@ -62,45 +62,47 @@ public class OrderRiskRegisterController extends GenericForwardComposer {
     public void doAfterCompose(Component comp) throws Exception {
         super.doAfterCompose(comp);
 
-        comp.setAttribute("orderRiskRegisterController", this, true);
+        comp.setAttribute("orderProjectScheduleController", this, true);
         this.window = comp;
 
-        riskRegisterModel = (IRiskRegisterModel) SpringUtil.getBean("riskRegisterModel");
+        projectScheduleModel = (IProjectScheduleModel) SpringUtil.getBean("projectScheduleModel");
 
         initGrid();
     }
 
-    public void saveRisk() {
+    public void saveSchedule() {
 
-        RiskRegister riskRegister = new RiskRegister();
+        ProjectSchedule projectSchedule = new ProjectSchedule();
 
-        riskRegister.setDescription(textBDescription.getValue());
-        riskRegister.setResponse(textBResponse.getValue());
-        riskRegister.setExcecutor(textBExecutor.getValue());
-        riskRegister.setDateEndRisk(dateBEndRisk.getValue());
-        riskRegister.setStatus(textBStatus.getValue());
-
-        riskRegisterModel.confirmSave(riskRegister);
+        projectSchedule.setTask(textBTask.getValue());
+        projectSchedule.setDateStart(dateBStartSchedule.getValue());
+        projectSchedule.setDateEnd(dateBFinishSchedule.getValue());
+        projectSchedule.setResponse(textBResponseSchedule.getValue());
+        projectSchedule.setCost(Double.valueOf(textBCostSchedule.getValue()));
+//TODO: checked value cost from char ',' to '.'
+        projectScheduleModel.confirmSave(projectSchedule);
 
         initGrid();
         //TODO: add mesage "done" and clear all value in view
+
     }
 
     private void initGrid() {
-        appRiskGrid.setModel(new ListModelList<RiskRegister>
-                (riskRegisterModel.getRiskRegister()));
 
-        appRiskGrid.setRowRenderer(gridRenderRow());
+        appScheduleGrid.setModel(new ListModelList<ProjectSchedule>
+                (projectScheduleModel.getProjectSchedule()));
+
+        appScheduleGrid.setRowRenderer(gridRenderRow());
     }
 
-    private RowRenderer<RiskRegister> gridRenderRow() {
-        return (row, data, index) -> {
+    private RowRenderer<ProjectSchedule> gridRenderRow() {
+        return ((row, data, index) -> {
             row.appendChild(new Label(String.valueOf(index)));
-            row.appendChild(new Label(data.getDescription()));
+            row.appendChild(new Label(data.getTask()));
+            row.appendChild(new Label(data.getDateStart().toString()));
+            row.appendChild(new Label(data.getDateEnd().toString()));
             row.appendChild(new Label(data.getResponse()));
-            row.appendChild(new Label(data.getExcecutor()));
-            row.appendChild(new Label(data.getDateEndRisk().toString()));
-            row.appendChild(new Label(data.getStatus()));
-        };
+            row.appendChild(new Label(data.getCost().toString()));
+        });
     }
 }

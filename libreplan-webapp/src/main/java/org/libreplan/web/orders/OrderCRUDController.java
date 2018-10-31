@@ -48,6 +48,7 @@ import org.libreplan.web.common.components.bandboxsearch.BandboxSearch;
 import org.libreplan.web.common.components.finders.FilterPair;
 import org.libreplan.web.common.components.finders.OrderFilterEnum;
 import org.libreplan.web.common.components.finders.TaskGroupFilterEnum;
+import org.libreplan.web.orders.PPO.OrderProjectScheduleController;
 import org.libreplan.web.orders.PPO.OrderResourceApprovalSheetController;
 import org.libreplan.web.orders.PPO.OrderRiskRegisterController;
 import org.libreplan.web.orders.criterionrequirements.AssignedCriterionRequirementToOrderElementController;
@@ -178,10 +179,6 @@ public class OrderCRUDController extends GenericForwardComposer {
 
     private OrderAuthorizationController orderAuthorizationController;
 
-    private OrderResourceApprovalSheetController orderResourceApprovalSheetController;
-
-    private OrderRiskRegisterController orderRiskRegisterController;
-
     private OrderFilesController orderFilesController;
 
     private Grid gridAskedEndDates;
@@ -195,6 +192,14 @@ public class OrderCRUDController extends GenericForwardComposer {
     private Runnable onUp;
 
     private boolean readOnly = true;
+
+
+
+    private OrderResourceApprovalSheetController orderResourceApprovalSheetController;
+
+    private OrderRiskRegisterController orderRiskRegisterController;
+
+    private OrderProjectScheduleController orderProjectScheduleController;
 
     public void showCreateFormFromTemplate(OrderTemplate template) {
         showOrderElementFilter();
@@ -780,6 +785,31 @@ public class OrderCRUDController extends GenericForwardComposer {
         } else {
             Util.createBindingsFor(orderElementRiskRegister);
             Util.reloadBindings(orderElementRiskRegister);
+        }
+    }
+
+    public void setupOrderProjectScheduleController() {
+        if (!confirmLastTab()) {
+            return;
+        }
+        setCurrentTab();
+
+        Component orderElementProjectSchedule = editWindow
+                .getFellowIfAny("orderElementProjectSchedule");
+        //orderProjectScheduleController
+
+        if (orderProjectScheduleController == null) {
+
+            orderProjectScheduleController = (OrderProjectScheduleController)
+                    orderElementProjectSchedule
+                            .getAttribute("orderProjectScheduleController", true);
+
+            // orderResourceApprovalSheetController.setMessagesForUserComponent(messagesForUser);
+            // initOrderAuthorizations();
+
+        } else {
+            Util.createBindingsFor(orderElementProjectSchedule);
+            Util.reloadBindings(orderElementProjectSchedule);
         }
     }
 

@@ -41,10 +41,6 @@
 
 <?component name="listOrderElementTaskQualityForms" inline="true" macroURI="_listOrderElementTaskQualityForms.zul"?>
 
-<?component name="listOrderElemenResourceApprovalSheet" inline="true" macroURI="PPO/_listOrderElementApprovalSheet.zul"?>
-
-<?component name="listOrderElemenRiskRegister" inline="true" macroURI="PPO/_listOrderElementRiskRegister.zul"?>
-
 <?component name="listOrderElementAuthorizations" inline="true" macroURI="_listOrderElementAuthorizations.zul"?>
 
 <?component name="listOrderElementFiles" inline="true" macroURI="_listOrderElementFiles.zul"?>
@@ -52,6 +48,12 @@
 <?component name="jiraOrderElementSynchronizer" inline="true" macroURI="components/_jiraOrderElementSync.zul"?>
 
 <?component name="timOrderTimesheetSynchronizer" inline="true" macroURI="components/_timOrderTimesheetSync.zul"?>
+
+<?component name="listOrderElemenResourceApprovalSheet" inline="true" macroURI="PPO/_listOrderElementApprovalSheet.zul"?>
+
+<?component name="listOrderElemenRiskRegister" inline="true" macroURI="PPO/_listOrderElementRiskRegister.zul"?>
+
+<?component name="listOrderElemenProjectSchedule" inline="true" macroURI="PPO/_listOrderElementProjectSchedule.zul"?>
 
 <window id="${arg.top_id}">
 
@@ -86,7 +88,10 @@
             <tab id="tabRiskRegistr" label="Реестр рисков"/>
             <!--Risk Register Реестр рисков-->
 
-            <!--<tab id="tabProjectSchedule" label="${i18n:_('Project schedule')}"/> &lt;!&ndash;Календарный план проекта&ndash;&gt;-->
+            <tab id="tabProjectSchedule" label="Календарный план проекта"/>
+            <!--Project schedule Календарный план проекта-->
+
+
             <!--<tab id="tabProjectCharter" label="${i18n:_('Project charter')}"/> &lt;!&ndash;Устав проекта&ndash;&gt;-->
 
                  <!--onSelect = "controller.setupOrderAuthorizationController();"-->
@@ -395,6 +400,10 @@
 
             <tabpanel>
                 <listOrderElemenRiskRegister id="orderElementRiskRegister" fulfill="tabRiskRegistr.onSelect"/>
+            </tabpanel>
+
+            <tabpanel>
+                <listOrderElemenProjectSchedule id="orderElementProjectSchedule" fulfill="tabProjectSchedule.onSelect"/>
             </tabpanel>
         </tabpanels>
     </tabbox>

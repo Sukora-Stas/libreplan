@@ -19,7 +19,7 @@ package org.libreplan.web.orders.PPO;/*
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-import org.libreplan.business.orders.entities.PPO.RiskRegister;
+import org.libreplan.business.orders.entities.PPO.ProjectSchedule;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
@@ -28,15 +28,14 @@ import java.util.List;
 
 /**
  * libreplan
- * Created by 8_Sukora_671  on 30/10/18 16:05.
+ * Created by 8_Sukora_671  on 31/10/18 12:30.
  *
  * @author 8_Sukora_671
  */
 
-public interface IRiskRegisterModel {
+public interface IProjectScheduleModel {
 
-    void confirmSave(RiskRegister riskRegister);
+    void confirmSave(ProjectSchedule projectSchedule);
 
-    List<RiskRegister> getRiskRegister();
-
+    List<ProjectSchedule> getProjectSchedule();
 }

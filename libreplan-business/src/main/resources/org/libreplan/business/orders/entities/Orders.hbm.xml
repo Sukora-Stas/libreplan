@@ -402,4 +402,24 @@
 
     </class>
 
+    <class name="org.libreplan.business.orders.entities.PPO.ProjectSchedule" table="project_schedule">
+
+        <id name="id" access="property" type="long">
+            <generator class="increment">
+                <param name="max_lo">100</param>
+            </generator>
+        </id>
+
+        <property name="task" type="string" column="task"/>
+
+        <property name="dateStart" column="date_start"/>
+
+        <property name="dateEnd" column="date_end"/>
+
+        <property name="response" type="string" column="response"/>
+
+        <property name="cost" type="double" column="cost"/>
+
+    </class>
+
 </hibernate-mapping>

@@ -33,8 +33,6 @@ import java.util.List;
  * @author 8_Sukora_671
  */
 
-@Service
-@Scope(BeanDefinition.SCOPE_PROTOTYPE)
 public interface IResourceApprovalSheetModel {
 
     void confirmSave(ResourceApprovalSheet resourceApprovalSheet);

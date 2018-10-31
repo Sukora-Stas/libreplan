@@ -5,6 +5,39 @@
                    http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.1.xsd">
 
 
+
+    <changeSet id="add-new-table-project-schedule" author="SukoraStas">
+       <comment>Add new table to order ProjectSchedule</comment>
+
+        <createTable tableName="project_schedule">
+
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true"/>
+            </column>
+
+            <column name="task" type="VARCHAR(1000)">
+                <constraints nullable="true"/>
+            </column>
+
+            <column name="date_start" type="DATETIME">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="date_end" type="DATETIME">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="response" type="VARCHAR(200)">
+                <constraints nullable="true"/>
+            </column>
+
+            <column name="cost" type="double">
+                <constraints nullable="true"/>
+            </column>
+
+        </createTable>
+    </changeSet>
+
     <changeSet id="add-new-table-risk-register1" author="SukoraStas">
         <comment>Add new table to order RiskRegister</comment>
 
