@@ -49,6 +49,14 @@
 
 <?component name="timOrderTimesheetSynchronizer" inline="true" macroURI="components/_timOrderTimesheetSync.zul"?>
 
+<?component name="listOrderElemenResourceApprovalSheet" inline="true" macroURI="PPO/_listOrderElementApprovalSheet.zul"?>
+
+<?component name="listOrderElemenRiskRegister" inline="true" macroURI="PPO/_listOrderElementRiskRegister.zul"?>
+
+<?component name="listOrderElemenProjectSchedule" inline="true" macroURI="PPO/_listOrderElementProjectSchedule.zul"?>
+
+<?component name="listOrderElemenProjectCharter" inline="true" macroURI="PPO/_listOrderElementProjectCharter.zul"?>
+
 <window id="${arg.top_id}">
 
     <tabbox id="tabboxOrder">
@@ -74,12 +82,27 @@
                  onSelect="controller.setupOrderFilesController();"/>
             <tab id="tabAuthorizations" label="${i18n:_('Authorizations')}"
                  onSelect = "controller.setupOrderAuthorizationController();"/>
+
+
+            <tab id="tabResourceApprovalSheet" label="Лист согласования ресурсов"/>
+            <!--Resource approval sheet Лист согласования ресурсов-->
+
+            <tab id="tabRiskRegistr" label="Реестр рисков"/>
+            <!--Risk Register Реестр рисков-->
+
+            <tab id="tabProjectSchedule" label="Календарный план проекта"/>
+            <!--Project schedule Календарный план проекта-->
+
+            <tab id="tabProjectCharter" label="Устав проекта"/>
+            <!--Project charter Устав проекта-->
+
         </tabs>
         <tabpanels>
             <tabpanel sclass="orderelements-tab">
                 <orderElementTree id="orderElementTree" sclass="orderElementTree" style="width: 100%;"
                                   showCreateTemplateButton="true" />
             </tabpanel>
+
             <tabpanel id="tabPanelGeneralData" fulfill="tabGeneralData.onSelect">
                 <hbox width="100%">
                     <groupbox style="margin-top: 5px" sclass="assignedresources" closable="false" hflex="1">
@@ -95,7 +118,7 @@
                             <rows>
                                 <row>
                                     <label value="${i18n:_('Name')}" />
-                                    <textbox value="@{controller.order.name}" hflex="1"
+                                    <textbox value="ko" hflex="1"
                                              constraint="@{controller.checkValidProjectName}" />
                                 </row>
                                 <row>
@@ -369,6 +392,24 @@
             <tabpanel>
                 <listOrderElementAuthorizations id="orderElementAuthorizations" fulfill="tabAuthorizations.onSelect"/>
             </tabpanel>
+
+
+            <tabpanel>
+                <listOrderElemenResourceApprovalSheet id="orderElementResourceApprovalSheet" fulfill="tabResourceApprovalSheet.onSelect"/>
+            </tabpanel>
+
+            <tabpanel>
+                <listOrderElemenRiskRegister id="orderElementRiskRegister" fulfill="tabRiskRegistr.onSelect"/>
+            </tabpanel>
+
+            <tabpanel>
+                <listOrderElemenProjectSchedule id="orderElementProjectSchedule" fulfill="tabProjectSchedule.onSelect"/>
+            </tabpanel>
+
+            <tabpanel>
+                <listOrderElemenProjectCharter id="orderElementProjectCharter" fulfill="tabProjectCharter.onSelect"/>
+            </tabpanel>
+
         </tabpanels>
     </tabbox>
 </window>

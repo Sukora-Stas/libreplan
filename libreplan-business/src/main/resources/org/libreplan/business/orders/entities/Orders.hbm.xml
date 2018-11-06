@@ -334,6 +334,7 @@
     </class>
 
     <class name="OrderFile" table="files">
+
         <id name="id" column="id" type="long" access="property">
             <generator class="increment">
                 <param name="max_lo">100</param>
@@ -349,6 +350,75 @@
         <many-to-one name="uploader" class="org.libreplan.business.users.entities.User" column="uploader" lazy="false"/>
 
         <many-to-one name="parent" class="org.libreplan.business.orders.entities.OrderElement" column="parent" lazy="false"/>
+
+    </class>
+
+    <class name="org.libreplan.business.orders.entities.PPO.ResourceApprovalSheet"
+           table="resourse_approval_sheet">
+
+        <id name="id" access="property" type="long">
+            <!--<generator class="native" />-->
+            <generator class="increment">
+                <param name="max_lo">100</param>
+            </generator>
+        </id>
+
+        <property name="unit" type="string" column="unit"/>
+
+        <property name="projectRole" type="string" column="project_role"/>
+
+        <property name="FIO" type="string" column="FIO"/>
+
+        <property name="position" type="string" column="position"/>
+
+        <property name="dateStart"  column="date_start"/>
+
+        <property name="dateEnd"  column="date_end"/>
+
+        <property name="duration" type="string" column="duration"/>
+
+        <property name="percentLoad" type="string" column="percent_load"/>
+
+        <property name="peopleDay" type="string" column="people_day"/>
+
+    </class>
+
+    <class name="org.libreplan.business.orders.entities.PPO.RiskRegister" table="risk_register">
+        <id name="id" access="property" type="long">
+            <generator class="increment">
+                <param name="max_lo">100</param>
+            </generator>
+        </id>
+
+        <property name="description" type="string" column="description"/>
+
+        <property name="response" type="string" column="response"/>
+
+        <property name="excecutor" type="string" column="excecutor"/>
+
+        <property name="dateEndRisk" column="date_end_risk"/>
+
+        <property name="status" type="string" column="status"/>
+
+    </class>
+
+    <class name="org.libreplan.business.orders.entities.PPO.ProjectSchedule" table="project_schedule">
+
+        <id name="id" access="property" type="long">
+            <generator class="increment">
+                <param name="max_lo">100</param>
+            </generator>
+        </id>
+
+        <property name="task" type="string" column="task"/>
+
+        <property name="dateStart" column="date_start"/>
+
+        <property name="dateEnd" column="date_end"/>
+
+        <property name="response" type="string" column="response"/>
+
+        <property name="cost" type="double" column="cost"/>
 
     </class>
 
