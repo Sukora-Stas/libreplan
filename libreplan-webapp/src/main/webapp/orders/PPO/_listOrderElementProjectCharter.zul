@@ -31,52 +31,232 @@
             <grid fixedLayout="true" width="99%">
                 <columns>
                     <column width="200px"/>
-                    <column width="55%"/>
-                    <column width="150px"/>
-                    <column width="20%"/>
+                    <column width="100%"/>
                 </columns>
                 <rows>
                     <row>
-                        <label value="проверка задачи"/>
-                        <textbox id="textBTask1" rows="2" width="100%"/>
-
-                        <label value="Дата старта задачи"/>
-                        <datebox id="dateBS1tartSchedule" format="long"
-                                 onCreate="self.value = new Date()" width="150px"/>
+                        <label value="Краткое название проекта"/>
+                        <textbox id="textShortNameProject" width="100%"/>
                     </row>
                     <row>
-                        <label value="Ответственное лицо"/>
-                        <textbox id="textBRe1sponseSchedule" rows="2" width="100%"/>
+                        <label value="Куратор проекта"/>
+                        <textbox id="textCuratorProject" width="100%"/>
+                    </row>
+                    <row>
+                        <label value="Заказчик проекта"/>
+                        <textbox id="textCustomerProject" rows="2" width="100%"/>
+                    </row>
+                    <row>
+                        <label value="Руководитель проекта"/>
+                        <textbox id="textManagerProject" rows="2" width="100%"/>
+                    </row>
+                    <row>
+                        <label value="Обоснование инициации проекта"/>
+                        <textbox id="textRationalInitiation" rows="6" width="100%" height="150px"/>
+                    </row>
+                </rows>
+            </grid>
+        </groupbox>
 
-                        <label value="Дата финиша задачи"/>
-                        <datebox id="dateBFin1ishSchedule" format="long"
-                                 onCreate="self.value = new Date()" width="150px"/>
+        <vbox hflex="1">
+            <groupbox style="margin-top: 5px" sclass="assignedresources" hflex="1">
+                <caption label="Команда проекта"/>
+                <separator spacing="10px"/>
+
+                <grid>
+                    <columns>
+                        <column width="180px"/>
+                        <column/>
+                    </columns>
+                    <rows>
+                        <row>
+                            <label value="Должность"/>
+                            <textbox id="textPositionCommandCharter" rows="2" width="100%"/>
+                        </row>
+                        <row>
+                            <label value="ФИО участника"/>
+                            <textbox id="textFIOCommandCharter" rows="2" width="100%"/>
+                        </row>
+                        <row>
+                            <cell colspan="2" align="center">
+                                <button id="butSaveCommand" label="Сохранить" sclass="add-button"/>
+                            </cell>
+                        </row>
+                        <row>
+                            <cell colspan="2" align="center">
+                                <grid id="appCommandGrid" height="200px" width="100%">
+                                    <columns>
+                                        <column label="№ п/п" width="50px"/>
+                                        <column label="Должность"/>
+                                        <column label="ФИО"/>
+                                    </columns>
+                                </grid>
+                            </cell>
+                        </row>
+                    </rows>
+                </grid>
+
+            </groupbox>
+        </vbox>
+
+        <vbox hflex="1">
+            <groupbox style="margin-top: 5px" sclass="assignedresources" hflex="1">
+                <caption label="Подготовили"/>
+                <separator spacing="10px"/>
+                <grid>
+                    <columns>
+                        <column width="180px"/>
+                        <column/>
+                    </columns>
+                    <rows>
+                        <row>
+                            <label value="Должность"/>
+                            <textbox id="textPositionPreparedCharter" rows="2" width="100%"/>
+                        </row>
+                        <row>
+                            <label value="ФИО участника"/>
+                            <textbox id="textFIOPreparedCharter" rows="2" width="100%"/>
+                        </row>
+                        <row>
+                            <cell colspan="2" align="center">
+                                <button id="butSavePrepare" label="Сохранить" sclass="add-button"/>
+                            </cell>
+                        </row>
+                        <row>
+                            <cell colspan="2" align="center">
+                                <grid id="appPreparedGrid" height="200px" width="100%">
+                                    <columns>
+                                        <column label="№ п/п" width="50px"/>
+                                        <column label="Должность"/>
+                                        <column label="ФИО"/>
+                                    </columns>
+                                </grid>
+                            </cell>
+                        </row>
+                    </rows>
+                </grid>
+            </groupbox>
+        </vbox>
+
+    </hbox>
+
+    <!--Цели уже есть в задачах, выводить их или оставить там?!-->
+    <!--TODO: what did with this crap? load or add-->
+
+    <hbox width="100%">
+        <groupbox style="margin-top: 5px" sclass="assignedresources" hflex="1">
+            <caption label="Основные результаты проекта"/>
+            <separator spacing="10px"/>
+
+            <grid>
+                <columns>
+                    <column width="200px"/>
+                    <column width="40%"/>
+                    <column width="200px"/>
+                    <column width="40%"/>
+                </columns>
+                <rows>
+                    <row>
+                        <label value="Основные результаты проекта"/>
+                        <textbox rows="2" width="100%"/>
+
+                        <label value="Критерии приемки результатов проекта"/>
+                        <textbox rows="2" width="100%"/>
+                    </row>
+                    <row>
+                        <cell colspan="4" align="center">
+                            <button id="butSaveCriteriaCharter" label="Сохранить" sclass="add-button"/>
+                        </cell>
+                    </row>
+                    <row>
+                        <cell colspan="4" align="center">
+                            <grid id="appCriteriaGrid" height="200px" width="100%">
+                                <columns>
+                                    <column label="№ п/п" width="50px"/>
+                                    <column label="Основные результаты проекта" width="70%"/>
+                                    <column label="Критерии приемки результатов проекта"/>
+                                </columns>
+                            </grid>
+                        </cell>
+                    </row>
+                </rows>
+            </grid>
+        </groupbox>
+
+
+    </hbox>
+
+    <hbox width="100%">
+        <groupbox style="margin-top: 5px" sclass="assignedresources" hflex="1">
+            <caption label="Предварительные требования к результатам проекта"/>
+
+            <grid fixedLayout="true" width="99%">
+                <columns>
+                    <column/>
+                    <column/>
+                </columns>
+                <rows>
+                    <row>
+                        <label value="Требование"/>
+                        <textbox width="100%"/>
+                    </row>
+                    <row>
+                        <cell colspan="2">
+                            <button label="Сохранить" sclass="add-button"/>
+                        </cell>
+                    </row>
+                    <row>
+                        <cell colspan="2">
+                            <grid height="200px" width="100%">
+                                <columns>
+                                    <column label="№ п/п" width="50px"/>
+                                    <column label="Предварительные требования к результатам проекта"/>
+                                </columns>
+                            </grid>
+                        </cell>
+                    </row>
+                </rows>
+            </grid>
+
+        </groupbox>
+
+        <groupbox style="margin-top: 5px" sclass="assignedresources" hflex="1">
+            <caption label="Этапы проекта"/>
+            <grid fixedLayout="true" width="99%">
+                <columns>
+                    <column width="100px"/>
+                    <column/>
+                </columns>
+                <rows>
+                    <row>
+                        <cell colspan="2">
+                            <radiogroup>
+                                <radio label="Водопадная"/>
+                                <radio label="ещё какая то"/>
+                            </radiogroup>
+                        </cell>
+                    </row>
+                    <row>
+                        <label value="Этап: "/>
+                        <textbox rows="2" width="100%"/>
                     </row>
                     <row>
                         <cell colspan="2" align="center">
-                            <button id="butSaveSc1hedule" label="Сохранить" sclass="add-button"
-                                    onClick="orderProjectScheduleController.saveSchedule()"/>
+                            <button label="Сохранить" sclass="add-button"/>
                         </cell>
-
-                        <label value="Бюджет/стоимость, руб. коп."/>
-                        <textbox id="textB1CostSchedule" width="100%"/>
                     </row>
-
+                    <row>
+                        <cell colspan="2">
+                            <grid height="200px" width="100%">
+                                <columns>
+                                    <column label="№ п/п" width="50px"/>
+                                    <column label="Предварительные требования к результатам проекта"/>
+                                </columns>
+                            </grid>
+                        </cell>
+                    </row>
                 </rows>
             </grid>
         </groupbox>
     </hbox>
-
-
-    <grid id="appScheduleGri1d" height="100%" width="100%" style="margin-top: 10px">
-        <columns>
-            <column label="№ п/п"/>
-            <column label="Наименование задачи"/>
-            <column label="Дата старта задачи"/>
-            <column label="Дата финиша задачи"/>
-            <column label="Ответственное лицо"/>
-            <column label="Бюджет/стоимость, руб. коп."/>
-        </columns>
-    </grid>
-
 </vbox>

@@ -95,7 +95,7 @@ public class OrderRiskRegisterController extends GenericForwardComposer {
 
   private RowRenderer<RiskRegister> gridRenderRow() {
     return (row, data, index) -> {
-      row.appendChild(new Label(String.valueOf(index) + 1));
+      row.appendChild(new Label(String.valueOf(index + 1)));
       row.appendChild(new Label(data.getDescription()));
       row.appendChild(new Label(data.getResponse()));
       row.appendChild(new Label(data.getExcecutor()));
