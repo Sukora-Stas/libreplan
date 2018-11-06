@@ -70,7 +70,7 @@
 
     <grid id="appScheduleGrid" height="100%" width="100%" style="margin-top: 10px">
         <columns>
-            <column label="№ п/п"/>
+            <column label="№ п/п" width="50px"/>
             <column label="Наименование задачи"/>
             <column label="Дата старта задачи"/>
             <column label="Дата финиша задачи"/>

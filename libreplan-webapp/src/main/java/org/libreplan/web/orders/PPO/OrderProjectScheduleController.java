@@ -79,7 +79,7 @@ public class OrderProjectScheduleController extends GenericForwardComposer {
     projectSchedule.setDateEnd(dateBFinishSchedule.getValue());
     projectSchedule.setResponse(textBResponseSchedule.getValue());
     projectSchedule.setCost(Double.valueOf(textBCostSchedule.getValue()));
-//TODO: checked value cost from char ',' to '.'
+    //TODO: checked value cost from char ',' to '.'
     projectScheduleModel.confirmSave(projectSchedule);
 
     initGrid();
