@@ -148,52 +148,115 @@
             <caption label="Основные результаты проекта"/>
             <separator spacing="10px"/>
 
-           <grid>
-               <columns>
-                   <column width="200px"/>
-                   <column width="40%"/>
-                   <column width="200px"/>
-                   <column width="40%"/>
-               </columns>
-               <rows>
-                   <row>
-                       <label value="Основные результаты проекта"/>
-                       <textbox rows="2" width="100%"/>
+            <grid>
+                <columns>
+                    <column width="200px"/>
+                    <column width="40%"/>
+                    <column width="200px"/>
+                    <column width="40%"/>
+                </columns>
+                <rows>
+                    <row>
+                        <label value="Основные результаты проекта"/>
+                        <textbox rows="2" width="100%"/>
 
-                       <label value="Критерии приемки результатов проекта"/>
-                       <textbox rows="2" width="100%"/>
-                   </row>
-                   <row>
-                       <cell colspan="4" align="center">
-                           <button id="butSaveCriteriaCharter" label="Сохранить" sclass="add-button"/>
-                       </cell>
-                   </row>
-                   <row>
-                       <cell colspan="4" align="center">
-                           <grid id="appCriteriaGrid" height="200px" width="100%">
-                               <columns>
-                                   <column label="№ п/п" width="50px"/>
-                                   <column label="Основные результаты проекта" width="70%"/>
-                                   <column label="Критерии приемки результатов проекта"/>
-                               </columns>
-                           </grid>
-                       </cell>
-                   </row>
-               </rows>
-           </grid>
-
+                        <label value="Критерии приемки результатов проекта"/>
+                        <textbox rows="2" width="100%"/>
+                    </row>
+                    <row>
+                        <cell colspan="4" align="center">
+                            <button id="butSaveCriteriaCharter" label="Сохранить" sclass="add-button"/>
+                        </cell>
+                    </row>
+                    <row>
+                        <cell colspan="4" align="center">
+                            <grid id="appCriteriaGrid" height="200px" width="100%">
+                                <columns>
+                                    <column label="№ п/п" width="50px"/>
+                                    <column label="Основные результаты проекта" width="70%"/>
+                                    <column label="Критерии приемки результатов проекта"/>
+                                </columns>
+                            </grid>
+                        </cell>
+                    </row>
+                </rows>
+            </grid>
         </groupbox>
+
+
     </hbox>
 
-    <!--<grid id="appScheduleGri1d" height="100%" width="100%" style="margin-top: 10px">
-        <columns>
-            <column label="№ п/п"/>
-            <column label="Наименование задачи"/>
-            <column label="Дата старта задачи"/>
-            <column label="Дата финиша задачи"/>
-            <column label="Ответственное лицо"/>
-            <column label="Бюджет/стоимость, руб. коп."/>
-        </columns>
-    </grid>-->
+    <hbox width="100%">
+        <groupbox style="margin-top: 5px" sclass="assignedresources" hflex="1">
+            <caption label="Предварительные требования к результатам проекта"/>
 
+            <grid fixedLayout="true" width="99%">
+                <columns>
+                    <column/>
+                    <column/>
+                </columns>
+                <rows>
+                    <row>
+                        <label value="Требование"/>
+                        <textbox width="100%"/>
+                    </row>
+                    <row>
+                        <cell colspan="2">
+                            <button label="Сохранить" sclass="add-button"/>
+                        </cell>
+                    </row>
+                    <row>
+                        <cell colspan="2">
+                            <grid height="200px" width="100%">
+                                <columns>
+                                    <column label="№ п/п" width="50px"/>
+                                    <column label="Предварительные требования к результатам проекта"/>
+                                </columns>
+                            </grid>
+                        </cell>
+                    </row>
+                </rows>
+            </grid>
+
+        </groupbox>
+
+        <groupbox style="margin-top: 5px" sclass="assignedresources" hflex="1">
+            <caption label="Этапы проекта"/>
+            <grid fixedLayout="true" width="99%">
+                <columns>
+                    <column width="100px"/>
+                    <column/>
+                </columns>
+                <rows>
+                    <row>
+                        <cell colspan="2">
+                            <radiogroup>
+                                <radio label="Водопадная"/>
+                                <radio label="ещё какая то"/>
+                            </radiogroup>
+                        </cell>
+                    </row>
+                    <row>
+                        <label value="Этап: "/>
+                        <textbox rows="2" width="100%"/>
+                    </row>
+                    <row>
+                        <cell colspan="2" align="center">
+                            <button label="Сохранить" sclass="add-button"/>
+                        </cell>
+                    </row>
+                    <row>
+                        <cell colspan="2">
+                            <grid height="200px" width="100%">
+                                <columns>
+                                    <column label="№ п/п" width="50px"/>
+                                    <column label="Предварительные требования к результатам проекта"/>
+                                </columns>
+                            </grid>
+                        </cell>
+                    </row>
+                </rows>
+            </grid>
+        </groupbox>
+    </hbox>
 </vbox>
