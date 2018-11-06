@@ -97,7 +97,7 @@ public class OrderProjectScheduleController extends GenericForwardComposer {
 
   private RowRenderer<ProjectSchedule> gridRenderRow() {
     return ((row, data, index) -> {
-      row.appendChild(new Label(String.valueOf(index) + 1));
+      row.appendChild(new Label(String.valueOf(index + 1)));
       row.appendChild(new Label(data.getTask()));
       row.appendChild(new Label(data.getDateStart().toString()));
       row.appendChild(new Label(data.getDateEnd().toString()));
