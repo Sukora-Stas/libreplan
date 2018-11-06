@@ -37,7 +37,7 @@
                 </columns>
                 <rows>
                     <row>
-                        <label value="Наименование задачи"/>
+                        <label value="проверка задачи"/>
                         <textbox id="textBTask1" rows="2" width="100%"/>
 
                         <label value="Дата старта задачи"/>
