@@ -35,8 +35,8 @@ import java.util.List;
 
 public interface IRiskRegisterModel {
 
-    void confirmSave(RiskRegister riskRegister);
+  void confirmSave(RiskRegister riskRegister);
 
-    List<RiskRegister> getRiskRegister();
+  List<RiskRegister> getRiskRegister();
 
 }

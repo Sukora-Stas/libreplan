@@ -35,7 +35,7 @@ import java.util.List;
 
 public interface IProjectScheduleModel {
 
-    void confirmSave(ProjectSchedule projectSchedule);
+  void confirmSave(ProjectSchedule projectSchedule);
 
-    List<ProjectSchedule> getProjectSchedule();
+  List<ProjectSchedule> getProjectSchedule();
 }

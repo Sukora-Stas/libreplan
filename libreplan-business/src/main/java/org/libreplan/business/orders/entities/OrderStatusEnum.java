@@ -33,48 +33,47 @@ import java.util.EnumSet;
  */
 public enum OrderStatusEnum {
 
-    PRE_SALES(_("PRE-SALES"), 0),
-    OFFERED(_("OFFERED"), 1),
-    OUTSOURCED(_("OUTSOURCED"), 2),
-    ACCEPTED(_("ACCEPTED"), 3),
-    STARTED(_("STARTED"), 4),
-    ON_HOLD(_("ON HOLD"), 5),
-    FINISHED(_("FINISHED"), 6),
-    CANCELLED(_("CANCELLED"), 7),
-    STORED(_("ARCHIVED"), 8);
+  PRE_SALES(_("PRE-SALES"), 0),
+  OFFERED(_("OFFERED"), 1),
+  OUTSOURCED(_("OUTSOURCED"), 2),
+  ACCEPTED(_("ACCEPTED"), 3),
+  STARTED(_("STARTED"), 4),
+  ON_HOLD(_("ON HOLD"), 5),
+  FINISHED(_("FINISHED"), 6),
+  CANCELLED(_("CANCELLED"), 7),
+  STORED(_("ARCHIVED"), 8);
 
-    private String description;
+  /**
+   * For {@link DashboardControllerGlobal}.
+   * When I am building Global Dashboard page I need to know order of enums in {@link Grid}.
+   */
+  private final int index;
+  private String description;
 
-    /**
-     * For {@link DashboardControllerGlobal}.
-     * When I am building Global Dashboard page I need to know order of enums in {@link Grid}.
-     */
-    private final int index;
+  OrderStatusEnum(String description, int index) {
+    this.description = description;
+    this.index = index;
+  }
 
-    OrderStatusEnum(String description, int index) {
-        this.description = description;
-        this.index = index;
-    }
+  public static OrderStatusEnum getDefault() {
+    return PRE_SALES;
+  }
 
-    @Override
-    public String toString() {
-        return this.description;
-    }
+  public static EnumSet<OrderStatusEnum> getVisibleStatus() {
+    return EnumSet.of(
+            OrderStatusEnum.PRE_SALES, OrderStatusEnum.OFFERED,
+            OrderStatusEnum.OUTSOURCED, OrderStatusEnum.ACCEPTED,
+            OrderStatusEnum.STARTED, OrderStatusEnum.ON_HOLD,
+            OrderStatusEnum.FINISHED);
+  }
 
-    public int getIndex() {
-        return this.index;
-    }
+  @Override
+  public String toString() {
+    return this.description;
+  }
 
-    public static OrderStatusEnum getDefault() {
-        return PRE_SALES;
-    }
-
-    public static EnumSet<OrderStatusEnum> getVisibleStatus() {
-        return EnumSet.of(
-                OrderStatusEnum.PRE_SALES, OrderStatusEnum.OFFERED,
-                OrderStatusEnum.OUTSOURCED, OrderStatusEnum.ACCEPTED,
-                OrderStatusEnum.STARTED, OrderStatusEnum.ON_HOLD,
-                OrderStatusEnum.FINISHED);
-    }
+  public int getIndex() {
+    return this.index;
+  }
 
 }

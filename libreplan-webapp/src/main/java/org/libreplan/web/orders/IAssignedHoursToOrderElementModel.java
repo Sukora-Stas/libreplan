@@ -33,39 +33,41 @@ import org.libreplan.business.workingday.EffortDuration;
  * @author Susana Montes Pedreira <smontes@wirelessgalicia.com>
  * @author Manuel Rego Casasnovas <rego@igalia.com>
  */
-public interface IAssignedHoursToOrderElementModel{
-    public List<WorkReportLineDTO> getWorkReportLines();
+public interface IAssignedHoursToOrderElementModel {
+  public List<WorkReportLineDTO> getWorkReportLines();
 
-    public EffortDuration getTotalAssignedEffort();
+  public EffortDuration getTotalAssignedEffort();
 
-    public EffortDuration getAssignedDirectEffortChildren();
-    public void initOrderElement(OrderElement orderElement);
+  public EffortDuration getAssignedDirectEffortChildren();
 
-    public EffortDuration getEstimatedEffort();
-    public int getProgressWork();
+  public void initOrderElement(OrderElement orderElement);
 
-    public EffortDuration getAssignedDirectEffort();
+  public EffortDuration getEstimatedEffort();
 
-    BigDecimal getBudget();
+  public int getProgressWork();
 
-    BigDecimal getMoneyCost();
+  public EffortDuration getAssignedDirectEffort();
 
-    BigDecimal getMoneyCostPercentage();
+  BigDecimal getBudget();
 
-    public String getTotalDirectExpenses();
+  BigDecimal getMoneyCost();
 
-    public String getTotalIndirectExpenses();
+  BigDecimal getMoneyCostPercentage();
 
-    public List<ExpenseSheetLine> getExpenseSheetLines();
+  public String getTotalDirectExpenses();
 
-    public String getTotalExpenses();
+  public String getTotalIndirectExpenses();
 
-    public BigDecimal getCostOfExpenses();
+  public List<ExpenseSheetLine> getExpenseSheetLines();
 
-    public BigDecimal getCostOfHours();
+  public String getTotalExpenses();
 
-    public BigDecimal getCalculatedBudget();
+  public BigDecimal getCostOfExpenses();
 
-    public BigDecimal getResourcesBudget();
+  public BigDecimal getCostOfHours();
+
+  public BigDecimal getCalculatedBudget();
+
+  public BigDecimal getResourcesBudget();
 
 }

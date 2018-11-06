@@ -30,46 +30,43 @@ import org.zkoss.zkplus.spring.SpringUtil;
  * Controller for showing OrderElement assigned labels.
  *
  * @author Diego Pino García <dpino@igalia.com>
- *
  */
 public class AssignedLabelsToOrderElementController extends AssignedLabelsController<OrderElement, IOrderElementModel> {
 
-    private IAssignedLabelsToOrderElementModel assignedLabelsToOrderElementModel;
+  IOrderElementModel orderElementModel;
+  private IAssignedLabelsToOrderElementModel assignedLabelsToOrderElementModel;
 
-
-    IOrderElementModel orderElementModel;
-
-    public AssignedLabelsToOrderElementController() {
-        if ( assignedLabelsToOrderElementModel == null ) {
-            assignedLabelsToOrderElementModel =
-                    (IAssignedLabelsToOrderElementModel) SpringUtil.getBean("assignedLabelsToOrderElementModel");
-        }
+  public AssignedLabelsToOrderElementController() {
+    if (assignedLabelsToOrderElementModel == null) {
+      assignedLabelsToOrderElementModel =
+              (IAssignedLabelsToOrderElementModel) SpringUtil.getBean("assignedLabelsToOrderElementModel");
     }
+  }
 
-    @Override
-    protected IAssignedLabelsToOrderElementModel getModel() {
-        return assignedLabelsToOrderElementModel;
+  @Override
+  protected IAssignedLabelsToOrderElementModel getModel() {
+    return assignedLabelsToOrderElementModel;
+  }
+
+  @Override
+  protected void setOuterModel(IOrderElementModel orderElementModel) {
+    this.orderElementModel = orderElementModel;
+    setOrderModel(orderElementModel.getOrderModel());
+
+  }
+
+  private void setOrderModel(IOrderModel orderModel) {
+    if (assignedLabelsToOrderElementModel != null) {
+      assignedLabelsToOrderElementModel.setOrderModel(orderModel);
     }
+  }
 
-    @Override
-    protected void setOuterModel(IOrderElementModel orderElementModel) {
-        this.orderElementModel = orderElementModel;
-        setOrderModel(orderElementModel.getOrderModel());
+  public OrderElement getOrderElement() {
+    return orderElementModel.getOrderElement();
+  }
 
-    }
-
-    private void setOrderModel(IOrderModel orderModel) {
-        if (assignedLabelsToOrderElementModel != null) {
-            assignedLabelsToOrderElementModel.setOrderModel(orderModel);
-        }
-    }
-
-    public OrderElement getOrderElement() {
-        return orderElementModel.getOrderElement();
-    }
-
-    @Override
-    protected OrderElement getElement() {
-        return getOrderElement();
-    }
+  @Override
+  protected OrderElement getElement() {
+    return getOrderElement();
+  }
 }

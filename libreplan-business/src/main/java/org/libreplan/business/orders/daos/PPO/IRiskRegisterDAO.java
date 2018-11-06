@@ -32,5 +32,5 @@ import java.util.List;
  */
 public interface IRiskRegisterDAO extends IGenericDAO<RiskRegister, Long> {
 
-    List<RiskRegister> getAll();
+  List<RiskRegister> getAll();
 }

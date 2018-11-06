@@ -83,6 +83,7 @@ import org.zkoss.zul.impl.InputElement;
 /**
  * Controller for {@link OrderElement} tree view of {@link Order} entities.
  * <br />
+ *
  * @author Lorenzo Tilve Álvaro <ltilve@igalia.com>
  * @author Manuel Rego Casasnovas <mrego@igalia.com>
  * @author Susana Montes Pedreira <smontes@wirelessgalicia.com>
@@ -91,775 +92,764 @@ import org.zkoss.zul.impl.InputElement;
  */
 public class OrderElementTreeController extends TreeController<OrderElement> {
 
-    private Vbox orderElementFilter;
+  private final IOrderModel orderModel;
+  private final OrderElementController orderElementController;
+  private final IMessagesForUser messagesForUser;
+  private Vbox orderElementFilter;
+  private BandboxMultipleSearch bdFiltersOrderElement;
+  private Datebox filterStartDateOrderElement;
+  private Datebox filterFinishDateOrderElement;
+  private Checkbox labelsWithoutInheritance;
+  private Textbox filterNameOrderElement;
+  private OrderElementTreeitemRenderer renderer = new OrderElementTreeitemRenderer();
+  private transient IPredicate predicate;
+  private OrderElementOperations operationsForOrderElement;
+  private IConnectorDAO connectorDAO;
 
-    private BandboxMultipleSearch bdFiltersOrderElement;
+  private Tab tabGeneralData;
 
-    private Datebox filterStartDateOrderElement;
+  private TemplateFinderPopup templateFinderPopup;
 
-    private Datebox filterFinishDateOrderElement;
+  public OrderElementTreeController(IOrderModel orderModel,
+                                    OrderElementController orderElementController,
+                                    IMessagesForUser messagesForUser) {
 
-    private Checkbox labelsWithoutInheritance;
+    super(OrderElement.class);
+    this.orderModel = orderModel;
+    this.orderElementController = orderElementController;
+    this.messagesForUser = messagesForUser;
+    initializeOperationsForOrderElement();
+  }
 
-    private Textbox filterNameOrderElement;
+  public List<Label> getLabels() {
+    return orderModel.getLabels();
+  }
 
-    private OrderElementTreeitemRenderer renderer = new OrderElementTreeitemRenderer();
+  @Override
+  public OrderElementTreeitemRenderer getRenderer() {
+    return renderer;
+  }
 
-    private final IOrderModel orderModel;
+  /**
+   * Initializes operationsForOrderTemplate.
+   * A reference to variables tree and orderTemplates will be set later in doAfterCompose()
+   */
+  private void initializeOperationsForOrderElement() {
+    operationsForOrderElement = OrderElementOperations
+            .build()
+            .treeController(this)
+            .orderModel(this.orderModel)
+            .orderElementController(this.orderElementController);
+  }
 
-    private final OrderElementController orderElementController;
+  public OrderElementController getOrderElementController() {
+    return orderElementController;
+  }
 
-    private transient IPredicate predicate;
+  @Override
+  protected OrderElementTreeModel getModel() {
+    return orderModel.getOrderElementTreeModel();
+  }
 
-    private OrderElementOperations operationsForOrderElement;
+  /**
+   * Operations for each node.
+   */
 
-    private final IMessagesForUser messagesForUser;
+  public void editSelectedElement() {
+    operationsForOrderElement.editSelectedElement();
+  }
 
-    private IConnectorDAO connectorDAO;
+  public void createTemplateFromSelectedElement() {
+    operationsForOrderElement.createTemplateFromSelectedElement();
+  }
 
-    private Tab tabGeneralData;
+  public void moveSelectedElementUp() {
+    operationsForOrderElement.moveSelectedElementUp();
+  }
 
-    private TemplateFinderPopup templateFinderPopup;
+  public void moveSelectedElementDown() {
+    operationsForOrderElement.moveSelectedElementDown();
+  }
 
-    public OrderElementTreeController(IOrderModel orderModel,
-                                      OrderElementController orderElementController,
-                                      IMessagesForUser messagesForUser) {
+  public void indentSelectedElement() {
+    operationsForOrderElement.indentSelectedElement();
+  }
 
-        super(OrderElement.class);
-        this.orderModel = orderModel;
-        this.orderElementController = orderElementController;
-        this.messagesForUser = messagesForUser;
-        initializeOperationsForOrderElement();
+  public void unindentSelectedElement() {
+    operationsForOrderElement.unindentSelectedElement();
+  }
+
+  public void deleteSelectedElement() {
+    operationsForOrderElement.deleteSelectedElement();
+  }
+
+  public void createFromTemplate() {
+    templateFinderPopup.openForSubElemenetCreation(tree, "after_pointer", template -> {
+      OrderLineGroup parent = (OrderLineGroup) getModel().getRoot();
+      orderModel.createFrom(parent, template);
+      getModel().addNewlyAddedChildrenOf(parent);
+
+      reloadTreeUIAfterChanges();
+    });
+  }
+
+  @Override
+  protected void reloadTreeUIAfterChanges() {
+    tree.setModel(getFilteredTreeModel());
+    tree.onInitRender();
+    tree.invalidate();
+  }
+
+  void doEditFor() {
+    Util.reloadBindings(tree);
+  }
+
+  public void disabledCodeBoxes(boolean disabled) {
+    Set<Treeitem> childrenSet = new HashSet<>();
+    Treechildren treeChildren = tree.getTreechildren();
+
+    if (treeChildren != null) {
+      childrenSet.addAll(treeChildren.getItems());
     }
 
-    public List<Label> getLabels() {
-        return orderModel.getLabels();
+    for (Treeitem each : childrenSet) {
+      disableCodeBoxes(each, disabled);
+    }
+  }
+
+  private void disableCodeBoxes(Treeitem item, boolean disabled) {
+    Treerow row = item.getTreerow();
+    InputElement codeBox = (InputElement) (row.getChildren().get(1)).getChildren().get(0);
+    codeBox.setDisabled(disabled);
+    codeBox.invalidate();
+
+    Set<Treeitem> childrenSet = new HashSet<>();
+    Treechildren children = item.getTreechildren();
+
+    if (children != null) {
+      childrenSet.addAll(children.getItems());
     }
 
-    @Override
-    public OrderElementTreeitemRenderer getRenderer() {
-        return renderer;
+    for (Treeitem each : childrenSet) {
+      disableCodeBoxes(each, disabled);
     }
+  }
 
-    /**
-     * Initializes operationsForOrderTemplate.
-     * A reference to variables tree and orderTemplates will be set later in doAfterCompose()
-     */
-    private void initializeOperationsForOrderElement() {
-        operationsForOrderElement = OrderElementOperations
-                .build()
-                .treeController(this)
-                .orderModel(this.orderModel)
-                .orderElementController(this.orderElementController);
-    }
+  @Override
+  public void doAfterCompose(Component comp) throws Exception {
+    super.doAfterCompose(comp);
+    orderElementFilter.getChildren().clear();
+    appendExpandCollapseButton();
 
-    public OrderElementController getOrderElementController() {
-        return orderElementController;
-    }
+    connectorDAO = (IConnectorDAO) SpringUtil.getBean("connectorDAO");
 
-    @Override
-    protected OrderElementTreeModel getModel() {
-        return orderModel.getOrderElementTreeModel();
-    }
+    // Configuration of the order elements filter
+    Component filterComponent = Executions.createComponents(
+            "/orders/_orderElementTreeFilter.zul",
+            orderElementFilter,
+            new HashMap<String, String>());
 
-    /**
-     * Operations for each node.
-     */
+    IOrderTemplatesControllerEntryPoints orderTemplates =
+            (IOrderTemplatesControllerEntryPoints) SpringUtil.getBean("orderTemplates");
 
-    public void editSelectedElement() {
-        operationsForOrderElement.editSelectedElement();
-    }
+    filterComponent.setAttribute("treeController", this, true);
+    bdFiltersOrderElement = (BandboxMultipleSearch) filterComponent.getFellow("bdFiltersOrderElement");
+    Popup filterOptionsPopup = (Popup) filterComponent.getFellow("filterOptionsPopup");
+    filterStartDateOrderElement = (Datebox) filterOptionsPopup.getFellow("filterStartDateOrderElement");
+    filterFinishDateOrderElement = (Datebox) filterOptionsPopup.getFellow("filterFinishDateOrderElement");
+    labelsWithoutInheritance = (Checkbox) filterOptionsPopup.getFellow("labelsWithoutInheritance");
+    filterNameOrderElement = (Textbox) filterComponent.getFellow("filterNameOrderElement");
+    labelsWithoutInheritance = (Checkbox) filterComponent.getFellow("labelsWithoutInheritance");
+    templateFinderPopup = (TemplateFinderPopup) comp.getFellow("templateFinderPopupAtTree");
+    operationsForOrderElement.tree(tree).orderTemplates(orderTemplates);
 
-    public void createTemplateFromSelectedElement() {
-        operationsForOrderElement.createTemplateFromSelectedElement();
-    }
+    importOrderFiltersFromSession();
+    disableCreateTemplateButtonIfNeeded(comp);
+  }
 
-    public void moveSelectedElementUp() {
-        operationsForOrderElement.moveSelectedElementUp();
-    }
+  private void importOrderFiltersFromSession() {
+    Order order = orderModel.getOrder();
+    filterNameOrderElement.setValue(FilterUtils.readOrderTaskName(order));
+    filterStartDateOrderElement.setValue(FilterUtils.readOrderStartDate(order));
+    filterFinishDateOrderElement.setValue(FilterUtils.readOrderEndDate(order));
 
-    public void moveSelectedElementDown() {
-        operationsForOrderElement.moveSelectedElementDown();
-    }
-
-    public void indentSelectedElement() {
-        operationsForOrderElement.indentSelectedElement();
-    }
-
-    public void unindentSelectedElement() {
-        operationsForOrderElement.unindentSelectedElement();
-    }
-
-    public void deleteSelectedElement() {
-        operationsForOrderElement.deleteSelectedElement();
-    }
-
-    public void createFromTemplate() {
-        templateFinderPopup.openForSubElemenetCreation(tree, "after_pointer", template -> {
-            OrderLineGroup parent = (OrderLineGroup) getModel().getRoot();
-            orderModel.createFrom(parent, template);
-            getModel().addNewlyAddedChildrenOf(parent);
-
-            reloadTreeUIAfterChanges();
-        });
-    }
-
-    @Override
-    protected void reloadTreeUIAfterChanges() {
-        tree.setModel(getFilteredTreeModel());
-        tree.onInitRender();
-        tree.invalidate();
-    }
-
-    void doEditFor() {
-        Util.reloadBindings(tree);
-    }
-
-    public void disabledCodeBoxes(boolean disabled) {
-        Set<Treeitem> childrenSet = new HashSet<>();
-        Treechildren treeChildren = tree.getTreechildren();
-
-        if ( treeChildren != null ) {
-            childrenSet.addAll(treeChildren.getItems());
+    if (FilterUtils.readOrderParameters(order) != null) {
+      for (FilterPair each : FilterUtils.readOrderParameters(order)) {
+        if (toOrderFilterEnum(each) != null) {
+          bdFiltersOrderElement.addSelectedElement(toOrderFilterEnum(each));
         }
-
-        for (Treeitem each : childrenSet) {
-            disableCodeBoxes(each, disabled);
-        }
+      }
     }
-
-    private void disableCodeBoxes(Treeitem item, boolean disabled) {
-        Treerow row = item.getTreerow();
-        InputElement codeBox = (InputElement) (row.getChildren().get(1)).getChildren().get(0);
-        codeBox.setDisabled(disabled);
-        codeBox.invalidate();
-
-        Set<Treeitem> childrenSet = new HashSet<>();
-        Treechildren children = item.getTreechildren();
-
-        if ( children != null ) {
-            childrenSet.addAll(children.getItems());
-        }
-
-        for (Treeitem each : childrenSet) {
-            disableCodeBoxes(each, disabled);
-        }
+    if (FilterUtils.readOrderInheritance(order) != null) {
+      labelsWithoutInheritance.setChecked(FilterUtils.readOrderInheritance(order));
     }
+  }
 
-    @Override
-    public void doAfterCompose(Component comp) throws Exception {
-        super.doAfterCompose(comp);
-        orderElementFilter.getChildren().clear();
-        appendExpandCollapseButton();
+  private FilterPair toOrderFilterEnum(FilterPair each) {
+    switch ((TaskElementFilterEnum) each.getType()) {
 
-        connectorDAO = (IConnectorDAO) SpringUtil.getBean("connectorDAO");
+      case Label:
+        return new FilterPair(OrderElementFilterEnum.Label, each.getPattern(), each.getValue());
 
-        // Configuration of the order elements filter
-        Component filterComponent = Executions.createComponents(
-                "/orders/_orderElementTreeFilter.zul",
-                orderElementFilter,
-                new HashMap<String, String>());
+      case Criterion:
+        return new FilterPair(OrderElementFilterEnum.Criterion, each.getPattern(), each.getValue());
 
-        IOrderTemplatesControllerEntryPoints orderTemplates =
-                (IOrderTemplatesControllerEntryPoints) SpringUtil.getBean("orderTemplates");
-
-        filterComponent.setAttribute("treeController", this, true);
-        bdFiltersOrderElement = (BandboxMultipleSearch) filterComponent.getFellow("bdFiltersOrderElement");
-        Popup filterOptionsPopup = (Popup) filterComponent.getFellow("filterOptionsPopup");
-        filterStartDateOrderElement = (Datebox) filterOptionsPopup.getFellow("filterStartDateOrderElement");
-        filterFinishDateOrderElement = (Datebox) filterOptionsPopup.getFellow("filterFinishDateOrderElement");
-        labelsWithoutInheritance = (Checkbox) filterOptionsPopup.getFellow("labelsWithoutInheritance");
-        filterNameOrderElement = (Textbox) filterComponent.getFellow("filterNameOrderElement");
-        labelsWithoutInheritance = (Checkbox) filterComponent.getFellow("labelsWithoutInheritance");
-        templateFinderPopup = (TemplateFinderPopup) comp.getFellow("templateFinderPopupAtTree");
-        operationsForOrderElement.tree(tree).orderTemplates(orderTemplates);
-
-        importOrderFiltersFromSession();
-        disableCreateTemplateButtonIfNeeded(comp);
-    }
-
-    private void importOrderFiltersFromSession() {
-        Order order = orderModel.getOrder();
-        filterNameOrderElement.setValue(FilterUtils.readOrderTaskName(order));
-        filterStartDateOrderElement.setValue(FilterUtils.readOrderStartDate(order));
-        filterFinishDateOrderElement.setValue(FilterUtils.readOrderEndDate(order));
-
-        if ( FilterUtils.readOrderParameters(order) != null ) {
-            for (FilterPair each : FilterUtils.readOrderParameters(order)) {
-                if ( toOrderFilterEnum(each) != null ) {
-                    bdFiltersOrderElement.addSelectedElement(toOrderFilterEnum(each));
-                }
-            }
-        }
-        if ( FilterUtils.readOrderInheritance(order) != null ) {
-            labelsWithoutInheritance.setChecked(FilterUtils.readOrderInheritance(order));
-        }
-    }
-
-    private FilterPair toOrderFilterEnum(FilterPair each) {
-        switch ((TaskElementFilterEnum) each.getType()) {
-
-            case Label:
-                return new FilterPair(OrderElementFilterEnum.Label, each.getPattern(), each.getValue());
-
-            case Criterion:
-                return new FilterPair(OrderElementFilterEnum.Criterion, each.getPattern(), each.getValue());
-
-            case Resource:
-                // Resources are discarded on WBS filter
-            default:
-                return null;
-        }
-    }
-
-    private void disableCreateTemplateButtonIfNeeded(Component comp) {
-        Button createTemplateButton = (Button) comp.getFellowIfAny("createTemplateButton");
-        if ( createTemplateButton != null ) {
-            if ( !SecurityUtils.isSuperuserOrUserInRoles(UserRole.ROLE_TEMPLATES) ) {
-                createTemplateButton.setDisabled(true);
-                createTemplateButton.setTooltiptext(_("Not enough permissions to create templates"));
-            }
-        }
-    }
-
-    private void appendExpandCollapseButton() {
-        List<Component> children = orderElementFilter.getParent().getChildren();
-
-        Button button = (Button) ComponentsFinder.findById("expandAllButton", children);
-
-        if ( button != null ) {
-            if ( button.getSclass().equals("planner-command clicked") ) {
-                button.setSclass("planner-command");
-                button.invalidate();
-            }
-            return;
-        }
-
-        // Append expand/collapse button
-        final Button expandAllButton = new Button();
-        expandAllButton.setId("expandAllButton");
-        expandAllButton.setClass("planner-command");
-        expandAllButton.setTooltiptext(_("Expand/Collapse all"));
-        expandAllButton.setImage("/common/img/ico_expand.png");
-
-        expandAllButton.addEventListener("onClick",  event -> {
-            if ( expandAllButton.getSclass().equals("planner-command") ) {
-                expandAll();
-                expandAllButton.setSclass("planner-command clicked");
-            } else {
-                collapseAll();
-                expandAllButton.setSclass("planner-command");
-            }
-        });
-
-        children.add(expandAllButton);
-    }
-
-    public void expandAll() {
-        Set<Treeitem> childrenSet = new HashSet<>();
-        Treechildren children = tree.getTreechildren();
-
-        if ( children != null ) {
-            childrenSet.addAll(children.getItems());
-        }
-        childrenSet.forEach(this::expandAll);
-    }
-
-    private void expandAll(Treeitem item) {
-        item.setOpen(true);
-
-        Set<Treeitem> childrenSet = new HashSet<>();
-        Treechildren children = item.getTreechildren();
-
-        if ( children != null ) {
-            childrenSet.addAll(children.getItems());
-        }
-
-        childrenSet.forEach(this::expandAll);
-    }
-
-    public void collapseAll() {
-        Treechildren children = tree.getTreechildren();
-        for (Treeitem each: (children.getItems())) {
-            each.setOpen(false);
-        }
-    }
-
-    public Map<OrderElement, Textbox> getOrderElementCodeTextboxes() {
-        return getRenderer().getCodeTextboxByElement();
-    }
-
-    public class OrderElementTreeitemRenderer extends Renderer {
-
-        public OrderElementTreeitemRenderer() {}
-
-        @Override
-        protected void addDescriptionCell(OrderElement element) {
-            addTaskNameCell(element);
-        }
-
-        private void addTaskNameCell(final OrderElement orderElementForThisRow) {
-            int[] path = getModel().getPath(orderElementForThisRow);
-            String cssClass = "depth_" + path.length;
-
-            Textbox textBox = Util.bind(
-                    new Textbox(),
-                    () -> orderElementForThisRow.getName(),
-                    value -> orderElementForThisRow.setName(value)
-            );
-
-            if ( readOnly ) {
-                textBox.setDisabled(true);
-            }
-
-            textBox.setConstraint("no empty:" + _("cannot be empty"));
-            addCell(cssClass, textBox);
-            putNameTextbox(orderElementForThisRow, textBox);
-        }
-
-        @Override
-        protected SchedulingState getSchedulingStateFrom(OrderElement currentElement) {
-            return currentElement.getSchedulingState();
-        }
-
-        @Override
-        protected void onDoubleClickForSchedulingStateCell(final OrderElement currentOrderElement) {
-            IOrderElementModel model = orderModel.getOrderElementModel(currentOrderElement);
-            orderElementController.openWindow(model);
-            updateColumnsFor(currentOrderElement);
-        }
-
-        @Override
-        protected void addCodeCell(final OrderElement orderElement) {
-            if ( orderElement.isJiraIssue() ) {
-                addHyperlink(orderElement);
-            } else {
-                addTextbox(orderElement);
-            }
-        }
-
-        private void addTextbox(final OrderElement orderElement) {
-            Textbox textBoxCode = new Textbox();
-
-            Util.bind(
-                    textBoxCode,
-                    () -> orderElement.getCode(),
-                    value -> orderElement.setCode(value)
-            );
-
-            textBoxCode.setConstraint((comp, value) -> {
-                if ( !orderElement.isFormatCodeValid((String) value) ) {
-
-                    throw new WrongValueException(
-                            comp,
-                            _("Value is not valid.\n Code cannot contain chars like '_' \n " +
-                                    "and should not be empty"));
-                }
-            });
-
-            if ( orderModel.isCodeAutogenerated() || readOnly ) {
-                textBoxCode.setDisabled(true);
-            }
-
-            addCell(textBoxCode);
-            putCodeTextbox(orderElement, textBoxCode);
-        }
-
-        private void addHyperlink(final OrderElement orderElement) {
-            String code = orderElement.getCode();
-            A hyperlink = new A(code);
-
-            Connector connector = connectorDAO.findUniqueByName(PredefinedConnectors.JIRA.getName());
-            if ( connector == null ) {
-                return;
-            }
-
-            String jiraUrl = connector.getPropertiesAsMap().get(PredefinedConnectorProperties.SERVER_URL);
-
-            String codeWithoutPrefix = StringUtils.removeStart(code, PredefinedConnectorProperties.JIRA_CODE_PREFIX);
-
-            codeWithoutPrefix = StringUtils.removeStart(codeWithoutPrefix,
-                    orderElement.getOrder().getCode() + EntitySequence.CODE_SEPARATOR_CHILDREN);
-
-            hyperlink.setHref(jiraUrl + "/browse/" + codeWithoutPrefix);
-
-            if ( orderModel.isCodeAutogenerated() || readOnly ) {
-                hyperlink.setDisabled(true);
-            }
-
-            addCell(hyperlink);
-        }
-
-        void addInitDateCell(final OrderElement currentOrderElement) {
-            DynamicDatebox dynamicDatebox = new DynamicDatebox(
-                    () -> currentOrderElement.getInitDate(), value -> currentOrderElement.setInitDate(value));
-
-            if ( readOnly ) {
-                dynamicDatebox.setDisabled(true);
-            }
-            addDateCell("init-date-cell", dynamicDatebox);
-            putInitDateDynamicDatebox(currentOrderElement, dynamicDatebox);
-            reduceWidthOfDateBoxes(dynamicDatebox);
-        }
-
-        void addEndDateCell(final OrderElement currentOrderElement) {
-            DynamicDatebox dynamicDatebox = new DynamicDatebox(
-                    () -> currentOrderElement.getDeadline(), value -> currentOrderElement.setDeadline(value));
-
-            if ( readOnly ||
-                    (currentOrderElement.getTaskSource() != null &&
-                            currentOrderElement.getTaskSource().getTask().isSubcontracted()) ) {
-
-                dynamicDatebox.setDisabled(true);
-            }
-
-            addDateCell("end-date-cell", dynamicDatebox);
-            putEndDateDynamicDatebox(currentOrderElement, dynamicDatebox);
-            reduceWidthOfDateBoxes(dynamicDatebox);
-        }
-
-        /**
-         * Decrease width of components in ZK8.
-         */
-        private void reduceWidthOfDateBoxes(DynamicDatebox dynamicDatebox) {
-            Textbox textbox = dynamicDatebox.getDateTextBox();
-            String[] strings = textbox.getWidth().split("px");
-            textbox.setWidth( Integer.toString(Integer.valueOf(strings[0]) - 10) );
-        }
-
-        @Override
-        protected void addOperationsCell(final Treeitem item, final OrderElement currentOrderElement) {
-            addCell(createEditButton(item), createRemoveButton(currentOrderElement));
-        }
-
-        private Button createEditButton(final Treeitem item) {
-
-            return createButton(
-                    "/common/img/ico_editar1.png",
-                    _("Edit"),
-                    "/common/img/ico_editar.png",
-                    "icono",
-                    event -> showEditionOrderElement(item));
-        }
-
-        @Override
-        public void removeCodeTextbox(OrderElement key) {
-            super.removeCodeTextbox(key);
-        }
-
-        public void addResourcesBudgetCell(final OrderElement currentElement) {
-            BigDecimal value = currentElement.getSubstractedBudget();
-            Textbox autoBudgetCell = new Textbox(Util.addCurrencySymbol(value));
-            autoBudgetCell.setDisabled(true);
-            addCell(autoBudgetCell);
-        }
-
-    }
-
-    @Override
-    protected boolean isPredicateApplied() {
-        return (predicate != null) && !((OrderElementPredicate) predicate).isEmpty();
-    }
-
-    /**
-     * Apply filter to order elements in current order.
-     */
-    public void onApplyFilter() {
-        writeFilterParameters();
-        OrderElementPredicate predicate = createPredicate();
-        this.predicate = predicate;
-
-        if ( predicate != null ) {
-            filterByPredicate(predicate);
-        } else {
-            showAllOrderElements();
-        }
-    }
-
-    private void writeFilterParameters() {
-        Order order = orderModel.getOrder();
-        FilterUtils.writeOrderStartDate(order, filterStartDateOrderElement.getValue());
-        FilterUtils.writeOrderEndDate(order, filterFinishDateOrderElement.getValue());
-        FilterUtils.writeOrderTaskName(order, filterNameOrderElement.getValue());
-        FilterUtils.writeOrderInheritance(order, labelsWithoutInheritance.isChecked());
-        List<FilterPair> result = new ArrayList<>();
-
-        for (FilterPair filterPair : (List<FilterPair>) bdFiltersOrderElement.getSelectedElements()) {
-            result.add(toTasKElementFilterEnum(filterPair));
-        }
-
-        FilterUtils.writeOrderParameters(order, result);
-        FilterUtils.writeOrderWBSFiltersChanged(order, true);
-    }
-
-    private FilterPair toTasKElementFilterEnum(FilterPair each) {
-        switch ((OrderElementFilterEnum) each.getType()) {
-
-            case Label:
-                return new FilterPair(TaskElementFilterEnum.Label, each.getPattern(), each.getValue());
-
-            case Criterion:
-                return new FilterPair(TaskElementFilterEnum.Criterion, each.getPattern(), each.getValue());
-
-            default:
-                return null;
-        }
-    }
-
-    private OrderElementPredicate createPredicate() {
-        List<FilterPair> listFilters = bdFiltersOrderElement.getSelectedElements();
-        Date startDate = filterStartDateOrderElement.getValue();
-        Date finishDate = filterFinishDateOrderElement.getValue();
-        boolean ignoreLabelsInheritance = labelsWithoutInheritance.isChecked();
-        String name = filterNameOrderElement.getValue();
-
-        return listFilters.isEmpty() && startDate == null && finishDate == null && name == null
-                ? null
-                : new OrderElementPredicate(listFilters, startDate, finishDate, name, ignoreLabelsInheritance);
-    }
-
-    public TreeModel getFilteredTreeModel() {
-        OrderElementTreeModel filteredModel = getFilteredModel();
-
-        return filteredModel == null ? null : filteredModel.asTree();
-    }
-
-    public OrderElementTreeModel getFilteredModel() {
-        if (orderModel == null) {
-            return null;
-        }
-
-        OrderElementPredicate predicate = createPredicate();
-        this.predicate = predicate;
-
-        return predicate != null
-                ? orderModel.getOrderElementsFilteredByPredicate(predicate)
-                : orderModel.getOrderElementTreeModel();
-    }
-
-    private void filterByPredicate(OrderElementPredicate predicate) {
-        OrderElementTreeModel orderElementTreeModel = orderModel.getOrderElementsFilteredByPredicate(predicate);
-        tree.setModel(orderElementTreeModel.asTree());
-        tree.invalidate();
-    }
-
-    public void showAllOrderElements() {
-        this.predicate = null;
-        tree.setModel(orderModel.getOrderElementTreeModel().asTree());
-        tree.invalidate();
-    }
-
-    @Override
-    protected boolean isNewButtonDisabled() {
-        return readOnly;
-    }
-
-    /**
-     * Clear {@link BandboxSearch} for Labels, and initializes {@link IPredicate}.
-     */
-    public void clear() {
-        selectDefaultTab();
-        bdFiltersOrderElement.clear();
-        predicate = null;
-    }
-
-    private void selectDefaultTab() {
-        tabGeneralData.setSelected(true);
-    }
-
-    @Override
-    protected String createTooltipText(OrderElement elem) {
-        StringBuilder tooltipText = new StringBuilder();
-        tooltipText.append(elem.getName()).append(". ");
-
-        if ( (elem.getDescription() != null) && !("".equals(elem.getDescription())) ) {
-            tooltipText.append(elem.getDescription());
-            tooltipText.append(". ");
-        }
-
-        if ( (elem.getLabels() != null) && (!elem.getLabels().isEmpty()) ) {
-            tooltipText.append(" ").append(_("Labels")).append(":");
-            tooltipText.append(StringUtils.join(elem.getLabels(), ","));
-            tooltipText.append(".");
-        }
-
-        if ( (elem.getCriterionRequirements() != null) && (!elem.getCriterionRequirements().isEmpty()) ) {
-            ArrayList<String> criterionNames = new ArrayList<>();
-
-            for(CriterionRequirement each:elem.getCriterionRequirements()) {
-
-                if ( each.isValid() ) {
-                    criterionNames.add(each.getCriterion().getName());
-                }
-            }
-
-            if ( !criterionNames.isEmpty() ) {
-                tooltipText.append(" " + _("Criteria") + ":");
-                tooltipText.append(StringUtils.join(criterionNames, ","));
-                tooltipText.append(".");
-            }
-        }
-        // To calculate other unit advances implement getOtherAdvancesPercentage()
-        tooltipText.append(" ").append(_("Progress")).append(":").append(elem.getAdvancePercentage());
-        tooltipText.append(".");
-
-        return tooltipText.toString();
-    }
-
-    public void showEditionOrderElement(final Treeitem item) {
-        OrderElement currentOrderElement = item.getValue();
-        markModifiedTreeitem(item.getTreerow());
-        IOrderElementModel model = orderModel.getOrderElementModel(currentOrderElement);
-        orderElementController.openWindow(model);
-        refreshRow(item);
-    }
-
-    public void refreshRow(Treeitem item) {
-        try {
-            getRenderer().updateColumnsFor(item.getValue());
-            getRenderer().render(item, item.getValue(), 0);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
-
-    public Treeitem getTreeitemByOrderElement(OrderElement element) {
-        List<Treeitem> listItems = new ArrayList<>(this.tree.getItems());
-        for (Treeitem item : listItems) {
-            OrderElement orderElement = item.getValue();
-            if ( orderElement.getId().equals(element.getId()) ) {
-                return item;
-            }
-        }
-
+      case Resource:
+        // Resources are discarded on WBS filter
+      default:
         return null;
     }
+  }
+
+  private void disableCreateTemplateButtonIfNeeded(Component comp) {
+    Button createTemplateButton = (Button) comp.getFellowIfAny("createTemplateButton");
+    if (createTemplateButton != null) {
+      if (!SecurityUtils.isSuperuserOrUserInRoles(UserRole.ROLE_TEMPLATES)) {
+        createTemplateButton.setDisabled(true);
+        createTemplateButton.setTooltiptext(_("Not enough permissions to create templates"));
+      }
+    }
+  }
+
+  private void appendExpandCollapseButton() {
+    List<Component> children = orderElementFilter.getParent().getChildren();
+
+    Button button = (Button) ComponentsFinder.findById("expandAllButton", children);
+
+    if (button != null) {
+      if (button.getSclass().equals("planner-command clicked")) {
+        button.setSclass("planner-command");
+        button.invalidate();
+      }
+      return;
+    }
+
+    // Append expand/collapse button
+    final Button expandAllButton = new Button();
+    expandAllButton.setId("expandAllButton");
+    expandAllButton.setClass("planner-command");
+    expandAllButton.setTooltiptext(_("Expand/Collapse all"));
+    expandAllButton.setImage("/common/img/ico_expand.png");
+
+    expandAllButton.addEventListener("onClick", event -> {
+      if (expandAllButton.getSclass().equals("planner-command")) {
+        expandAll();
+        expandAllButton.setSclass("planner-command clicked");
+      } else {
+        collapseAll();
+        expandAllButton.setSclass("planner-command");
+      }
+    });
+
+    children.add(expandAllButton);
+  }
+
+  public void expandAll() {
+    Set<Treeitem> childrenSet = new HashSet<>();
+    Treechildren children = tree.getTreechildren();
+
+    if (children != null) {
+      childrenSet.addAll(children.getItems());
+    }
+    childrenSet.forEach(this::expandAll);
+  }
+
+  private void expandAll(Treeitem item) {
+    item.setOpen(true);
+
+    Set<Treeitem> childrenSet = new HashSet<>();
+    Treechildren children = item.getTreechildren();
+
+    if (children != null) {
+      childrenSet.addAll(children.getItems());
+    }
+
+    childrenSet.forEach(this::expandAll);
+  }
+
+  public void collapseAll() {
+    Treechildren children = tree.getTreechildren();
+    for (Treeitem each : (children.getItems())) {
+      each.setOpen(false);
+    }
+  }
+
+  public Map<OrderElement, Textbox> getOrderElementCodeTextboxes() {
+    return getRenderer().getCodeTextboxByElement();
+  }
+
+  @Override
+  protected boolean isPredicateApplied() {
+    return (predicate != null) && !((OrderElementPredicate) predicate).isEmpty();
+  }
+
+  /**
+   * Apply filter to order elements in current order.
+   */
+  public void onApplyFilter() {
+    writeFilterParameters();
+    OrderElementPredicate predicate = createPredicate();
+    this.predicate = predicate;
+
+    if (predicate != null) {
+      filterByPredicate(predicate);
+    } else {
+      showAllOrderElements();
+    }
+  }
+
+  private void writeFilterParameters() {
+    Order order = orderModel.getOrder();
+    FilterUtils.writeOrderStartDate(order, filterStartDateOrderElement.getValue());
+    FilterUtils.writeOrderEndDate(order, filterFinishDateOrderElement.getValue());
+    FilterUtils.writeOrderTaskName(order, filterNameOrderElement.getValue());
+    FilterUtils.writeOrderInheritance(order, labelsWithoutInheritance.isChecked());
+    List<FilterPair> result = new ArrayList<>();
+
+    for (FilterPair filterPair : (List<FilterPair>) bdFiltersOrderElement.getSelectedElements()) {
+      result.add(toTasKElementFilterEnum(filterPair));
+    }
+
+    FilterUtils.writeOrderParameters(order, result);
+    FilterUtils.writeOrderWBSFiltersChanged(order, true);
+  }
+
+  private FilterPair toTasKElementFilterEnum(FilterPair each) {
+    switch ((OrderElementFilterEnum) each.getType()) {
+
+      case Label:
+        return new FilterPair(TaskElementFilterEnum.Label, each.getPattern(), each.getValue());
+
+      case Criterion:
+        return new FilterPair(TaskElementFilterEnum.Criterion, each.getPattern(), each.getValue());
+
+      default:
+        return null;
+    }
+  }
+
+  private OrderElementPredicate createPredicate() {
+    List<FilterPair> listFilters = bdFiltersOrderElement.getSelectedElements();
+    Date startDate = filterStartDateOrderElement.getValue();
+    Date finishDate = filterFinishDateOrderElement.getValue();
+    boolean ignoreLabelsInheritance = labelsWithoutInheritance.isChecked();
+    String name = filterNameOrderElement.getValue();
+
+    return listFilters.isEmpty() && startDate == null && finishDate == null && name == null
+            ? null
+            : new OrderElementPredicate(listFilters, startDate, finishDate, name, ignoreLabelsInheritance);
+  }
+
+  public TreeModel getFilteredTreeModel() {
+    OrderElementTreeModel filteredModel = getFilteredModel();
+
+    return filteredModel == null ? null : filteredModel.asTree();
+  }
+
+  public OrderElementTreeModel getFilteredModel() {
+    if (orderModel == null) {
+      return null;
+    }
+
+    OrderElementPredicate predicate = createPredicate();
+    this.predicate = predicate;
+
+    return predicate != null
+            ? orderModel.getOrderElementsFilteredByPredicate(predicate)
+            : orderModel.getOrderElementTreeModel();
+  }
+
+  private void filterByPredicate(OrderElementPredicate predicate) {
+    OrderElementTreeModel orderElementTreeModel = orderModel.getOrderElementsFilteredByPredicate(predicate);
+    tree.setModel(orderElementTreeModel.asTree());
+    tree.invalidate();
+  }
+
+  public void showAllOrderElements() {
+    this.predicate = null;
+    tree.setModel(orderModel.getOrderElementTreeModel().asTree());
+    tree.invalidate();
+  }
+
+  @Override
+  protected boolean isNewButtonDisabled() {
+    return readOnly;
+  }
+
+  /**
+   * Clear {@link BandboxSearch} for Labels, and initializes {@link IPredicate}.
+   */
+  public void clear() {
+    selectDefaultTab();
+    bdFiltersOrderElement.clear();
+    predicate = null;
+  }
+
+  private void selectDefaultTab() {
+    tabGeneralData.setSelected(true);
+  }
+
+  @Override
+  protected String createTooltipText(OrderElement elem) {
+    StringBuilder tooltipText = new StringBuilder();
+    tooltipText.append(elem.getName()).append(". ");
+
+    if ((elem.getDescription() != null) && !("".equals(elem.getDescription()))) {
+      tooltipText.append(elem.getDescription());
+      tooltipText.append(". ");
+    }
+
+    if ((elem.getLabels() != null) && (!elem.getLabels().isEmpty())) {
+      tooltipText.append(" ").append(_("Labels")).append(":");
+      tooltipText.append(StringUtils.join(elem.getLabels(), ","));
+      tooltipText.append(".");
+    }
+
+    if ((elem.getCriterionRequirements() != null) && (!elem.getCriterionRequirements().isEmpty())) {
+      ArrayList<String> criterionNames = new ArrayList<>();
+
+      for (CriterionRequirement each : elem.getCriterionRequirements()) {
+
+        if (each.isValid()) {
+          criterionNames.add(each.getCriterion().getName());
+        }
+      }
+
+      if (!criterionNames.isEmpty()) {
+        tooltipText.append(" " + _("Criteria") + ":");
+        tooltipText.append(StringUtils.join(criterionNames, ","));
+        tooltipText.append(".");
+      }
+    }
+    // To calculate other unit advances implement getOtherAdvancesPercentage()
+    tooltipText.append(" ").append(_("Progress")).append(":").append(elem.getAdvancePercentage());
+    tooltipText.append(".");
+
+    return tooltipText.toString();
+  }
+
+  public void showEditionOrderElement(final Treeitem item) {
+    OrderElement currentOrderElement = item.getValue();
+    markModifiedTreeitem(item.getTreerow());
+    IOrderElementModel model = orderModel.getOrderElementModel(currentOrderElement);
+    orderElementController.openWindow(model);
+    refreshRow(item);
+  }
+
+  public void refreshRow(Treeitem item) {
+    try {
+      getRenderer().updateColumnsFor(item.getValue());
+      getRenderer().render(item, item.getValue(), 0);
+    } catch (Exception e) {
+      e.printStackTrace();
+    }
+  }
+
+  public Treeitem getTreeitemByOrderElement(OrderElement element) {
+    List<Treeitem> listItems = new ArrayList<>(this.tree.getItems());
+    for (Treeitem item : listItems) {
+      OrderElement orderElement = item.getValue();
+      if (orderElement.getId().equals(element.getId())) {
+        return item;
+      }
+    }
+
+    return null;
+  }
+
+  /**
+   * Operations to filter the orders by multiple filters.
+   */
+  public Constraint checkConstraintFinishDate() {
+    return (comp, value) -> {
+      Date finishDate = (Date) value;
+
+      if ((finishDate != null) &&
+              (filterStartDateOrderElement.getValue() != null) &&
+              (finishDate.compareTo(filterStartDateOrderElement.getValue()) < 0)) {
+
+        filterFinishDateOrderElement.setValue(null);
+        throw new WrongValueException(comp, _("must be after start date"));
+      }
+    };
+  }
+
+  public Constraint checkConstraintStartDate() {
+    return (comp, value) -> {
+      Date startDate = (Date) value;
+
+      if ((startDate != null) &&
+              (filterFinishDateOrderElement.getValue() != null) &&
+              (startDate.compareTo(filterFinishDateOrderElement.getValue()) > 0)) {
+
+        filterStartDateOrderElement.setValue(null);
+        throw new WrongValueException(comp, _("must be lower than end date"));
+      }
+    };
+  }
+
+  @Override
+  public void remove(OrderElement element) {
+    boolean hasImputedExpenseSheets = orderModel.hasImputedExpenseSheetsThisOrAnyOfItsChildren(element);
+
+    if (hasImputedExpenseSheets) {
+      messagesForUser.showMessage(
+              Level.ERROR,
+              _("You can not remove the project \"{0}\" because this one has imputed expense sheets.",
+                      element.getName()));
+      return;
+    }
+
+    boolean alreadyInUse = orderModel.isAlreadyInUse(element);
+    if (alreadyInUse) {
+      messagesForUser.showMessage(
+              Level.ERROR,
+              _("You cannot remove the task \"{0}\" because it has work reported on it or any of its children",
+                      element.getName()));
+      return;
+    }
+
+    boolean onlyChildAndParentAlreadyInUseByHoursOrExpenses =
+            orderModel.isOnlyChildAndParentAlreadyInUseByHoursOrExpenses(element);
+
+    if (onlyChildAndParentAlreadyInUseByHoursOrExpenses) {
+      messagesForUser.showMessage(
+              Level.ERROR,
+              _("You cannot remove the task \"{0}\" because it is the only child of its parent " +
+                              "and its parent has tracked time or imputed expenses",
+                      element.getName()));
+      return;
+    }
+
+    super.remove(element);
+    getRenderer().removeCodeTextbox(element);
+  }
+
+  @Override
+  protected IHoursGroupHandler<OrderElement> getHoursGroupHandler() {
+    return new IHoursGroupHandler<OrderElement>() {
+
+      @Override
+      public boolean hasMoreThanOneHoursGroup(OrderElement element) {
+        return element.getHoursGroups().size() > 1;
+      }
+
+      @Override
+      public boolean isTotalHoursValid(OrderElement line, Integer value) {
+        return ((OrderLine) line).isTotalHoursValid(value);
+      }
+
+      @Override
+      public Integer getWorkHoursFor(OrderElement element) {
+        return element.getWorkHours();
+      }
+
+      @Override
+      public void setWorkHours(OrderElement element, Integer value) {
+        if (element instanceof OrderLine) {
+          OrderLine line = (OrderLine) element;
+          line.setWorkHours(value);
+        }
+      }
+    };
+  }
+
+  @Override
+  protected IBudgetHandler<OrderElement> getBudgetHandler() {
+    return new IBudgetHandler<OrderElement>() {
+
+      @Override
+      public BigDecimal getBudgetFor(OrderElement element) {
+        return element.getBudget();
+      }
+
+      @Override
+      public void setBudgetHours(OrderElement element, BigDecimal budget) {
+        if (element instanceof OrderLine) {
+          OrderLine line = (OrderLine) element;
+          line.setBudget(budget);
+        }
+      }
+
+    };
+  }
+
+  @Override
+  protected INameHandler<OrderElement> getNameHandler() {
+    return element -> element.getName();
+  }
+
+  @Override
+  protected ICodeHandler<OrderElement> getCodeHandler() {
+    return element -> element.getCode();
+  }
+
+  public class OrderElementTreeitemRenderer extends Renderer {
+
+    public OrderElementTreeitemRenderer() {
+    }
+
+    @Override
+    protected void addDescriptionCell(OrderElement element) {
+      addTaskNameCell(element);
+    }
+
+    private void addTaskNameCell(final OrderElement orderElementForThisRow) {
+      int[] path = getModel().getPath(orderElementForThisRow);
+      String cssClass = "depth_" + path.length;
+
+      Textbox textBox = Util.bind(
+              new Textbox(),
+              () -> orderElementForThisRow.getName(),
+              value -> orderElementForThisRow.setName(value)
+      );
+
+      if (readOnly) {
+        textBox.setDisabled(true);
+      }
+
+      textBox.setConstraint("no empty:" + _("cannot be empty"));
+      addCell(cssClass, textBox);
+      putNameTextbox(orderElementForThisRow, textBox);
+    }
+
+    @Override
+    protected SchedulingState getSchedulingStateFrom(OrderElement currentElement) {
+      return currentElement.getSchedulingState();
+    }
+
+    @Override
+    protected void onDoubleClickForSchedulingStateCell(final OrderElement currentOrderElement) {
+      IOrderElementModel model = orderModel.getOrderElementModel(currentOrderElement);
+      orderElementController.openWindow(model);
+      updateColumnsFor(currentOrderElement);
+    }
+
+    @Override
+    protected void addCodeCell(final OrderElement orderElement) {
+      if (orderElement.isJiraIssue()) {
+        addHyperlink(orderElement);
+      } else {
+        addTextbox(orderElement);
+      }
+    }
+
+    private void addTextbox(final OrderElement orderElement) {
+      Textbox textBoxCode = new Textbox();
+
+      Util.bind(
+              textBoxCode,
+              () -> orderElement.getCode(),
+              value -> orderElement.setCode(value)
+      );
+
+      textBoxCode.setConstraint((comp, value) -> {
+        if (!orderElement.isFormatCodeValid((String) value)) {
+
+          throw new WrongValueException(
+                  comp,
+                  _("Value is not valid.\n Code cannot contain chars like '_' \n " +
+                          "and should not be empty"));
+        }
+      });
+
+      if (orderModel.isCodeAutogenerated() || readOnly) {
+        textBoxCode.setDisabled(true);
+      }
+
+      addCell(textBoxCode);
+      putCodeTextbox(orderElement, textBoxCode);
+    }
+
+    private void addHyperlink(final OrderElement orderElement) {
+      String code = orderElement.getCode();
+      A hyperlink = new A(code);
+
+      Connector connector = connectorDAO.findUniqueByName(PredefinedConnectors.JIRA.getName());
+      if (connector == null) {
+        return;
+      }
+
+      String jiraUrl = connector.getPropertiesAsMap().get(PredefinedConnectorProperties.SERVER_URL);
+
+      String codeWithoutPrefix = StringUtils.removeStart(code, PredefinedConnectorProperties.JIRA_CODE_PREFIX);
+
+      codeWithoutPrefix = StringUtils.removeStart(codeWithoutPrefix,
+              orderElement.getOrder().getCode() + EntitySequence.CODE_SEPARATOR_CHILDREN);
+
+      hyperlink.setHref(jiraUrl + "/browse/" + codeWithoutPrefix);
+
+      if (orderModel.isCodeAutogenerated() || readOnly) {
+        hyperlink.setDisabled(true);
+      }
+
+      addCell(hyperlink);
+    }
+
+    void addInitDateCell(final OrderElement currentOrderElement) {
+      DynamicDatebox dynamicDatebox = new DynamicDatebox(
+              () -> currentOrderElement.getInitDate(), value -> currentOrderElement.setInitDate(value));
+
+      if (readOnly) {
+        dynamicDatebox.setDisabled(true);
+      }
+      addDateCell("init-date-cell", dynamicDatebox);
+      putInitDateDynamicDatebox(currentOrderElement, dynamicDatebox);
+      reduceWidthOfDateBoxes(dynamicDatebox);
+    }
+
+    void addEndDateCell(final OrderElement currentOrderElement) {
+      DynamicDatebox dynamicDatebox = new DynamicDatebox(
+              () -> currentOrderElement.getDeadline(), value -> currentOrderElement.setDeadline(value));
+
+      if (readOnly ||
+              (currentOrderElement.getTaskSource() != null &&
+                      currentOrderElement.getTaskSource().getTask().isSubcontracted())) {
+
+        dynamicDatebox.setDisabled(true);
+      }
+
+      addDateCell("end-date-cell", dynamicDatebox);
+      putEndDateDynamicDatebox(currentOrderElement, dynamicDatebox);
+      reduceWidthOfDateBoxes(dynamicDatebox);
+    }
 
     /**
-     * Operations to filter the orders by multiple filters.
+     * Decrease width of components in ZK8.
      */
-    public Constraint checkConstraintFinishDate() {
-        return (comp, value) -> {
-            Date finishDate = (Date) value;
-
-            if ( (finishDate != null) &&
-                    (filterStartDateOrderElement.getValue() != null) &&
-                    (finishDate.compareTo(filterStartDateOrderElement.getValue()) < 0) ) {
-
-                filterFinishDateOrderElement.setValue(null);
-                throw new WrongValueException(comp, _("must be after start date"));
-            }
-        };
-    }
-
-    public Constraint checkConstraintStartDate() {
-        return (comp, value) -> {
-            Date startDate = (Date) value;
-
-            if ( (startDate != null) &&
-                    (filterFinishDateOrderElement.getValue() != null) &&
-                    (startDate.compareTo(filterFinishDateOrderElement.getValue()) > 0) ) {
-
-                filterStartDateOrderElement.setValue(null);
-                throw new WrongValueException(comp, _("must be lower than end date"));
-            }
-        };
+    private void reduceWidthOfDateBoxes(DynamicDatebox dynamicDatebox) {
+      Textbox textbox = dynamicDatebox.getDateTextBox();
+      String[] strings = textbox.getWidth().split("px");
+      textbox.setWidth(Integer.toString(Integer.valueOf(strings[0]) - 10));
     }
 
     @Override
-    public void remove(OrderElement element) {
-        boolean hasImputedExpenseSheets = orderModel.hasImputedExpenseSheetsThisOrAnyOfItsChildren(element);
+    protected void addOperationsCell(final Treeitem item, final OrderElement currentOrderElement) {
+      addCell(createEditButton(item), createRemoveButton(currentOrderElement));
+    }
 
-        if ( hasImputedExpenseSheets ) {
-            messagesForUser.showMessage(
-                    Level.ERROR,
-                    _("You can not remove the project \"{0}\" because this one has imputed expense sheets.",
-                            element.getName()));
-            return;
-        }
+    private Button createEditButton(final Treeitem item) {
 
-        boolean alreadyInUse = orderModel.isAlreadyInUse(element);
-        if ( alreadyInUse ) {
-            messagesForUser.showMessage(
-                    Level.ERROR,
-                    _("You cannot remove the task \"{0}\" because it has work reported on it or any of its children",
-                            element.getName()));
-            return;
-        }
-
-        boolean onlyChildAndParentAlreadyInUseByHoursOrExpenses =
-                orderModel.isOnlyChildAndParentAlreadyInUseByHoursOrExpenses(element);
-
-        if ( onlyChildAndParentAlreadyInUseByHoursOrExpenses ) {
-            messagesForUser.showMessage(
-                    Level.ERROR,
-                    _("You cannot remove the task \"{0}\" because it is the only child of its parent " +
-                                    "and its parent has tracked time or imputed expenses",
-                            element.getName()));
-            return;
-        }
-
-        super.remove(element);
-        getRenderer().removeCodeTextbox(element);
+      return createButton(
+              "/common/img/ico_editar1.png",
+              _("Edit"),
+              "/common/img/ico_editar.png",
+              "icono",
+              event -> showEditionOrderElement(item));
     }
 
     @Override
-    protected IHoursGroupHandler<OrderElement> getHoursGroupHandler() {
-        return new IHoursGroupHandler<OrderElement>() {
-
-            @Override
-            public boolean hasMoreThanOneHoursGroup(OrderElement element) {
-                return element.getHoursGroups().size() > 1;
-            }
-
-            @Override
-            public boolean isTotalHoursValid(OrderElement line, Integer value) {
-                return ((OrderLine) line).isTotalHoursValid(value);
-            }
-
-            @Override
-            public Integer getWorkHoursFor(OrderElement element) {
-                return element.getWorkHours();
-            }
-
-            @Override
-            public void setWorkHours(OrderElement element, Integer value) {
-                if ( element instanceof OrderLine ) {
-                    OrderLine line = (OrderLine) element;
-                    line.setWorkHours(value);
-                }
-            }
-        };
+    public void removeCodeTextbox(OrderElement key) {
+      super.removeCodeTextbox(key);
     }
 
-    @Override
-    protected IBudgetHandler<OrderElement> getBudgetHandler() {
-        return new IBudgetHandler<OrderElement>() {
-
-            @Override
-            public BigDecimal getBudgetFor(OrderElement element) {
-                return element.getBudget();
-            }
-
-            @Override
-            public void setBudgetHours(OrderElement element, BigDecimal budget) {
-                if ( element instanceof OrderLine ) {
-                    OrderLine line = (OrderLine) element;
-                    line.setBudget(budget);
-                }
-            }
-
-        };
+    public void addResourcesBudgetCell(final OrderElement currentElement) {
+      BigDecimal value = currentElement.getSubstractedBudget();
+      Textbox autoBudgetCell = new Textbox(Util.addCurrencySymbol(value));
+      autoBudgetCell.setDisabled(true);
+      addCell(autoBudgetCell);
     }
 
-    @Override
-    protected INameHandler<OrderElement> getNameHandler() {
-        return element -> element.getName();
-    }
-
-    @Override
-    protected ICodeHandler<OrderElement> getCodeHandler() {
-        return element -> element.getCode();
-    }
+  }
 
 }

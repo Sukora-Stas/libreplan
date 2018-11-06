@@ -27,56 +27,58 @@ import org.libreplan.business.trees.TreeNodeOnList;
 
 /**
  * Takes into account the scheduling state when modifying the tree. <br />
+ *
  * @author Óscar González Fernández <ogonzalez@igalia.com>
  */
 public abstract class TreeNodeOnListWithSchedulingState<T extends ITreeNode<T>>
         extends TreeNodeOnList<T> {
 
-    protected TreeNodeOnListWithSchedulingState(List<T> children) {
-        super(children);
+  protected TreeNodeOnListWithSchedulingState(List<T> children) {
+    super(children);
+  }
+
+  protected abstract SchedulingState getSchedulingStateFrom(T node);
+
+  protected void updateSchedulingStateGiven(T node) {
+    removeFromPreviousSchedulingState(node);
+    updateWithNewChild(getSchedulingStateFrom(node));
+  }
+
+  @Override
+  protected void onChildAdded(T newChild) {
+    updateSchedulingStateGiven(newChild);
+    onChildAddedAdditionalActions(newChild);
+  }
+
+  /**
+   * This method is intended to be overridden
+   *
+   * @param previousChild
+   */
+  protected void onChildAddedAdditionalActions(T newChild) {
+  }
+
+  @Override
+  protected void onChildRemoved(T previousChild) {
+    removeFromPreviousSchedulingState(previousChild);
+    onChildRemovedAdditionalActions(previousChild);
+  }
+
+  /**
+   * This method is intended to be overridden
+   *
+   * @param previousChild
+   */
+  protected void onChildRemovedAdditionalActions(T previousChild) {
+  }
+
+  protected abstract void updateWithNewChild(SchedulingState newChildState);
+
+  protected void removeFromPreviousSchedulingState(T node) {
+    SchedulingState schedulingState = getSchedulingStateFrom(node);
+    if (!schedulingState.isRoot()) {
+      schedulingState.getParent().removeChild(schedulingState);
     }
-
-    protected abstract SchedulingState getSchedulingStateFrom(T node);
-
-    protected void updateSchedulingStateGiven(T node) {
-        removeFromPreviousSchedulingState(node);
-        updateWithNewChild(getSchedulingStateFrom(node));
-    }
-
-    @Override
-    protected void onChildAdded(T newChild) {
-        updateSchedulingStateGiven(newChild);
-        onChildAddedAdditionalActions(newChild);
-    }
-
-    /**
-     * This method is intended to be overridden
-     *
-     * @param previousChild
-     */
-    protected void onChildAddedAdditionalActions(T newChild) {
-    }
-
-    @Override
-    protected void onChildRemoved(T previousChild) {
-        removeFromPreviousSchedulingState(previousChild);
-        onChildRemovedAdditionalActions(previousChild);
-    }
-
-    /**
-     * This method is intended to be overridden
-     * @param previousChild
-     */
-    protected void onChildRemovedAdditionalActions(T previousChild) {
-    }
-
-    protected abstract void updateWithNewChild(SchedulingState newChildState);
-
-    protected void removeFromPreviousSchedulingState(T node) {
-        SchedulingState schedulingState = getSchedulingStateFrom(node);
-        if ( !schedulingState.isRoot() ) {
-            schedulingState.getParent().removeChild(schedulingState);
-        }
-    }
+  }
 
 }

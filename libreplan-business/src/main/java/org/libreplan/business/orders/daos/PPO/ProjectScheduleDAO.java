@@ -39,10 +39,10 @@ import java.util.List;
 public class ProjectScheduleDAO extends GenericDAOHibernate<ProjectSchedule, Long>
         implements IProjectScheduleDAO {
 
-    @Override
-    public List<ProjectSchedule> getAll() {
-        return list(ProjectSchedule.class);
-    }
+  @Override
+  public List<ProjectSchedule> getAll() {
+    return list(ProjectSchedule.class);
+  }
 
 
 }

@@ -19,6 +19,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 package org.libreplan.web.orders;
+
 import org.apache.commons.lang3.Validate;
 import org.libreplan.business.orders.entities.SchedulingState;
 import org.libreplan.business.orders.entities.SchedulingState.ITypeChangedListener;
@@ -30,52 +31,52 @@ import org.zkoss.zk.ui.HtmlMacroComponent;
  */
 public class SchedulingStateToggler extends HtmlMacroComponent {
 
-    private final SchedulingState state;
+  private final SchedulingState state;
 
-    private boolean readOnly = false;
+  private boolean readOnly = false;
 
-    public SchedulingStateToggler(SchedulingState state) {
-        Validate.notNull(state);
-        this.state = state;
-        this.state.addTypeChangeListener(new ITypeChangedListener() {
+  public SchedulingStateToggler(SchedulingState state) {
+    Validate.notNull(state);
+    this.state = state;
+    this.state.addTypeChangeListener(new ITypeChangedListener() {
 
-            @Override
-            public void typeChanged(Type newType) {
-                recreate();
-            }
-        });
-    }
+      @Override
+      public void typeChanged(Type newType) {
+        recreate();
+      }
+    });
+  }
 
-    public boolean isScheduleButtonVisible() {
-        return !readOnly && state.canBeScheduled();
-    }
+  public boolean isScheduleButtonVisible() {
+    return !readOnly && state.canBeScheduled();
+  }
 
-    public boolean isUnscheduleButtonVisible() {
-        return !readOnly && state.canBeUnscheduled();
-    }
+  public boolean isUnscheduleButtonVisible() {
+    return !readOnly && state.canBeUnscheduled();
+  }
 
-    public void schedule() {
-        state.schedule();
-    }
+  public void schedule() {
+    state.schedule();
+  }
 
-    public void unschedule() {
-        state.unschedule();
-    }
+  public void unschedule() {
+    state.unschedule();
+  }
 
-    public String getButtonLabel() {
-        return state.getStateAbbreviation();
-    }
+  public String getButtonLabel() {
+    return state.getStateAbbreviation();
+  }
 
-    public String getButtonTextTooltip() {
-        return state.getStateName();
-    }
+  public String getButtonTextTooltip() {
+    return state.getStateName();
+  }
 
-    public boolean isReadOnly() {
-        return readOnly;
-    }
+  public boolean isReadOnly() {
+    return readOnly;
+  }
 
-    public void setReadOnly(boolean readOnly) {
-        this.readOnly = readOnly;
-    }
+  public void setReadOnly(boolean readOnly) {
+    this.readOnly = readOnly;
+  }
 
 }

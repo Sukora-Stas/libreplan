@@ -33,7 +33,7 @@ import java.util.List;
  */
 public interface IResourceApprovalSheetDAO extends IGenericDAO<ResourceApprovalSheet, Long> {
 
-    List<ResourceApprovalSheet> getAll();
+  List<ResourceApprovalSheet> getAll();
 
   //  void save(ResourceApprovalSheet resourceApprovalSheet);
 

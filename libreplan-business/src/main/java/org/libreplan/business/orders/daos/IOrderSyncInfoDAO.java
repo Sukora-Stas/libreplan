@@ -32,80 +32,67 @@ import org.libreplan.business.orders.entities.OrderSyncInfo;
  */
 public interface IOrderSyncInfoDAO extends IGenericDAO<OrderSyncInfo, Long> {
 
-    /**
-     * Search last synchronized info for the specified
-     * <code>{@link Order}</code> and <code>connectorName</code>
-     *
-     * @param order
-     *            the order to search for
-     * @param connectorName
-     *            the connector name
-     *
-     * @return Last synchronized info
-     */
-    OrderSyncInfo findLastSynchronizedInfoByOrderAndConnectorName(Order order,
-            String connectorName);
+  /**
+   * Search last synchronized info for the specified
+   * <code>{@link Order}</code> and <code>connectorName</code>
+   *
+   * @param order         the order to search for
+   * @param connectorName the connector name
+   * @return Last synchronized info
+   */
+  OrderSyncInfo findLastSynchronizedInfoByOrderAndConnectorName(Order order,
+                                                                String connectorName);
 
-    /**
-     * Search last synchronized infos for the specified
-     * <code>{@link Order}</code> and <code>connectorName</code>
-     *
-     * @param order
-     *            the order to search for
-     * @param connectorName
-     *            the connector name
-     * @return list of last synchronized infos
-     */
-    List<OrderSyncInfo> findLastSynchronizedInfosByOrderAndConnectorName(
-            Order order, String connectorName);
+  /**
+   * Search last synchronized infos for the specified
+   * <code>{@link Order}</code> and <code>connectorName</code>
+   *
+   * @param order         the order to search for
+   * @param connectorName the connector name
+   * @return list of last synchronized infos
+   */
+  List<OrderSyncInfo> findLastSynchronizedInfosByOrderAndConnectorName(
+          Order order, String connectorName);
 
-    /**
-     * Searches and returns <code>{@link OrderSyncInfo}</code> for the specified
-     * <code>key</code> and <code>connectorName</code>
-     *
-     * @param key
-     *            the unique key with in connector id
-     * @param order
-     *            the order
-     * @param connectorName
-     *            the connector name
-     */
-    OrderSyncInfo findByKeyOrderAndConnectorName(String key, Order order,
-            String connectorName);
+  /**
+   * Searches and returns <code>{@link OrderSyncInfo}</code> for the specified
+   * <code>key</code> and <code>connectorName</code>
+   *
+   * @param key           the unique key with in connector id
+   * @param order         the order
+   * @param connectorName the connector name
+   */
+  OrderSyncInfo findByKeyOrderAndConnectorName(String key, Order order,
+                                               String connectorName);
 
-    /**
-     * Finds the {@link OrderSyncInfo}s for the specified
-     * <code>connectorName</code>
-     *
-     * @param connectorName
-     *            the connector name
-     * @return a list of OrderSyncInfo if found and null if not
-     */
-    List<OrderSyncInfo> findByConnectorName(String connectorName);
+  /**
+   * Finds the {@link OrderSyncInfo}s for the specified
+   * <code>connectorName</code>
+   *
+   * @param connectorName the connector name
+   * @return a list of OrderSyncInfo if found and null if not
+   */
+  List<OrderSyncInfo> findByConnectorName(String connectorName);
 
-    /**
-     * Returns true if there exists other {@link OrderSyncInfo} with the same
-     * <code>{@link OrderSyncInfo#getKey()}</code>,
-     * <code>{@link OrderSyncInfo#getOrder()}</code> and
-     * <code>{@link OrderSyncInfo#getConnectorName()}</code>
-     *
-     * @param orderSyncInfo
-     *            the <code>{@link OrderSyncInfo}</code>
-     */
-    boolean existsByKeyOrderAndConnectorNameAnotherTransaction(
-            OrderSyncInfo orderSyncInfo);
+  /**
+   * Returns true if there exists other {@link OrderSyncInfo} with the same
+   * <code>{@link OrderSyncInfo#getKey()}</code>,
+   * <code>{@link OrderSyncInfo#getOrder()}</code> and
+   * <code>{@link OrderSyncInfo#getConnectorName()}</code>
+   *
+   * @param orderSyncInfo the <code>{@link OrderSyncInfo}</code>
+   */
+  boolean existsByKeyOrderAndConnectorNameAnotherTransaction(
+          OrderSyncInfo orderSyncInfo);
 
-    /**
-     * Returns unique {@link OrderSyncInfo} for the specified <code>key</code>,
-     * <code>order</code> and <code>connectorName</code>
-     *
-     * @param key
-     *            the key
-     * @param order
-     *            an order
-     * @param connectorName
-     *            the name of the connector
-     */
-    OrderSyncInfo findUniqueByKeyOrderAndConnectorNameAnotherTransaction(
-            String key, Order order, String connectorName);
+  /**
+   * Returns unique {@link OrderSyncInfo} for the specified <code>key</code>,
+   * <code>order</code> and <code>connectorName</code>
+   *
+   * @param key           the key
+   * @param order         an order
+   * @param connectorName the name of the connector
+   */
+  OrderSyncInfo findUniqueByKeyOrderAndConnectorNameAnotherTransaction(
+          String key, Order order, String connectorName);
 }

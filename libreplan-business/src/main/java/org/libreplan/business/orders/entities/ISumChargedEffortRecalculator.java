@@ -22,7 +22,7 @@ package org.libreplan.business.orders.entities;
 
 /**
  * Interface to recalculate {@link SumChargedEffort} for an {@link Order}.<br />
- *
+ * <p>
  * This is needed to be called when some elements are moved in the {@link Order}
  * .
  *
@@ -30,11 +30,11 @@ package org.libreplan.business.orders.entities;
  */
 public interface ISumChargedEffortRecalculator {
 
-    /**
-     * Mark {@link Order} to recalculate {@link SumChargedEffort}.<br />
-     *
-     * @param orderId
-     */
-    void recalculate(Long orderId);
+  /**
+   * Mark {@link Order} to recalculate {@link SumChargedEffort}.<br />
+   *
+   * @param orderId
+   */
+  void recalculate(Long orderId);
 
 }

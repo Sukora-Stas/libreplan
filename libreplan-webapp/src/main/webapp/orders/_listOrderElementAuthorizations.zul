@@ -27,9 +27,9 @@
         <panelchildren>
             <hbox align="center" sclass="margin-border">
                 <autocomplete id="profileAutocomplete" constraint=""
-                              autodrop="true" finder="ProfileFinder" />
-                <checkbox id="profileReadAuthCheckbox" label="${i18n:_('Read')}" />
-                <checkbox id="profileWriteAuthCheckbox" label="${i18n:_('Write')}" />
+                              autodrop="true" finder="ProfileFinder"/>
+                <checkbox id="profileReadAuthCheckbox" label="${i18n:_('Read')}"/>
+                <checkbox id="profileWriteAuthCheckbox" label="${i18n:_('Write')}"/>
                 <button label="${i18n:_('Authorize')}" sclass="add-button"
                         onClick="orderAuthorizationController.addOrderAuthorization(
                         profileAutocomplete.selectedItem, profileReadAuthCheckbox.checked,
@@ -37,11 +37,11 @@
             </hbox>
             <grid id="profilesAuthListing"
                   model="@{orderAuthorizationController.profileOrderAuthorizations}"
-                  rowRenderer="@{orderAuthorizationController.orderAuthorizationRenderer}" >
+                  rowRenderer="@{orderAuthorizationController.orderAuthorizationRenderer}">
                 <columns sizable="true">
-                    <column label="${i18n:_('Profile name')}" />
-                    <column label="${i18n:_('Permissions')}" />
-                    <column label="${i18n:_('Actions')}" />
+                    <column label="${i18n:_('Profile name')}"/>
+                    <column label="${i18n:_('Permissions')}"/>
+                    <column label="${i18n:_('Actions')}"/>
                 </columns>
             </grid>
         </panelchildren>
@@ -52,9 +52,9 @@
         <panelchildren>
             <hbox align="center" sclass="margin-border">
                 <autocomplete id="usersAutocomplete" constraint=""
-                              autodrop="true" finder="UserFinder" />
-                <checkbox id="userReadAuthCheckbox" label="${i18n:_('Read')}" />
-                <checkbox id="userWriteAuthCheckbox" label="${i18n:_('Write')}" />
+                              autodrop="true" finder="UserFinder"/>
+                <checkbox id="userReadAuthCheckbox" label="${i18n:_('Read')}"/>
+                <checkbox id="userWriteAuthCheckbox" label="${i18n:_('Write')}"/>
                 <button label="${i18n:_('Authorize')}" sclass="add-button"
                         onClick="orderAuthorizationController.addOrderAuthorization(
                         usersAutocomplete.selectedItem, userReadAuthCheckbox.checked,
@@ -63,20 +63,20 @@
             <grid id="usersAuthListing"
                   model="@{orderAuthorizationController.userOrderAuthorizations}">
                 <columns sizable="true">
-                    <column label="${i18n:_('Profile name')}" />
-                    <column label="${i18n:_('Permissions')}" />
-                    <column label="${i18n:_('Actions')}" />
+                    <column label="${i18n:_('Profile name')}"/>
+                    <column label="${i18n:_('Permissions')}"/>
+                    <column label="${i18n:_('Actions')}"/>
                 </columns>
                 <rows>
                     <row self="@{each='authorization'}" value="@{authorization}">
-                        <label value="@{authorization.user.loginName}" />
-                        <label value="@{authorization.authorizationType.displayName}" />
+                        <label value="@{authorization.user.loginName}"/>
+                        <label value="@{authorization.authorizationType.displayName}"/>
                         <hbox>
                             <button sclass="icono" image="/common/img/ico_borrar1.png"
                                     onClick="orderAuthorizationController.
                                     removeOrderAuthorization(self.parent.parent.value);"
                                     hoverImage="/common/img/ico_borrar.png"
-                                    tooltiptext="${i18n:_('Delete')}" />
+                                    tooltiptext="${i18n:_('Delete')}"/>
                         </hbox>
                     </row>
                 </rows>

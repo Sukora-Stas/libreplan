@@ -21,8 +21,8 @@
 <vbox id="${arg.id}" apply="org.libreplan.web.orders.ManageOrderElementAdvancesController" width="100%">
 
     <groupbox sclass="progress-assignments" closable="false">
-        <caption label="${i18n:_('Progress assignments')}" />
-        <vbox id="messagesContainerAdvances" />
+        <caption label="${i18n:_('Progress assignments')}"/>
+        <vbox id="messagesContainerAdvances"/>
         <vbox align="left" width="100%">
             <hbox>
                 <button label="${i18n:_('Add new progress assignment')}"
@@ -41,7 +41,7 @@
                          pageSize="4">
 
                     <listhead sizable="true">
-                        <listheader label="${i18n:_('Type')}" tooltiptext="${i18n:_('Progress unit type')}" />
+                        <listheader label="${i18n:_('Type')}" tooltiptext="${i18n:_('Progress unit type')}"/>
 
                         <listheader label="${i18n:_('Max value')}" tooltiptext="${i18n:_('Maximum allowed value')}"
                                     width="105px" align="center"/>
@@ -66,7 +66,7 @@
     </groupbox>
 
     <groupbox sclass="advance-measurement" width="100%" closable="false">
-        <caption label="@{manageOrderElementAdvancesController.getInfoAdvance}" />
+        <caption label="@{manageOrderElementAdvancesController.getInfoAdvance}"/>
         <hbox>
             <hbox>
                 <listbox id="editAdvancesMeasurement" width="410px"
@@ -100,8 +100,8 @@
                    titleFont="${tfont}"
                    xAxisFont="${lbfont}" xAxisTickFont="${lbfont}"
                    yAxisFont="${lbfont}" yAxisTickFont="${lbfont}"
-                   xAxis="${i18n:_('Date')}" yAxis= "${i18n:_('Value')}"
-                   paneColor="#FFFFFF" height="200" width="500"  />
+                   xAxis="${i18n:_('Date')}" yAxis="${i18n:_('Value')}"
+                   paneColor="#FFFFFF" height="200" width="500"/>
         </hbox>
     </groupbox>
 </vbox>

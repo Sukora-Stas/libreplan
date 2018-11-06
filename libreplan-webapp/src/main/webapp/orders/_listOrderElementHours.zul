@@ -26,49 +26,49 @@
             <panelchildren>
                 <grid
                         model="@{assignedHoursToOrderElementController.workReportLines}"
-                        mold="paging" pageSize="10" >
+                        mold="paging" pageSize="10">
                     <columns>
-                        <column label="${i18n:_('Date')}" width="120px" />
-                        <column label="${i18n:_('Resource')}" />
-                        <column label="${i18n:_('Hours type')}" />
-                        <column label="${i18n:_('Hours')}" width="100px" />
+                        <column label="${i18n:_('Date')}" width="120px"/>
+                        <column label="${i18n:_('Resource')}"/>
+                        <column label="${i18n:_('Hours type')}"/>
+                        <column label="${i18n:_('Hours')}" width="100px"/>
                     </columns>
                     <rows>
                         <row self="@{each='workReportLine'}">
                             <label
-                                    value="@{workReportLine.date, converter='org.libreplan.web.common.typeconverters.DateConverter'}" />
+                                    value="@{workReportLine.date, converter='org.libreplan.web.common.typeconverters.DateConverter'}"/>
                             <label
-                                    value="@{workReportLine.resource.shortDescription}" />
-                            <label value="@{workReportLine.typeOfWorkHours.name}" />
-                            <label value="@{workReportLine.sumEffort.toFormattedString}" />
+                                    value="@{workReportLine.resource.shortDescription}"/>
+                            <label value="@{workReportLine.typeOfWorkHours.name}"/>
+                            <label value="@{workReportLine.sumEffort.toFormattedString}"/>
                         </row>
                     </rows>
                 </grid>
                 <grid style="border:0px">
                     <columns>
-                        <column />
-                        <column width="100px" />
+                        <column/>
+                        <column width="100px"/>
                     </columns>
                     <rows>
                         <row style="border-top:1px solid black">
                             <label
-                                    value="${i18n:_('Sum of direct imputed hours')}" />
+                                    value="${i18n:_('Sum of direct imputed hours')}"/>
                             <label
-                                    value="@{assignedHoursToOrderElementController.totalAssignedDirectEffort}" />
+                                    value="@{assignedHoursToOrderElementController.totalAssignedDirectEffort}"/>
                         </row>
                         <row>
                             <label
-                                    value="${i18n:_('Sum of imputed hours in children tasks')}" />
+                                    value="${i18n:_('Sum of imputed hours in children tasks')}"/>
                             <label id="totalIDC"
-                                   value="@{assignedHoursToOrderElementController.effortChildren}" />
+                                   value="@{assignedHoursToOrderElementController.effortChildren}"/>
                         </row>
                         <row
                                 style="border-top:1px solid black; font-weight: bold;">
                             <label value="${i18n:_('Total hours')}"
-                                   style="font-weight: bold" />
+                                   style="font-weight: bold"/>
                             <label id="addtotal"
                                    value="@{assignedHoursToOrderElementController.totalAssignedEffort}"
-                                   style="font-weight: bold" />
+                                   style="font-weight: bold"/>
                         </row>
                     </rows>
                 </grid>
@@ -77,7 +77,7 @@
         <panel title="${i18n:_('Imputed expenses')}">
             <panelchildren>
                 <separator bar="false" spacing="10px" orient="horizontal"/>
-                <grid id="listExpenses"  mold="paging" pageSize="10"
+                <grid id="listExpenses" mold="paging" pageSize="10"
                       model="@{assignedHoursToOrderElementController.expenseSheetLines}" sclass="clickable-rows">
                     <columns sizable="true">
                         <column label="${i18n:_('Date')}" width="120px"/>
@@ -87,48 +87,48 @@
                     </columns>
                     <rows>
                         <row self="@{each='expenseSheetLine'}" value="@{expenseSheetLine}">
-                            <label value="@{expenseSheetLine.date, converter='org.libreplan.web.common.typeconverters.LocalDateConverter'}" />
+                            <label value="@{expenseSheetLine.date, converter='org.libreplan.web.common.typeconverters.LocalDateConverter'}"/>
                             <label value="@{expenseSheetLine.concept}"/>
                             <label value="@{expenseSheetLine.resource.getName}"/>
                             <hbox>
                                 <label value="@{expenseSheetLine.value}"/>
-                                <label value="@{assignedHoursToOrderElementController.currencySymbol}" />
+                                <label value="@{assignedHoursToOrderElementController.currencySymbol}"/>
                             </hbox>
                         </row>
                     </rows>
                 </grid>
                 <grid style="border:0px">
                     <columns>
-                        <column />
-                        <column width="100px" />
+                        <column/>
+                        <column width="100px"/>
                     </columns>
                     <rows>
                         <row style="border-top:1px solid black">
                             <label
-                                    value="${i18n:_('Sum of direct expenses')}" />
+                                    value="${i18n:_('Sum of direct expenses')}"/>
                             <hbox>
                                 <label
-                                        value="@{assignedHoursToOrderElementController.totalDirectExpenses}" />
-                                <label value="@{assignedHoursToOrderElementController.currencySymbol}" />
+                                        value="@{assignedHoursToOrderElementController.totalDirectExpenses}"/>
+                                <label value="@{assignedHoursToOrderElementController.currencySymbol}"/>
                             </hbox>
                         </row>
                         <row>
                             <label
-                                    value="${i18n:_('Sum of expenses imputed in children tasks')}" />
+                                    value="${i18n:_('Sum of expenses imputed in children tasks')}"/>
                             <hbox>
                                 <label id="totalIDE"
-                                       value="@{assignedHoursToOrderElementController.totalIndirectExpenses}" />
-                                <label value="@{assignedHoursToOrderElementController.currencySymbol}" />
+                                       value="@{assignedHoursToOrderElementController.totalIndirectExpenses}"/>
+                                <label value="@{assignedHoursToOrderElementController.currencySymbol}"/>
                             </hbox>
                         </row>
                         <row
                                 style="border-top:1px solid black; font-weight: bold;">
                             <label value="${i18n:_('Total expenses')}"
-                                   style="font-weight: bold" />
+                                   style="font-weight: bold"/>
                             <hbox>
                                 <label style="font-weight: bold"
                                        value="@{assignedHoursToOrderElementController.totalExpenses}"/>
-                                <label value="@{assignedHoursToOrderElementController.currencySymbol}" />
+                                <label value="@{assignedHoursToOrderElementController.currencySymbol}"/>
                             </hbox>
                         </row>
                     </rows>
@@ -137,7 +137,7 @@
         </panel>
     </vbox>
 
-    <separator spacing="5px" orient="horizontal" />
+    <separator spacing="5px" orient="horizontal"/>
 
     <!-- Hours consumed -->
     <vbox width="100%">
@@ -146,39 +146,39 @@
             <panelchildren>
                 <grid fixedLayout="true">
                     <columns>
-                        <column />
-                        <column />
+                        <column/>
+                        <column/>
                     </columns>
                     <rows>
                         <row>
                             <grid fixedLayout="true">
                                 <columns>
-                                    <column width="200px" />
-                                    <column width="200px" />
+                                    <column width="200px"/>
+                                    <column width="200px"/>
                                 </columns>
                                 <rows>
                                     <row>
                                         <label
-                                                value="${i18n:_('Budget hours')}:" />
+                                                value="${i18n:_('Budget hours')}:"/>
                                         <label
-                                                value="@{assignedHoursToOrderElementController.estimatedEffort}" />
+                                                value="@{assignedHoursToOrderElementController.estimatedEffort}"/>
                                     </row>
                                     <row>
                                         <label
-                                                value="${i18n:_('Imputed hours')}:" />
+                                                value="${i18n:_('Imputed hours')}:"/>
                                         <label
-                                                value="@{assignedHoursToOrderElementController.totalAssignedEffort}" />
+                                                value="@{assignedHoursToOrderElementController.totalAssignedEffort}"/>
                                     </row>
                                 </rows>
                             </grid>
                             <hbox id="Percentage">
                                 <label
-                                        value="@{assignedHoursToOrderElementController.progressWork}" />
-                                <label value="${i18n:_('%')}" />
-                                <progressmeter id="hoursProgressBar" />
+                                        value="@{assignedHoursToOrderElementController.progressWork}"/>
+                                <label value="${i18n:_('%')}"/>
+                                <progressmeter id="hoursProgressBar"/>
                                 <progressmeter id="exceedHoursProgressBar"
                                                style="background:red ; border:1px solid red"
-                                               value="0" />
+                                               value="0"/>
                             </hbox>
                         </row>
                     </rows>
@@ -194,8 +194,8 @@
             <panelchildren>
                 <grid fixedLayout="true">
                     <columns>
-                        <column />
-                        <column />
+                        <column/>
+                        <column/>
                     </columns>
                     <rows sclass="remove-detailrow-background">
                         <row>
@@ -210,32 +210,32 @@
                                         <detailrow open="false">
                                             <grid fixedLayout="true">
                                                 <columns>
-                                                    <column width="200px" />
+                                                    <column width="200px"/>
                                                     <column align="right"/>
                                                 </columns>
                                                 <rows>
                                                     <row>
-                                                        <label value="${i18n:_('Resources budget')}:" />
+                                                        <label value="${i18n:_('Resources budget')}:"/>
                                                         <hbox sclass="move-to-right-in-table">
-                                                            <label value="@{assignedHoursToOrderElementController.resourcesBudget}" />
-                                                            <label value="@{assignedHoursToOrderElementController.currencySymbol}" />
+                                                            <label value="@{assignedHoursToOrderElementController.resourcesBudget}"/>
+                                                            <label value="@{assignedHoursToOrderElementController.currencySymbol}"/>
                                                         </hbox>
                                                     </row>
                                                     <row>
-                                                        <label value="${i18n:_('Expenses budget')}:" />
+                                                        <label value="${i18n:_('Expenses budget')}:"/>
                                                         <hbox sclass="move-to-right-in-table">
-                                                            <label value="@{assignedHoursToOrderElementController.budget}" />
-                                                            <label value="@{assignedHoursToOrderElementController.currencySymbol}" />
+                                                            <label value="@{assignedHoursToOrderElementController.budget}"/>
+                                                            <label value="@{assignedHoursToOrderElementController.currencySymbol}"/>
                                                         </hbox>
                                                     </row>
                                                 </rows>
                                             </grid>
                                         </detailrow>
                                         <label
-                                                value="${i18n:_('Total calculated budget')}:" />
+                                                value="${i18n:_('Total calculated budget')}:"/>
                                         <hbox sclass="move-to-right-in-table">
-                                            <label value="@{assignedHoursToOrderElementController.calculatedBudget}" />
-                                            <label value="@{assignedHoursToOrderElementController.currencySymbol}" />
+                                            <label value="@{assignedHoursToOrderElementController.calculatedBudget}"/>
+                                            <label value="@{assignedHoursToOrderElementController.currencySymbol}"/>
                                         </hbox>
                                     </row>
 
@@ -244,33 +244,33 @@
                                         <detailrow open="false">
                                             <grid fixedLayout="true">
                                                 <columns>
-                                                    <column width="200px" />
+                                                    <column width="200px"/>
                                                     <column align="right"/>
                                                 </columns>
                                                 <rows>
                                                     <row>
-                                                        <label value="${i18n:_('Hours cost')}:" />
+                                                        <label value="${i18n:_('Hours cost')}:"/>
                                                         <hbox sclass="move-to-right-in-table">
-                                                            <label value="@{assignedHoursToOrderElementController.costOfHours}" />
-                                                            <label value="@{assignedHoursToOrderElementController.currencySymbol}" />
+                                                            <label value="@{assignedHoursToOrderElementController.costOfHours}"/>
+                                                            <label value="@{assignedHoursToOrderElementController.currencySymbol}"/>
                                                         </hbox>
                                                     </row>
                                                     <row>
-                                                        <label value="${i18n:_('Expenses cost')}:" />
+                                                        <label value="${i18n:_('Expenses cost')}:"/>
                                                         <hbox sclass="move-to-right-in-table">
-                                                            <label value="@{assignedHoursToOrderElementController.costOfExpenses}" />
-                                                            <label value="@{assignedHoursToOrderElementController.currencySymbol}" />
+                                                            <label value="@{assignedHoursToOrderElementController.costOfExpenses}"/>
+                                                            <label value="@{assignedHoursToOrderElementController.currencySymbol}"/>
                                                         </hbox>
                                                     </row>
                                                 </rows>
                                             </grid>
                                         </detailrow>
                                         <label
-                                                value="${i18n:_('Money spent')}:" />
+                                                value="${i18n:_('Money spent')}:"/>
                                         <hbox sclass="move-to-right-in-table">
                                             <label
-                                                    value="@{assignedHoursToOrderElementController.moneyCost}" />
-                                            <label value="@{assignedHoursToOrderElementController.currencySymbol}" />
+                                                    value="@{assignedHoursToOrderElementController.moneyCost}"/>
+                                            <label value="@{assignedHoursToOrderElementController.currencySymbol}"/>
                                         </hbox>
                                     </row>
                                 </rows>
@@ -278,12 +278,12 @@
                             <hbox>
                                 <separator bar="false" spacing="10px" orient="vertical"/>
                                 <label
-                                        value="@{assignedHoursToOrderElementController.moneyCostPercentage}" />
-                                <label value="${i18n:_('%')}" />
-                                <progressmeter id="moneyCostProgressBar" />
+                                        value="@{assignedHoursToOrderElementController.moneyCostPercentage}"/>
+                                <label value="${i18n:_('%')}"/>
+                                <progressmeter id="moneyCostProgressBar"/>
                                 <progressmeter id="exceedMoneyCostProgressBar"
                                                style="background:red ; border:1px solid red"
-                                               value="0" />
+                                               value="0"/>
                             </hbox>
                         </row>
                     </rows>
@@ -294,7 +294,7 @@
     <!-- Script for aligning money values and currency symbols to right -->
     <script>
         zk.afterMount(function() {
-            $('.move-to-right-in-table').parent().css({'float':'right'});
+        $('.move-to-right-in-table').parent().css({'float':'right'});
         });
     </script>
 </vbox>

@@ -82,1641 +82,1627 @@ import org.libreplan.business.workreports.entities.WorkReportLine;
 
 public abstract class OrderElement extends IntegrationEntity implements ICriterionRequirable, ITreeNode<OrderElement> {
 
-    protected InfoComponentWithCode infoComponent = new InfoComponentWithCode();
+  protected InfoComponentWithCode infoComponent = new InfoComponentWithCode();
+  @Valid
+  protected Set<DirectAdvanceAssignment> directAdvanceAssignments = new HashSet<>();
+  @Valid
+  protected Set<MaterialAssignment> materialAssignments = new HashSet<>();
+  @Valid
+  protected Set<Label> labels = new HashSet<>();
+  protected Set<TaskQualityForm> taskQualityForms = new HashSet<>();
+  protected Set<CriterionRequirement> criterionRequirements = new HashSet<>();
+  protected OrderLineGroup parent;
+  protected CriterionRequirementOrderElementHandler criterionRequirementHandler =
+          CriterionRequirementOrderElementHandler.getInstance();
+  private Date initDate;
+  private Date deadline;
+  /**
+   * This field is transient.
+   */
+  private SchedulingState schedulingState = null;
 
-    private Date initDate;
+  private OrderElementTemplate template;
 
-    private Date deadline;
+  private BigDecimal lastAdvanceMeasurementForSpreading = BigDecimal.ZERO;
 
-    @Valid
-    protected Set<DirectAdvanceAssignment> directAdvanceAssignments = new HashSet<>();
+  private Boolean dirtyLastAdvanceMeasurementForSpreading = true;
 
-    @Valid
-    protected Set<MaterialAssignment> materialAssignments = new HashSet<>();
+  private SumChargedEffort sumChargedEffort;
 
-    @Valid
-    protected Set<Label> labels = new HashSet<>();
+  private SumExpenses sumExpenses;
 
-    protected Set<TaskQualityForm> taskQualityForms = new HashSet<>();
+  private String externalCode;
 
-    protected Set<CriterionRequirement> criterionRequirements = new HashSet<>();
+  private Map<OrderVersion, SchedulingDataForVersion> schedulingDataForVersion = new HashMap<>();
 
-    protected OrderLineGroup parent;
+  private SchedulingDataForVersion.Data current = null;
 
-    protected CriterionRequirementOrderElementHandler criterionRequirementHandler =
-                    CriterionRequirementOrderElementHandler.getInstance();
+  public OrderElementTemplate getTemplate() {
+    return template;
+  }
 
-    /**
-     * This field is transient.
-     */
-    private SchedulingState schedulingState = null;
+  protected void removeVersion(OrderVersion orderVersion) {
+    schedulingDataForVersion.remove(orderVersion);
+    for (OrderElement each : getChildren()) {
+      each.removeVersion(orderVersion);
+    }
+  }
 
-    private OrderElementTemplate template;
+  public SchedulingDataForVersion.Data getCurrentSchedulingData() {
+    if (current == null) {
+      throw new IllegalStateException(
+              "in order to use scheduling state related data " +
+                      "useSchedulingDataFor(OrderVersion orderVersion) must be called first");
+    }
+    return current;
+  }
 
-    private BigDecimal lastAdvanceMeasurementForSpreading = BigDecimal.ZERO;
+  private void schedulingDataNowPointsTo(DeepCopy deepCopy, OrderVersion version) {
+    current = getCurrentSchedulingData().pointsTo(deepCopy, version, schedulingVersionFor(version));
+    for (OrderElement each : getChildren()) {
+      each.schedulingDataNowPointsTo(deepCopy, version);
+    }
+  }
 
-    private Boolean dirtyLastAdvanceMeasurementForSpreading = true;
+  protected void addNeededReplaces(DeepCopy deepCopy, OrderVersion newOrderVersion) {
+    SchedulingDataForVersion currentVersion = getCurrentSchedulingData().getVersion();
+    SchedulingDataForVersion newSchedulingVersion = schedulingVersionFor(newOrderVersion);
+    deepCopy.replace(currentVersion, newSchedulingVersion);
 
-    private SumChargedEffort sumChargedEffort;
+    for (OrderElement each : getChildren()) {
+      each.addNeededReplaces(deepCopy, newOrderVersion);
+    }
+  }
 
-    private SumExpenses sumExpenses;
+  public SchedulingState getSchedulingState() {
+    if (schedulingState == null) {
+      ensureSchedulingStateInitializedFromTop();
+      initializeSchedulingState(); // Maybe this order element was added later
+    }
+    return schedulingState;
+  }
 
-    private String externalCode;
+  private void ensureSchedulingStateInitializedFromTop() {
+    OrderElement current = this;
+    while (current.getParent() != null) {
+      current = current.getParent();
+    }
+    current.initializeSchedulingState();
+  }
 
-    private Map<OrderVersion, SchedulingDataForVersion> schedulingDataForVersion = new HashMap<>();
-
-    private SchedulingDataForVersion.Data current = null;
-
-    public OrderElementTemplate getTemplate() {
-        return template;
+  private SchedulingState initializeSchedulingState() {
+    if (schedulingState != null) {
+      return schedulingState;
     }
 
-    protected void removeVersion(OrderVersion orderVersion) {
-        schedulingDataForVersion.remove(orderVersion);
-        for (OrderElement each : getChildren()) {
-            each.removeVersion(orderVersion);
-        }
+    schedulingState = SchedulingState.createSchedulingState(
+            getSchedulingStateType(), getChildrenStates(), getCurrentSchedulingData().onTypeChangeListener());
+
+    return schedulingState;
+  }
+
+  private List<SchedulingState> getChildrenStates() {
+    List<SchedulingState> result = new ArrayList<>();
+    for (OrderElement each : getChildren()) {
+      result.add(each.initializeSchedulingState());
     }
 
-    public SchedulingDataForVersion.Data getCurrentSchedulingData() {
-        if ( current == null ) {
-            throw new IllegalStateException(
-                    "in order to use scheduling state related data " +
-                            "useSchedulingDataFor(OrderVersion orderVersion) must be called first");
-        }
-        return current;
+    return result;
+  }
+
+  public boolean hasSchedulingDataBeingModified() {
+    return getCurrentSchedulingData().hasPendingChanges() || someSchedulingDataModified();
+  }
+
+  private boolean someSchedulingDataModified() {
+    for (OrderElement each : getChildren()) {
+      if (each.hasSchedulingDataBeingModified()) {
+        return true;
+      }
     }
 
-    private void schedulingDataNowPointsTo(DeepCopy deepCopy, OrderVersion version) {
-        current = getCurrentSchedulingData().pointsTo(deepCopy, version, schedulingVersionFor(version));
-        for (OrderElement each : getChildren()) {
-            each.schedulingDataNowPointsTo(deepCopy, version);
-        }
+    return false;
+  }
+
+  protected boolean isSchedulingDataInitialized() {
+    return current != null;
+  }
+
+  public void useSchedulingDataFor(OrderVersion orderVersion) {
+    useSchedulingDataFor(orderVersion, true);
+  }
+
+  public void useSchedulingDataFor(OrderVersion orderVersion, boolean recursive) {
+    Validate.notNull(orderVersion);
+    SchedulingDataForVersion schedulingVersion = schedulingVersionFor(orderVersion);
+    if (recursive) {
+      for (OrderElement each : getChildren()) {
+        each.useSchedulingDataFor(orderVersion);
+      }
+    }
+    current = schedulingVersion.makeAvailableFor(orderVersion);
+  }
+
+  private SchedulingDataForVersion schedulingVersionFor(OrderVersion orderVersion) {
+    SchedulingDataForVersion currentSchedulingData = schedulingDataForVersion.get(orderVersion);
+    if (currentSchedulingData == null) {
+      currentSchedulingData = SchedulingDataForVersion.createInitialFor(this);
+      schedulingDataForVersion.put(orderVersion, currentSchedulingData);
     }
 
-    protected void addNeededReplaces(DeepCopy deepCopy, OrderVersion newOrderVersion) {
-        SchedulingDataForVersion currentVersion = getCurrentSchedulingData().getVersion();
-        SchedulingDataForVersion newSchedulingVersion = schedulingVersionFor(newOrderVersion);
-        deepCopy.replace(currentVersion, newSchedulingVersion);
+    return currentSchedulingData;
+  }
 
-        for (OrderElement each : getChildren()) {
-            each.addNeededReplaces(deepCopy, newOrderVersion);
-        }
+  public SchedulingDataForVersion getCurrentSchedulingDataForVersion() {
+    return getCurrentSchedulingData().getVersion();
+  }
+
+  protected void writeSchedulingDataChanges() {
+    getCurrentSchedulingData().writeSchedulingDataChanges();
+    for (OrderElement each : getChildren()) {
+      each.writeSchedulingDataChanges();
     }
+  }
 
-    public SchedulingState getSchedulingState() {
-        if ( schedulingState == null ) {
-            ensureSchedulingStateInitializedFromTop();
-            initializeSchedulingState(); // Maybe this order element was added later
-        }
-        return schedulingState;
+  protected void writeSchedulingDataChangesTo(DeepCopy deepCopy, OrderVersion newOrderVersion) {
+    schedulingDataNowPointsTo(deepCopy, newOrderVersion);
+    writeSchedulingDataChanges();
+  }
+
+  protected void removeSpuriousDayAssignments(Scenario scenario) {
+    removeAtNotCurrent(scenario);
+    removeAtCurrent(scenario);
+
+    for (OrderElement each : getChildren()) {
+      each.removeSpuriousDayAssignments(scenario);
     }
+  }
 
-    private void ensureSchedulingStateInitializedFromTop() {
-        OrderElement current = this;
-        while (current.getParent() != null) {
-            current = current.getParent();
-        }
-        current.initializeSchedulingState();
+  private void removeAtNotCurrent(Scenario scenario) {
+    SchedulingDataForVersion currentDataForVersion = getCurrentSchedulingDataForVersion();
+    for (Entry<OrderVersion, SchedulingDataForVersion> each : schedulingDataForVersion.entrySet()) {
+      SchedulingDataForVersion dataForVersion = each.getValue();
+
+      if (!currentDataForVersion.equals(dataForVersion)) {
+        dataForVersion.removeSpuriousDayAssignments(scenario);
+      }
     }
+  }
 
-    private SchedulingState initializeSchedulingState() {
-        if ( schedulingState != null ) {
-            return schedulingState;
-        }
-
-        schedulingState = SchedulingState.createSchedulingState(
-                getSchedulingStateType(), getChildrenStates(), getCurrentSchedulingData().onTypeChangeListener());
-
-        return schedulingState;
+  private void removeAtCurrent(Scenario scenario) {
+    TaskElement associatedTaskElement = getAssociatedTaskElement();
+    if (associatedTaskElement != null) {
+      associatedTaskElement.removePredecessorsDayAssignmentsFor(scenario);
     }
+  }
 
-    private List<SchedulingState> getChildrenStates() {
-        List<SchedulingState> result = new ArrayList<>();
-        for (OrderElement each : getChildren()) {
-            result.add(each.initializeSchedulingState());
-        }
+  public List<TaskSourceSynchronization> calculateSynchronizationsNeeded() {
+    return calculateSynchronizationsNeeded(getCurrentSchedulingData().getVersion());
+  }
 
-        return result;
-    }
+  private List<TaskSourceSynchronization> calculateSynchronizationsNeeded(
+          SchedulingDataForVersion schedulingDataForVersion) {
 
-    public boolean hasSchedulingDataBeingModified() {
-        return getCurrentSchedulingData().hasPendingChanges() || someSchedulingDataModified();
-    }
+    List<TaskSourceSynchronization> result = new ArrayList<>();
+    if (isSchedulingPoint()) {
+      if (!wasASchedulingPoint()) {
 
-    private boolean someSchedulingDataModified() {
-        for (OrderElement each : getChildren()) {
-            if (each.hasSchedulingDataBeingModified()) {
-                return true;
-            }
-        }
+        // This element was a container but now it's a scheduling point
+        // we have to remove the TaskSource which contains a TaskGroup instead of TaskElement
+        removeTaskSource(result);
+      } else {
+        if (hadATaskSource() && currentTaskSourceIsNotTheSame()) {
 
-        return false;
-    }
+          // This element was unscheduled and then scheduled again.
+          // Its TaskSource has been recreated but we have to remove the old one.
+          if (!getParent().currentTaskSourceIsNotTheSame()) {
 
-    protected boolean isSchedulingDataInitialized() {
-        return current != null;
-    }
-
-    public void useSchedulingDataFor(OrderVersion orderVersion) {
-        useSchedulingDataFor(orderVersion, true);
-    }
-
-    public void useSchedulingDataFor(OrderVersion orderVersion, boolean recursive) {
-        Validate.notNull(orderVersion);
-        SchedulingDataForVersion schedulingVersion = schedulingVersionFor(orderVersion);
-        if ( recursive ) {
-            for (OrderElement each : getChildren()) {
-                each.useSchedulingDataFor(orderVersion);
-            }
-        }
-        current = schedulingVersion.makeAvailableFor(orderVersion);
-    }
-
-    private SchedulingDataForVersion schedulingVersionFor(OrderVersion orderVersion) {
-        SchedulingDataForVersion currentSchedulingData = schedulingDataForVersion.get(orderVersion);
-        if (currentSchedulingData == null) {
-            currentSchedulingData = SchedulingDataForVersion.createInitialFor(this);
-            schedulingDataForVersion.put(orderVersion, currentSchedulingData);
-        }
-
-        return currentSchedulingData;
-    }
-
-    public SchedulingDataForVersion getCurrentSchedulingDataForVersion() {
-        return getCurrentSchedulingData().getVersion();
-    }
-
-    protected void writeSchedulingDataChanges() {
-        getCurrentSchedulingData().writeSchedulingDataChanges();
-        for (OrderElement each : getChildren()) {
-            each.writeSchedulingDataChanges();
-        }
-    }
-
-    protected void writeSchedulingDataChangesTo(DeepCopy deepCopy, OrderVersion newOrderVersion) {
-        schedulingDataNowPointsTo(deepCopy, newOrderVersion);
-        writeSchedulingDataChanges();
-    }
-
-    protected void removeSpuriousDayAssignments(Scenario scenario) {
-        removeAtNotCurrent(scenario);
-        removeAtCurrent(scenario);
-
-        for (OrderElement each : getChildren()) {
-            each.removeSpuriousDayAssignments(scenario);
-        }
-    }
-
-    private void removeAtNotCurrent(Scenario scenario) {
-        SchedulingDataForVersion currentDataForVersion = getCurrentSchedulingDataForVersion();
-        for (Entry<OrderVersion, SchedulingDataForVersion> each : schedulingDataForVersion.entrySet()) {
-            SchedulingDataForVersion dataForVersion = each.getValue();
-
-            if (!currentDataForVersion.equals(dataForVersion)) {
-                dataForVersion.removeSpuriousDayAssignments(scenario);
-            }
-        }
-    }
-
-    private void removeAtCurrent(Scenario scenario) {
-        TaskElement associatedTaskElement = getAssociatedTaskElement();
-        if (associatedTaskElement != null) {
-            associatedTaskElement.removePredecessorsDayAssignmentsFor(scenario);
-        }
-    }
-
-    public List<TaskSourceSynchronization> calculateSynchronizationsNeeded() {
-        return calculateSynchronizationsNeeded(getCurrentSchedulingData().getVersion());
-    }
-
-    private List<TaskSourceSynchronization> calculateSynchronizationsNeeded(
-            SchedulingDataForVersion schedulingDataForVersion) {
-
-        List<TaskSourceSynchronization> result = new ArrayList<>();
-        if (isSchedulingPoint()) {
-            if (!wasASchedulingPoint()) {
-
-                // This element was a container but now it's a scheduling point
-                // we have to remove the TaskSource which contains a TaskGroup instead of TaskElement
-                removeTaskSource(result);
-            } else {
-                if (hadATaskSource() && currentTaskSourceIsNotTheSame()) {
-
-                    // This element was unscheduled and then scheduled again.
-                    // Its TaskSource has been recreated but we have to remove the old one.
-                    if (!getParent().currentTaskSourceIsNotTheSame()) {
-
-                        // We only remove the TaskSource if the parent is not in the same situation.
-                        // In case the parent is in the same situation, it will remove the related
-                        // TaskSources in children tasks.
-                        removeTaskSource(result);
-                    }
-                }
-            }
-
-            result.addAll(synchronizationForSchedulingPoint(schedulingDataForVersion));
-
-        } else if (isSuperElementPartialOrCompletelyScheduled()) {
-            removeUnscheduled(result);
-            if (wasASchedulingPoint()) {
-                removeTaskSource(result);
-            } else {
-                if (hadATaskSource() && currentTaskSourceIsNotTheSame()) {
-
-                    // All the children of this element were unscheduled and then scheduled again,
-                    // its TaskSource has been recreated but we have to remove the old one.
-                    if (getParent() == null || !getParent().currentTaskSourceIsNotTheSame()) {
-
-                        // If it's a container node inside another container we could have the
-                        // same problem than in the case of leaf tasks.
-                        result.add(taskSourceRemoval());
-                    }
-                }
-            }
-            result.add(synchronizationForSuperelement(schedulingDataForVersion));
-        } else if (schedulingState.isNoScheduled()) {
+            // We only remove the TaskSource if the parent is not in the same situation.
+            // In case the parent is in the same situation, it will remove the related
+            // TaskSources in children tasks.
             removeTaskSource(result);
+          }
         }
-        return result;
-    }
+      }
 
-    private TaskSourceSynchronization synchronizationForSuperelement(SchedulingDataForVersion schedulingState) {
-        List<TaskSourceSynchronization> childrenSynchronizations = childrenSynchronizations();
-        if (thereIsNoTaskSource()) {
-            getCurrentSchedulingData().requestedCreationOf(TaskSource.createForGroup(schedulingState));
+      result.addAll(synchronizationForSchedulingPoint(schedulingDataForVersion));
 
-            return TaskSource.mustAddGroup(getTaskSource(), childrenSynchronizations);
-        } else {
-            return getTaskSource().modifyGroup(childrenSynchronizations);
-        }
-    }
+    } else if (isSuperElementPartialOrCompletelyScheduled()) {
+      removeUnscheduled(result);
+      if (wasASchedulingPoint()) {
+        removeTaskSource(result);
+      } else {
+        if (hadATaskSource() && currentTaskSourceIsNotTheSame()) {
 
-    private boolean wasASchedulingPoint() {
-        TaskSource currentTaskSource = getTaskSource();
-        // Check if the existing TaskSource is inconsistent with the current scheduling state
-        if (currentTaskSource != null && currentTaskSource.getTask() != null &&
-                currentTaskSource.getTask().isLeaf() &&
-                getSchedulingStateType() != Type.SCHEDULING_POINT) {
+          // All the children of this element were unscheduled and then scheduled again,
+          // its TaskSource has been recreated but we have to remove the old one.
+          if (getParent() == null || !getParent().currentTaskSourceIsNotTheSame()) {
 
-            return true;
-        }
-
-        // Check if the scheduling state has changed WRT the DB
-        return SchedulingState.Type.SCHEDULING_POINT == getCurrentVersionOnDB().getSchedulingStateType();
-    }
-
-    protected boolean currentTaskSourceIsNotTheSame() {
-        return getOnDBTaskSource() != getTaskSource();
-    }
-
-    protected boolean hadATaskSource() {
-        return getOnDBTaskSource() != null;
-    }
-
-    private List<TaskSourceSynchronization> childrenSynchronizations() {
-        List<TaskSourceSynchronization> childrenOfGroup = new ArrayList<>();
-        for (OrderElement orderElement : getSomewhatScheduledOrderElements()) {
-            childrenOfGroup.addAll(orderElement.calculateSynchronizationsNeeded());
-        }
-        return childrenOfGroup;
-    }
-
-    private void removeUnscheduled(List<TaskSourceSynchronization> result) {
-        for (OrderElement orderElement : getNoScheduledOrderElements()) {
-            orderElement.removeTaskSource(result);
-        }
-    }
-
-    private List<TaskSourceSynchronization> synchronizationForSchedulingPoint(
-            SchedulingDataForVersion schedulingState) {
-
-        if (thereIsNoTaskSource()) {
-            getCurrentSchedulingData().requestedCreationOf(TaskSource.create(schedulingState, getHoursGroups()));
-
-            return Collections.singletonList(TaskSource.mustAdd(getTaskSource()));
-        } else if (getTaskSource().getTask().isLeaf()) {
-            return Collections.singletonList(getTaskSource().withCurrentHoursGroup(getHoursGroups()));
-        } else {
-            return synchronizationsForFromPartiallyScheduledToSchedulingPoint(schedulingState);
-        }
-    }
-
-    private List<TaskSourceSynchronization> synchronizationsForFromPartiallyScheduledToSchedulingPoint(
-            SchedulingDataForVersion schedulingState) {
-
-        List<TaskSourceSynchronization> result = new ArrayList<>();
-        for (TaskSource each : getTaskSourcesFromBottomToTop()) {
-            OrderElement orderElement = each.getOrderElement();
-            result.add(orderElement.taskSourceRemoval());
-        }
-
-        TaskSource newTaskSource = TaskSource.create(schedulingState, getHoursGroups());
-        getCurrentSchedulingData().requestedCreationOf(newTaskSource);
-        result.add(TaskSource.mustAdd(newTaskSource));
-
-        return result;
-    }
-
-    private boolean thereIsNoTaskSource() {
-        return getTaskSource() == null;
-    }
-
-    private List<OrderElement> getSomewhatScheduledOrderElements() {
-        List<OrderElement> result = new ArrayList<>();
-        for (OrderElement orderElement : getChildren()) {
-            if (orderElement.getSchedulingStateType().isSomewhatScheduled()) {
-                result.add(orderElement);
-            }
-        }
-        return result;
-    }
-
-    private List<OrderElement> getNoScheduledOrderElements() {
-        List<OrderElement> result = new ArrayList<>();
-        for (OrderElement orderElement : getChildren()) {
-            if (orderElement.getSchedulingState().isNoScheduled()) {
-                result.add(orderElement);
-            }
-        }
-        return result;
-    }
-
-    private void removeTaskSource(List<TaskSourceSynchronization> result) {
-        removeChildrenTaskSource(result);
-        if (getOnDBTaskSource() != null) {
+            // If it's a container node inside another container we could have the
+            // same problem than in the case of leaf tasks.
             result.add(taskSourceRemoval());
-        } else {
-            TaskSource taskSource = getTaskSource();
-            if (taskSource != null) {
-                taskSource.getTask().detach();
-                getCurrentSchedulingData().taskSourceRemovalRequested();
-            }
+          }
         }
+      }
+      result.add(synchronizationForSuperelement(schedulingDataForVersion));
+    } else if (schedulingState.isNoScheduled()) {
+      removeTaskSource(result);
+    }
+    return result;
+  }
+
+  private TaskSourceSynchronization synchronizationForSuperelement(SchedulingDataForVersion schedulingState) {
+    List<TaskSourceSynchronization> childrenSynchronizations = childrenSynchronizations();
+    if (thereIsNoTaskSource()) {
+      getCurrentSchedulingData().requestedCreationOf(TaskSource.createForGroup(schedulingState));
+
+      return TaskSource.mustAddGroup(getTaskSource(), childrenSynchronizations);
+    } else {
+      return getTaskSource().modifyGroup(childrenSynchronizations);
+    }
+  }
+
+  private boolean wasASchedulingPoint() {
+    TaskSource currentTaskSource = getTaskSource();
+    // Check if the existing TaskSource is inconsistent with the current scheduling state
+    if (currentTaskSource != null && currentTaskSource.getTask() != null &&
+            currentTaskSource.getTask().isLeaf() &&
+            getSchedulingStateType() != Type.SCHEDULING_POINT) {
+
+      return true;
     }
 
-    private TaskSource getOnDBTaskSource() {
-        return getCurrentVersionOnDB().getTaskSource();
+    // Check if the scheduling state has changed WRT the DB
+    return SchedulingState.Type.SCHEDULING_POINT == getCurrentVersionOnDB().getSchedulingStateType();
+  }
+
+  protected boolean currentTaskSourceIsNotTheSame() {
+    return getOnDBTaskSource() != getTaskSource();
+  }
+
+  protected boolean hadATaskSource() {
+    return getOnDBTaskSource() != null;
+  }
+
+  private List<TaskSourceSynchronization> childrenSynchronizations() {
+    List<TaskSourceSynchronization> childrenOfGroup = new ArrayList<>();
+    for (OrderElement orderElement : getSomewhatScheduledOrderElements()) {
+      childrenOfGroup.addAll(orderElement.calculateSynchronizationsNeeded());
+    }
+    return childrenOfGroup;
+  }
+
+  private void removeUnscheduled(List<TaskSourceSynchronization> result) {
+    for (OrderElement orderElement : getNoScheduledOrderElements()) {
+      orderElement.removeTaskSource(result);
+    }
+  }
+
+  private List<TaskSourceSynchronization> synchronizationForSchedulingPoint(
+          SchedulingDataForVersion schedulingState) {
+
+    if (thereIsNoTaskSource()) {
+      getCurrentSchedulingData().requestedCreationOf(TaskSource.create(schedulingState, getHoursGroups()));
+
+      return Collections.singletonList(TaskSource.mustAdd(getTaskSource()));
+    } else if (getTaskSource().getTask().isLeaf()) {
+      return Collections.singletonList(getTaskSource().withCurrentHoursGroup(getHoursGroups()));
+    } else {
+      return synchronizationsForFromPartiallyScheduledToSchedulingPoint(schedulingState);
+    }
+  }
+
+  private List<TaskSourceSynchronization> synchronizationsForFromPartiallyScheduledToSchedulingPoint(
+          SchedulingDataForVersion schedulingState) {
+
+    List<TaskSourceSynchronization> result = new ArrayList<>();
+    for (TaskSource each : getTaskSourcesFromBottomToTop()) {
+      OrderElement orderElement = each.getOrderElement();
+      result.add(orderElement.taskSourceRemoval());
     }
 
-    SchedulingDataForVersion getCurrentVersionOnDB() {
-        return schedulingDataForVersion.get(getCurrentSchedulingData().getOriginOrderVersion());
-    }
+    TaskSource newTaskSource = TaskSource.create(schedulingState, getHoursGroups());
+    getCurrentSchedulingData().requestedCreationOf(newTaskSource);
+    result.add(TaskSource.mustAdd(newTaskSource));
 
-    private TaskSourceSynchronization taskSourceRemoval() {
-        Validate.notNull(getOnDBTaskSource());
-        TaskSourceSynchronization result = TaskSource.mustRemove(getOnDBTaskSource());
+    return result;
+  }
+
+  private boolean thereIsNoTaskSource() {
+    return getTaskSource() == null;
+  }
+
+  private List<OrderElement> getSomewhatScheduledOrderElements() {
+    List<OrderElement> result = new ArrayList<>();
+    for (OrderElement orderElement : getChildren()) {
+      if (orderElement.getSchedulingStateType().isSomewhatScheduled()) {
+        result.add(orderElement);
+      }
+    }
+    return result;
+  }
+
+  private List<OrderElement> getNoScheduledOrderElements() {
+    List<OrderElement> result = new ArrayList<>();
+    for (OrderElement orderElement : getChildren()) {
+      if (orderElement.getSchedulingState().isNoScheduled()) {
+        result.add(orderElement);
+      }
+    }
+    return result;
+  }
+
+  private void removeTaskSource(List<TaskSourceSynchronization> result) {
+    removeChildrenTaskSource(result);
+    if (getOnDBTaskSource() != null) {
+      result.add(taskSourceRemoval());
+    } else {
+      TaskSource taskSource = getTaskSource();
+      if (taskSource != null) {
+        taskSource.getTask().detach();
         getCurrentSchedulingData().taskSourceRemovalRequested();
+      }
+    }
+  }
 
-        return result;
+  private TaskSource getOnDBTaskSource() {
+    return getCurrentVersionOnDB().getTaskSource();
+  }
+
+  SchedulingDataForVersion getCurrentVersionOnDB() {
+    return schedulingDataForVersion.get(getCurrentSchedulingData().getOriginOrderVersion());
+  }
+
+  private TaskSourceSynchronization taskSourceRemoval() {
+    Validate.notNull(getOnDBTaskSource());
+    TaskSourceSynchronization result = TaskSource.mustRemove(getOnDBTaskSource());
+    getCurrentSchedulingData().taskSourceRemovalRequested();
+
+    return result;
+  }
+
+  private void removeChildrenTaskSource(List<TaskSourceSynchronization> result) {
+    List<OrderElement> children = getChildren();
+    for (OrderElement each : children) {
+      each.removeTaskSource(result);
+    }
+  }
+
+  private boolean isSuperElementPartialOrCompletelyScheduled() {
+    return getSchedulingState().isSomewhatScheduled();
+  }
+
+  public void initializeType(SchedulingState.Type type) {
+    if (!isNewObject()) {
+      throw new IllegalStateException();
+    }
+    getCurrentSchedulingData().initializeType(type);
+    schedulingState = null;
+  }
+
+  public void initializeTemplate(OrderElementTemplate template) {
+    if (!isNewObject()) {
+      throw new IllegalStateException();
     }
 
-    private void removeChildrenTaskSource(List<TaskSourceSynchronization> result) {
-        List<OrderElement> children = getChildren();
-        for (OrderElement each : children) {
-            each.removeTaskSource(result);
+    if (this.template != null) {
+      throw new IllegalStateException("already initialized");
+    }
+
+    this.template = template;
+  }
+
+  public boolean isSchedulingPoint() {
+    return getSchedulingState().getType() == Type.SCHEDULING_POINT;
+  }
+
+  public OrderLineGroup getParent() {
+    return parent;
+  }
+
+  protected void setParent(OrderLineGroup parent) {
+    this.parent = parent;
+  }
+
+  public TaskElement getAssociatedTaskElement() {
+    return getTaskSource() == null ? null : getTaskSource().getTask();
+  }
+
+  public abstract Integer getWorkHours();
+
+  public abstract List<HoursGroup> getHoursGroups();
+
+  @NotEmpty(message = "name not specified")
+  public String getName() {
+    return getInfoComponent().getName();
+  }
+
+  public void setName(String name) {
+    if (name != null && name.length() > 255) {
+      name = name.substring(0, 255);
+    }
+
+    this.getInfoComponent().setName(name);
+  }
+
+  public Date getInitDate() {
+    return initDate;
+  }
+
+  public void setInitDate(Date initDate) {
+    this.initDate = initDate;
+  }
+
+  public Date getDeadline() {
+    return deadline;
+  }
+
+  public void setDeadline(Date deadline) {
+    this.deadline = deadline;
+  }
+
+  public String getDescription() {
+    return getInfoComponent().getDescription();
+  }
+
+  public void setDescription(String description) {
+    this.getInfoComponent().setDescription(description);
+  }
+
+  public abstract OrderLine toLeaf();
+
+  public abstract OrderLineGroup toContainer();
+
+  public boolean isScheduled() {
+    return getTaskSource() != null;
+  }
+
+  public boolean checkAtLeastOneHoursGroup() {
+    return !getHoursGroups().isEmpty();
+  }
+
+  public boolean isFormatCodeValid(String code) {
+    return !code.contains("_") && !"".equals(code);
+  }
+
+  public String getCode() {
+    return getInfoComponent().getCode();
+  }
+
+  public void setCode(String code) {
+    this.getInfoComponent().setCode(code);
+  }
+
+  public abstract OrderElementTemplate createTemplate();
+
+  public abstract DirectAdvanceAssignment getReportGlobalAdvanceAssignment();
+
+  public abstract void removeReportGlobalAdvanceAssignment();
+
+  public abstract DirectAdvanceAssignment getAdvanceAssignmentByType(AdvanceType type);
+
+  public DirectAdvanceAssignment getDirectAdvanceAssignmentByType(AdvanceType advanceType) {
+    if (advanceType != null) {
+      for (DirectAdvanceAssignment directAdvanceAssignment : getDirectAdvanceAssignments()) {
+        if (directAdvanceAssignment.getAdvanceType().getId().equals(advanceType.getId())) {
+          return directAdvanceAssignment;
         }
+      }
     }
 
-    private boolean isSuperElementPartialOrCompletelyScheduled() {
-        return getSchedulingState().isSomewhatScheduled();
+    return null;
+  }
+
+  public Set<DirectAdvanceAssignment> getDirectAdvanceAssignments() {
+    return Collections.unmodifiableSet(directAdvanceAssignments);
+  }
+
+  protected abstract Set<DirectAdvanceAssignment> getAllDirectAdvanceAssignments();
+
+  public abstract Set<DirectAdvanceAssignment> getAllDirectAdvanceAssignments(AdvanceType advanceType);
+
+  public abstract Set<IndirectAdvanceAssignment> getAllIndirectAdvanceAssignments(AdvanceType advanceType);
+
+  protected abstract Set<DirectAdvanceAssignment> getAllDirectAdvanceAssignmentsReportGlobal();
+
+  public void removeAdvanceAssignment(AdvanceAssignment advanceAssignment) {
+    if (directAdvanceAssignments.contains(advanceAssignment)) {
+      directAdvanceAssignments.remove(advanceAssignment);
+      if (this.getParent() != null) {
+        this.getParent().removeIndirectAdvanceAssignment(advanceAssignment.getAdvanceType());
+        removeChildrenAdvanceInParents(this.getParent());
+      }
+      markAsDirtyLastAdvanceMeasurementForSpreading();
+      updateSpreadAdvance();
+    }
+  }
+
+  public Set<Label> getLabels() {
+    return Collections.unmodifiableSet(labels);
+  }
+
+  public void setLabels(Set<Label> labels) {
+    this.labels = labels;
+  }
+
+  public Set<Label> getAllLabels() {
+    Set<Label> allLabels = new HashSet<>();
+    allLabels.addAll(this.labels);
+    if (parent != null) {
+      allLabels.addAll(parent.getAllLabels());
     }
 
-    public void initializeType(SchedulingState.Type type) {
-        if (!isNewObject()) {
-            throw new IllegalStateException();
+    return allLabels;
+  }
+
+  public void addLabel(Label label) {
+    Validate.notNull(label);
+
+    if (!checkAncestorsNoOtherLabelRepeated(label)) {
+      throw new IllegalArgumentException("An ancestor has the same label assigned, " +
+              "so this element is already inheriting this label");
+    }
+
+    removeLabelOnChildren(label);
+
+    labels.add(label);
+  }
+
+  protected void updateLabels() {
+    if (parent != null) {
+      Set<Label> toRemove = new HashSet<>();
+      for (Label each : labels) {
+        if (!parent.checkAncestorsNoOtherLabelRepeated(each)) {
+          toRemove.add(each);
         }
-        getCurrentSchedulingData().initializeType(type);
-        schedulingState = null;
+      }
+      labels.removeAll(toRemove);
     }
 
-    public void initializeTemplate(OrderElementTemplate template) {
-        if (!isNewObject()) {
-            throw new IllegalStateException();
-        }
-
-        if (this.template != null) {
-            throw new IllegalStateException("already initialized");
-        }
-
-        this.template = template;
-    }
-
-    public boolean isSchedulingPoint() {
-        return getSchedulingState().getType() == Type.SCHEDULING_POINT;
-    }
-
-    public OrderLineGroup getParent() {
-        return parent;
-    }
-
-    public TaskElement getAssociatedTaskElement() {
-        return getTaskSource() == null ? null : getTaskSource().getTask();
-    }
-
-    protected void setParent(OrderLineGroup parent) {
-        this.parent = parent;
-    }
-
-    public abstract Integer getWorkHours();
-
-    public abstract List<HoursGroup> getHoursGroups();
-
-    @NotEmpty(message = "name not specified")
-    public String getName() {
-        return getInfoComponent().getName();
-    }
-
-    public void setName(String name) {
-        if ( name != null && name.length() > 255 ) {
-            name = name.substring(0, 255);
-        }
-
-        this.getInfoComponent().setName(name);
-    }
-
-    public Date getInitDate() {
-        return initDate;
-    }
-
-    public void setInitDate(Date initDate) {
-        this.initDate = initDate;
-    }
-
-    public Date getDeadline() {
-        return deadline;
-    }
-
-    public void setDeadline(Date deadline) {
-        this.deadline = deadline;
-    }
-
-    public void setDescription(String description) {
-        this.getInfoComponent().setDescription(description);
-    }
-
-    public String getDescription() {
-        return getInfoComponent().getDescription();
-    }
-
-    public abstract OrderLine toLeaf();
-
-    public abstract OrderLineGroup toContainer();
-
-    public boolean isScheduled() {
-        return getTaskSource() != null;
-    }
-
-    public boolean checkAtLeastOneHoursGroup() {
-        return !getHoursGroups().isEmpty();
-    }
-
-    public boolean isFormatCodeValid(String code) {
-        return !code.contains("_") && !"".equals(code);
-    }
-
-    public void setCode(String code) {
-        this.getInfoComponent().setCode(code);
-    }
-
-
-    public String getCode() {
-        return getInfoComponent().getCode();
-    }
-
-    public abstract OrderElementTemplate createTemplate();
-
-    public abstract DirectAdvanceAssignment getReportGlobalAdvanceAssignment();
-
-    public abstract void removeReportGlobalAdvanceAssignment();
-
-    public abstract DirectAdvanceAssignment getAdvanceAssignmentByType(AdvanceType type);
-
-    public DirectAdvanceAssignment getDirectAdvanceAssignmentByType(AdvanceType advanceType) {
-        if (advanceType != null) {
-            for (DirectAdvanceAssignment directAdvanceAssignment : getDirectAdvanceAssignments()) {
-                if (directAdvanceAssignment.getAdvanceType().getId().equals(advanceType.getId())) {
-                    return directAdvanceAssignment;
-                }
-            }
-        }
-
-        return null;
-    }
-
-    public Set<DirectAdvanceAssignment> getDirectAdvanceAssignments() {
-        return Collections.unmodifiableSet(directAdvanceAssignments);
-    }
-
-    protected abstract Set<DirectAdvanceAssignment> getAllDirectAdvanceAssignments();
-
-    public abstract Set<DirectAdvanceAssignment> getAllDirectAdvanceAssignments(AdvanceType advanceType);
-
-    public abstract Set<IndirectAdvanceAssignment> getAllIndirectAdvanceAssignments(AdvanceType advanceType);
-
-    protected abstract Set<DirectAdvanceAssignment> getAllDirectAdvanceAssignmentsReportGlobal();
-
-    public void removeAdvanceAssignment(AdvanceAssignment advanceAssignment) {
-        if (directAdvanceAssignments.contains(advanceAssignment)) {
-            directAdvanceAssignments.remove(advanceAssignment);
-            if (this.getParent() != null) {
-                this.getParent().removeIndirectAdvanceAssignment(advanceAssignment.getAdvanceType());
-                removeChildrenAdvanceInParents(this.getParent());
-            }
-            markAsDirtyLastAdvanceMeasurementForSpreading();
-            updateSpreadAdvance();
-        }
-    }
-
-    public Set<Label> getLabels() {
-        return Collections.unmodifiableSet(labels);
-    }
-
-    public Set<Label> getAllLabels() {
-        Set<Label> allLabels = new HashSet<>();
-        allLabels.addAll(this.labels);
-        if (parent != null) {
-            allLabels.addAll(parent.getAllLabels());
-        }
-
-        return allLabels;
-    }
-
-    public void setLabels(Set<Label> labels) {
-        this.labels = labels;
-    }
-
-    public void addLabel(Label label) {
-        Validate.notNull(label);
-
-        if (!checkAncestorsNoOtherLabelRepeated(label)) {
-            throw new IllegalArgumentException("An ancestor has the same label assigned, " +
-                    "so this element is already inheriting this label");
-        }
-
-        removeLabelOnChildren(label);
-
-        labels.add(label);
-    }
-
-    protected void updateLabels() {
-        if (parent != null) {
-            Set<Label> toRemove = new HashSet<>();
-            for (Label each : labels) {
-                if (!parent.checkAncestorsNoOtherLabelRepeated(each)) {
-                    toRemove.add(each);
-                }
-            }
-            labels.removeAll(toRemove);
-        }
-
-        for (OrderElement each : getChildren()) {
-            each.updateLabels();
-        }
-    }
-
-    public void removeLabel(Label label) {
-        labels.remove(label);
-    }
-
-    /**
-     * Validate if the advanceAssignment can be added to the order element.
-     * The list of advanceAssignments must be attached.
-     *
-     * @param newAdvanceAssignment
-     *            must be attached
-     * @throws DuplicateValueTrueReportGlobalAdvanceException
-     * @throws DuplicateAdvanceAssignmentForOrderElementException
-     */
-    public void addAdvanceAssignment(DirectAdvanceAssignment newAdvanceAssignment)
-            throws DuplicateValueTrueReportGlobalAdvanceException, DuplicateAdvanceAssignmentForOrderElementException {
-
-        checkNoOtherGlobalAdvanceAssignment(newAdvanceAssignment);
-        checkAncestorsNoOtherAssignmentWithSameAdvanceType(this, newAdvanceAssignment);
-        checkChildrenNoOtherAssignmentWithSameAdvanceType(this, newAdvanceAssignment);
-
-        if ( getReportGlobalAdvanceAssignment() == null ) {
-            newAdvanceAssignment.setReportGlobalAdvance(true);
-        }
-
-        newAdvanceAssignment.setOrderElement(this);
-        this.directAdvanceAssignments.add(newAdvanceAssignment);
-
-        if ( this.getParent() != null ) {
-            addChildrenAdvanceInParents(this.getParent());
-            this.getParent()
-                    .addIndirectAdvanceAssignment(newAdvanceAssignment.createIndirectAdvanceFor(this.getParent()));
-        }
-    }
-
-    public void addChildrenAdvanceInParents(OrderLineGroup parent) {
-        if ( (parent != null) && (!parent.existChildrenAdvance()) ) {
-            parent.addChildrenAdvanceOrderLineGroup();
-            addChildrenAdvanceInParents(parent.getParent());
-        }
-
-    }
-
-    public void removeChildrenAdvanceInParents(OrderLineGroup parent) {
-        if ( (parent != null) && (parent.existChildrenAdvance() ) && (!itsChildrenHasAdvances(parent))) {
-            parent.removeChildrenAdvanceOrderLineGroup();
-            removeChildrenAdvanceInParents(parent.getParent());
-        }
-    }
-
-    private boolean itsChildrenHasAdvances(OrderElement orderElement) {
-        for (OrderElement child : orderElement.getChildren()) {
-
-            if ( (!child.getIndirectAdvanceAssignments().isEmpty()) ||
-                    (!child.getDirectAdvanceAssignments().isEmpty()) ) {
-
-                return true;
-            }
-            if ( itsChildrenHasAdvances(child) ) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    protected void checkNoOtherGlobalAdvanceAssignment(DirectAdvanceAssignment newAdvanceAssignment)
-            throws DuplicateValueTrueReportGlobalAdvanceException {
-
-        if ( !newAdvanceAssignment.getReportGlobalAdvance() ) {
-            return;
-        }
-
-        for (DirectAdvanceAssignment directAdvanceAssignment : directAdvanceAssignments) {
-            if ( directAdvanceAssignment.getReportGlobalAdvance() ) {
-                throw new DuplicateValueTrueReportGlobalAdvanceException(
-                        _("Cannot spread two progress in the same task"), this, OrderElement.class);
-            }
-        }
-    }
-
-    /**
-     * It checks there are no {@link DirectAdvanceAssignment} with the same type in {@link OrderElement} and ancestors.
-     *
-     * @param orderElement
-     * @param newAdvanceAssignment
-     * @throws DuplicateAdvanceAssignmentForOrderElementException
-     */
-    public void checkAncestorsNoOtherAssignmentWithSameAdvanceType(
-            OrderElement orderElement, DirectAdvanceAssignment newAdvanceAssignment)
-            throws DuplicateAdvanceAssignmentForOrderElementException {
-
-        for (DirectAdvanceAssignment directAdvanceAssignment : orderElement.getDirectAdvanceAssignments()) {
-
-            if ( AdvanceType.equivalentInDB(
-                    directAdvanceAssignment.getAdvanceType(), newAdvanceAssignment.getAdvanceType()) ) {
-
-                throw new DuplicateAdvanceAssignmentForOrderElementException(
-                        _("Duplicate Progress Assignment For Task"), this, OrderElement.class);
-            }
-        }
-        if (orderElement.getParent() != null) {
-            checkAncestorsNoOtherAssignmentWithSameAdvanceType(orderElement.getParent(), newAdvanceAssignment);
-        }
+    for (OrderElement each : getChildren()) {
+      each.updateLabels();
     }
+  }
 
-    /**
-     * It checks there are no {@link AdvanceAssignment} with the same type in orderElement and its children.
-     *
-     * @param orderElement
-     * @param newAdvanceAssignment
-     * @throws DuplicateAdvanceAssignmentForOrderElementException
-     */
-    protected void checkChildrenNoOtherAssignmentWithSameAdvanceType(
-            OrderElement orderElement, DirectAdvanceAssignment newAdvanceAssignment)
-            throws DuplicateAdvanceAssignmentForOrderElementException {
+  public void removeLabel(Label label) {
+    labels.remove(label);
+  }
 
-        if (orderElement.existsDirectAdvanceAssignmentWithTheSameType(newAdvanceAssignment.getAdvanceType())) {
-            throw new DuplicateAdvanceAssignmentForOrderElementException(
-                    _("Duplicate Progress Assignment For Task"),
-                    this,
-                    OrderElement.class);
-        }
-        if (!orderElement.getChildren().isEmpty()) {
-            for (OrderElement child : orderElement.getChildren()) {
-                checkChildrenNoOtherAssignmentWithSameAdvanceType(child, newAdvanceAssignment);
-            }
-        }
-    }
-
-    public boolean existsDirectAdvanceAssignmentWithTheSameType(AdvanceType type) {
-        for (DirectAdvanceAssignment directAdvanceAssignment : directAdvanceAssignments) {
-            if (AdvanceType.equivalentInDB(directAdvanceAssignment.getAdvanceType(), type)) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    public BigDecimal getAdvancePercentage() {
-        if ((dirtyLastAdvanceMeasurementForSpreading == null) || dirtyLastAdvanceMeasurementForSpreading) {
-            lastAdvanceMeasurementForSpreading = getAdvancePercentage(null);
-            dirtyLastAdvanceMeasurementForSpreading = false;
-        }
-
-        return lastAdvanceMeasurementForSpreading;
-    }
-
-    public abstract BigDecimal getAdvancePercentage(LocalDate date);
-
-    public abstract Set<IndirectAdvanceAssignment> getIndirectAdvanceAssignments();
-
-    public abstract DirectAdvanceAssignment calculateFakeDirectAdvanceAssignment(
-            IndirectAdvanceAssignment indirectAdvanceAssignment);
-
-    public abstract BigDecimal getAdvancePercentageChildren();
-
-    public List<OrderElement> getAllChildren() {
-        List<OrderElement> children = getChildren();
-        List<OrderElement> result = new ArrayList<>();
-
-        for (OrderElement orderElement : children) {
-            result.add(orderElement);
-            result.addAll(orderElement.getAllChildren());
-        }
-        return result;
-    }
-
-    public void setCriterionRequirements(Set<CriterionRequirement> criterionRequirements) {
-        this.criterionRequirements = criterionRequirements;
-    }
-
-    @Valid
-    @Override
-    public Set<CriterionRequirement> getCriterionRequirements() {
-        return Collections.unmodifiableSet(criterionRequirements);
-    }
-
-    /**
-     * Operations to manage the criterion requirements of a orderElement
-     * (remove, adding, update of the criterion requirement of the orderElement such as the descendant's criterion requirement)
-     */
-
-    public void setValidCriterionRequirement(IndirectCriterionRequirement requirement,boolean valid) {
-        requirement.setValid(valid);
-        criterionRequirementHandler.propagateValidCriterionRequirement(this, requirement.getParent(), valid);
-    }
-
-    public void removeDirectCriterionRequirement(DirectCriterionRequirement criterionRequirement) {
-        criterionRequirementHandler.propagateRemoveCriterionRequirement(this, criterionRequirement);
-        removeCriterionRequirement(criterionRequirement);
-    }
-
-    @Override
-    public void removeCriterionRequirement(CriterionRequirement requirement) {
-        criterionRequirements.remove(requirement);
-        if (requirement instanceof IndirectCriterionRequirement) {
-            ((IndirectCriterionRequirement)requirement).getParent().getChildren().remove(requirement);
-        }
-    }
-
-    @Override
-    public void addCriterionRequirement(CriterionRequirement criterionRequirement) {
-        criterionRequirementHandler.addCriterionRequirement(this, criterionRequirement);
-    }
-
-    public void addDirectCriterionRequirement(CriterionRequirement criterionRequirement) {
-        criterionRequirementHandler.addDirectCriterionRequirement(this, criterionRequirement);
-    }
-
-    public void addIndirectCriterionRequirement(IndirectCriterionRequirement criterionRequirement) {
-        criterionRequirementHandler.addIndirectCriterionRequirement(this, criterionRequirement);
-    }
-
-    protected void basicAddCriterionRequirement(CriterionRequirement criterionRequirement) {
-        criterionRequirement.setOrderElement(this);
-        this.criterionRequirements.add(criterionRequirement);
-    }
-
-    public void updateCriterionRequirements() {
-        criterionRequirementHandler.updateMyCriterionRequirements(this);
-        criterionRequirementHandler.propagateUpdateCriterionRequirements(this);
-    }
-
-    public boolean canAddCriterionRequirement(DirectCriterionRequirement newRequirement) {
-        return criterionRequirementHandler.canAddCriterionRequirement(this, newRequirement);
-    }
-
-    public Set<IndirectCriterionRequirement> getIndirectCriterionRequirement() {
-        return criterionRequirementHandler.getIndirectCriterionRequirement(criterionRequirements);
-    }
-
-    public void updatePositionConstraintOf(Task task) {
-        applyConstraintsInOrderElementParents(task);
-    }
-
-    public void applyInitialPositionConstraintTo(Task task) {
-        boolean applied = applyConstraintsInOrderElementParents(task);
-        if (applied) {
-            return;
-        }
-        if (getOrder().isScheduleBackwards()) {
-            task.getPositionConstraint().asLateAsPossible();
-        } else {
-            task.getPositionConstraint().asSoonAsPossible();
-        }
-    }
-
-    /**
-     * Searches for init date or end constraints on order element and order element parents.
-     *
-     * @param task
-     * @return <code>true</code> if a constraint have been applied, otherwise
-     *         <code>false</code>
-     */
-    private boolean applyConstraintsInOrderElementParents(Task task) {
-        boolean scheduleBackwards = getOrder().isScheduleBackwards();
-        OrderElement current = this;
-
-        while (current != null) {
-            boolean applied = current.applyConstraintBasedOnInitOrEndDate(task, scheduleBackwards);
-            if (applied) {
-                return true;
-            }
-            current = current.getParent();
-        }
-
-        return false;
-    }
-
-    protected boolean applyConstraintBasedOnInitOrEndDate(Task task, boolean scheduleBackwards) {
-        TaskPositionConstraint constraint = task.getPositionConstraint();
-
-        if (getInitDate() != null && (getDeadline() == null || !scheduleBackwards)) {
-            constraint.notEarlierThan(IntraDayDate.startOfDay(LocalDate.fromDateFields(this.getInitDate())));
-            return true;
-        }
-
-        return false;
-    }
-
-    public Set<DirectCriterionRequirement> getDirectCriterionRequirement() {
-        return criterionRequirementHandler.getDirectCriterionRequirement(criterionRequirements);
-    }
-
-    public SchedulingState.Type getSchedulingStateType() {
-        return getCurrentSchedulingData().getSchedulingStateType();
-    }
-
-    public TaskSource getTaskSource() {
-        return getCurrentSchedulingData().getTaskSource();
-    }
-
-    public TaskElement getTaskElement() {
-        TaskSource taskSource = getTaskSource();
-        return taskSource == null ? null : taskSource.getTask();
-    }
-
-    public Set<TaskElement> getTaskElements() {
-        return getTaskSource() == null
-                ? Collections.emptySet()
-                : Collections.singleton(getTaskSource().getTask());
-    }
-
-    public List<TaskSource> getTaskSourcesFromBottomToTop() {
-        List<TaskSource> result = new ArrayList<>();
-        taskSourcesFromBottomToTop(result);
-        return result;
-    }
-
-    public List<TaskSource> getAllScenariosTaskSourcesFromBottomToTop() {
-        List<TaskSource> result = new ArrayList<>();
-        allScenariosTaskSourcesFromBottomToTop(result);
-        return result;
-    }
-
-    public List<SchedulingDataForVersion> getSchedulingDataForVersionFromBottomToTop() {
-        List<SchedulingDataForVersion> result = new ArrayList<>();
-        schedulingDataForVersionFromBottomToTop(result);
-        return result;
-    }
-
-    private void schedulingDataForVersionFromBottomToTop(List<SchedulingDataForVersion> result) {
-        for (OrderElement each : getChildren()) {
-            each.schedulingDataForVersionFromBottomToTop(result);
-        }
-        result.addAll(schedulingDataForVersion.values());
-    }
-
-    private void taskSourcesFromBottomToTop(List<TaskSource> result) {
-        for (OrderElement each : getChildren()) {
-            each.taskSourcesFromBottomToTop(result);
-        }
-
-        if ( getTaskSource() != null ) {
-            result.add(getTaskSource());
-        }
-    }
-
-    private void allScenariosTaskSourcesFromBottomToTop(List<TaskSource> result) {
-        for (OrderElement each : getChildren()) {
-            each.allScenariosTaskSourcesFromBottomToTop(result);
-        }
-
-        for (Entry<OrderVersion, SchedulingDataForVersion> each : schedulingDataForVersion.entrySet()) {
-            TaskSource taskSource = each.getValue().getTaskSource();
-            if (taskSource != null) {
-                result.add(taskSource);
-            }
-        }
-    }
+  /**
+   * Validate if the advanceAssignment can be added to the order element.
+   * The list of advanceAssignments must be attached.
+   *
+   * @param newAdvanceAssignment must be attached
+   * @throws DuplicateValueTrueReportGlobalAdvanceException
+   * @throws DuplicateAdvanceAssignmentForOrderElementException
+   */
+  public void addAdvanceAssignment(DirectAdvanceAssignment newAdvanceAssignment)
+          throws DuplicateValueTrueReportGlobalAdvanceException, DuplicateAdvanceAssignmentForOrderElementException {
 
-    @Valid
-    public Set<MaterialAssignment> getMaterialAssignments() {
-        return Collections.unmodifiableSet(materialAssignments);
-    }
-
-    public void addMaterialAssignment(MaterialAssignment materialAssignment) {
-        materialAssignments.add(materialAssignment);
-        materialAssignment.setOrderElement(this);
-    }
-
-    public void removeMaterialAssignment(MaterialAssignment materialAssignment) {
-        materialAssignments.remove(materialAssignment);
-    }
-
-    public BigDecimal getTotalMaterialAssignmentUnits() {
-        BigDecimal result = BigDecimal.ZERO;
-
-        final Set<MaterialAssignment> materialAssignments = getMaterialAssignments();
-
-        for (MaterialAssignment each: materialAssignments) {
-            result = result.add(each.getUnits());
-        }
-        return result;
-    }
-
-    public BigDecimal getTotalMaterialAssignmentPrice() {
-        BigDecimal result = new BigDecimal(0);
-
-        final Set<MaterialAssignment> materialAssignments = getMaterialAssignments();
-
-        for (MaterialAssignment each: materialAssignments) {
-            result = result.add(each.getTotalPrice());
-        }
-        return result;
-    }
-
-    public Order getOrder() {
-        return parent == null ? null : parent.getOrder();
-    }
-
-    @Valid
-    public Set<TaskQualityForm> getTaskQualityForms() {
-        return Collections.unmodifiableSet(taskQualityForms);
-    }
-
-    public Set<QualityForm> getQualityForms() {
-        Set<QualityForm> result = new HashSet<>();
-        for (TaskQualityForm each : taskQualityForms) {
-            result.add(each.getQualityForm());
-        }
-        return result;
-    }
+    checkNoOtherGlobalAdvanceAssignment(newAdvanceAssignment);
+    checkAncestorsNoOtherAssignmentWithSameAdvanceType(this, newAdvanceAssignment);
+    checkChildrenNoOtherAssignmentWithSameAdvanceType(this, newAdvanceAssignment);
 
-    public void setTaskQualityFormItems(Set<TaskQualityForm> taskQualityForms) {
-        this.taskQualityForms = taskQualityForms;
+    if (getReportGlobalAdvanceAssignment() == null) {
+      newAdvanceAssignment.setReportGlobalAdvance(true);
     }
 
-    public TaskQualityForm addTaskQualityForm(QualityForm qualityForm) throws ValidationException {
-        checkUniqueQualityForm(qualityForm);
-        TaskQualityForm taskQualityForm = TaskQualityForm.create(this, qualityForm);
-        this.taskQualityForms.add(taskQualityForm);
-
-        return taskQualityForm;
-    }
+    newAdvanceAssignment.setOrderElement(this);
+    this.directAdvanceAssignments.add(newAdvanceAssignment);
 
-    public void removeTaskQualityForm(TaskQualityForm taskQualityForm) {
-        this.taskQualityForms.remove(taskQualityForm);
+    if (this.getParent() != null) {
+      addChildrenAdvanceInParents(this.getParent());
+      this.getParent()
+              .addIndirectAdvanceAssignment(newAdvanceAssignment.createIndirectAdvanceFor(this.getParent()));
     }
+  }
 
-    private void checkUniqueQualityForm(QualityForm qualityForm) throws ValidationException, IllegalArgumentException {
-        Validate.notNull(qualityForm);
-        for (TaskQualityForm taskQualityForm : getTaskQualityForms()) {
-
-            if ( qualityForm.equals(taskQualityForm.getQualityForm()) ) {
-
-                throw new ValidationException(ValidationException.invalidValue(
-                        _("Quality form already exists"),
-                        "name",
-                        qualityForm.getName(),
-                        qualityForm));
-            }
-        }
+  public void addChildrenAdvanceInParents(OrderLineGroup parent) {
+    if ((parent != null) && (!parent.existChildrenAdvance())) {
+      parent.addChildrenAdvanceOrderLineGroup();
+      addChildrenAdvanceInParents(parent.getParent());
     }
 
-    @Override
-    public boolean isUniqueCodeConstraint() {
-        // The automatic checking of this constraint is avoided because it uses the wrong code property
-        return true;
-    }
+  }
 
-    @AssertTrue(message = "code is already used in another project")
-    public boolean isCodeRepeatedInAnotherOrderConstraint() {
-        return StringUtils.isBlank(getCode()) ||
-                !Registry.getOrderElementDAO().existsByCodeInAnotherOrderAnotherTransaction(this);
+  public void removeChildrenAdvanceInParents(OrderLineGroup parent) {
+    if ((parent != null) && (parent.existChildrenAdvance()) && (!itsChildrenHasAdvances(parent))) {
+      parent.removeChildrenAdvanceOrderLineGroup();
+      removeChildrenAdvanceInParents(parent.getParent());
     }
+  }
 
-    @AssertTrue(message = "a label can not be assigned twice in the same branch")
-    public boolean isLabelNotRepeatedInTheSameBranchConstraint() {
-        return checkConstraintLabelNotRepeatedInTheSameBranch(new HashSet<>());
-    }
+  private boolean itsChildrenHasAdvances(OrderElement orderElement) {
+    for (OrderElement child : orderElement.getChildren()) {
 
-    private boolean checkConstraintLabelNotRepeatedInTheSameBranch(HashSet<Label> parentLabels) {
-        HashSet<Label> withThisLabels = new HashSet<>(parentLabels);
-        for (Label label : getLabels()) {
-            if (containsLabel(withThisLabels, label)) {
-                return false;
-            }
-            withThisLabels.add(label);
-        }
-        for (OrderElement child : getChildren()) {
-            if (!child.checkConstraintLabelNotRepeatedInTheSameBranch(withThisLabels)) {
-                return false;
-            }
-        }
+      if ((!child.getIndirectAdvanceAssignments().isEmpty()) ||
+              (!child.getDirectAdvanceAssignments().isEmpty())) {
 
         return true;
+      }
+      if (itsChildrenHasAdvances(child)) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  protected void checkNoOtherGlobalAdvanceAssignment(DirectAdvanceAssignment newAdvanceAssignment)
+          throws DuplicateValueTrueReportGlobalAdvanceException {
+
+    if (!newAdvanceAssignment.getReportGlobalAdvance()) {
+      return;
     }
 
-    private boolean containsLabel(HashSet<Label> labels, Label label) {
-        for (Label each : labels) {
-            if (each.isEqualTo(label)) {
-                return true;
-            }
-        }
+    for (DirectAdvanceAssignment directAdvanceAssignment : directAdvanceAssignments) {
+      if (directAdvanceAssignment.getReportGlobalAdvance()) {
+        throw new DuplicateValueTrueReportGlobalAdvanceException(
+                _("Cannot spread two progress in the same task"), this, OrderElement.class);
+      }
+    }
+  }
 
+  /**
+   * It checks there are no {@link DirectAdvanceAssignment} with the same type in {@link OrderElement} and ancestors.
+   *
+   * @param orderElement
+   * @param newAdvanceAssignment
+   * @throws DuplicateAdvanceAssignmentForOrderElementException
+   */
+  public void checkAncestorsNoOtherAssignmentWithSameAdvanceType(
+          OrderElement orderElement, DirectAdvanceAssignment newAdvanceAssignment)
+          throws DuplicateAdvanceAssignmentForOrderElementException {
+
+    for (DirectAdvanceAssignment directAdvanceAssignment : orderElement.getDirectAdvanceAssignments()) {
+
+      if (AdvanceType.equivalentInDB(
+              directAdvanceAssignment.getAdvanceType(), newAdvanceAssignment.getAdvanceType())) {
+
+        throw new DuplicateAdvanceAssignmentForOrderElementException(
+                _("Duplicate Progress Assignment For Task"), this, OrderElement.class);
+      }
+    }
+    if (orderElement.getParent() != null) {
+      checkAncestorsNoOtherAssignmentWithSameAdvanceType(orderElement.getParent(), newAdvanceAssignment);
+    }
+  }
+
+  /**
+   * It checks there are no {@link AdvanceAssignment} with the same type in orderElement and its children.
+   *
+   * @param orderElement
+   * @param newAdvanceAssignment
+   * @throws DuplicateAdvanceAssignmentForOrderElementException
+   */
+  protected void checkChildrenNoOtherAssignmentWithSameAdvanceType(
+          OrderElement orderElement, DirectAdvanceAssignment newAdvanceAssignment)
+          throws DuplicateAdvanceAssignmentForOrderElementException {
+
+    if (orderElement.existsDirectAdvanceAssignmentWithTheSameType(newAdvanceAssignment.getAdvanceType())) {
+      throw new DuplicateAdvanceAssignmentForOrderElementException(
+              _("Duplicate Progress Assignment For Task"),
+              this,
+              OrderElement.class);
+    }
+    if (!orderElement.getChildren().isEmpty()) {
+      for (OrderElement child : orderElement.getChildren()) {
+        checkChildrenNoOtherAssignmentWithSameAdvanceType(child, newAdvanceAssignment);
+      }
+    }
+  }
+
+  public boolean existsDirectAdvanceAssignmentWithTheSameType(AdvanceType type) {
+    for (DirectAdvanceAssignment directAdvanceAssignment : directAdvanceAssignments) {
+      if (AdvanceType.equivalentInDB(directAdvanceAssignment.getAdvanceType(), type)) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  public BigDecimal getAdvancePercentage() {
+    if ((dirtyLastAdvanceMeasurementForSpreading == null) || dirtyLastAdvanceMeasurementForSpreading) {
+      lastAdvanceMeasurementForSpreading = getAdvancePercentage(null);
+      dirtyLastAdvanceMeasurementForSpreading = false;
+    }
+
+    return lastAdvanceMeasurementForSpreading;
+  }
+
+  public abstract BigDecimal getAdvancePercentage(LocalDate date);
+
+  public abstract Set<IndirectAdvanceAssignment> getIndirectAdvanceAssignments();
+
+  public abstract DirectAdvanceAssignment calculateFakeDirectAdvanceAssignment(
+          IndirectAdvanceAssignment indirectAdvanceAssignment);
+
+  public abstract BigDecimal getAdvancePercentageChildren();
+
+  public List<OrderElement> getAllChildren() {
+    List<OrderElement> children = getChildren();
+    List<OrderElement> result = new ArrayList<>();
+
+    for (OrderElement orderElement : children) {
+      result.add(orderElement);
+      result.addAll(orderElement.getAllChildren());
+    }
+    return result;
+  }
+
+  @Valid
+  @Override
+  public Set<CriterionRequirement> getCriterionRequirements() {
+    return Collections.unmodifiableSet(criterionRequirements);
+  }
+
+  public void setCriterionRequirements(Set<CriterionRequirement> criterionRequirements) {
+    this.criterionRequirements = criterionRequirements;
+  }
+
+  /**
+   * Operations to manage the criterion requirements of a orderElement
+   * (remove, adding, update of the criterion requirement of the orderElement such as the descendant's criterion requirement)
+   */
+
+  public void setValidCriterionRequirement(IndirectCriterionRequirement requirement, boolean valid) {
+    requirement.setValid(valid);
+    criterionRequirementHandler.propagateValidCriterionRequirement(this, requirement.getParent(), valid);
+  }
+
+  public void removeDirectCriterionRequirement(DirectCriterionRequirement criterionRequirement) {
+    criterionRequirementHandler.propagateRemoveCriterionRequirement(this, criterionRequirement);
+    removeCriterionRequirement(criterionRequirement);
+  }
+
+  @Override
+  public void removeCriterionRequirement(CriterionRequirement requirement) {
+    criterionRequirements.remove(requirement);
+    if (requirement instanceof IndirectCriterionRequirement) {
+      ((IndirectCriterionRequirement) requirement).getParent().getChildren().remove(requirement);
+    }
+  }
+
+  @Override
+  public void addCriterionRequirement(CriterionRequirement criterionRequirement) {
+    criterionRequirementHandler.addCriterionRequirement(this, criterionRequirement);
+  }
+
+  public void addDirectCriterionRequirement(CriterionRequirement criterionRequirement) {
+    criterionRequirementHandler.addDirectCriterionRequirement(this, criterionRequirement);
+  }
+
+  public void addIndirectCriterionRequirement(IndirectCriterionRequirement criterionRequirement) {
+    criterionRequirementHandler.addIndirectCriterionRequirement(this, criterionRequirement);
+  }
+
+  protected void basicAddCriterionRequirement(CriterionRequirement criterionRequirement) {
+    criterionRequirement.setOrderElement(this);
+    this.criterionRequirements.add(criterionRequirement);
+  }
+
+  public void updateCriterionRequirements() {
+    criterionRequirementHandler.updateMyCriterionRequirements(this);
+    criterionRequirementHandler.propagateUpdateCriterionRequirements(this);
+  }
+
+  public boolean canAddCriterionRequirement(DirectCriterionRequirement newRequirement) {
+    return criterionRequirementHandler.canAddCriterionRequirement(this, newRequirement);
+  }
+
+  public Set<IndirectCriterionRequirement> getIndirectCriterionRequirement() {
+    return criterionRequirementHandler.getIndirectCriterionRequirement(criterionRequirements);
+  }
+
+  public void updatePositionConstraintOf(Task task) {
+    applyConstraintsInOrderElementParents(task);
+  }
+
+  public void applyInitialPositionConstraintTo(Task task) {
+    boolean applied = applyConstraintsInOrderElementParents(task);
+    if (applied) {
+      return;
+    }
+    if (getOrder().isScheduleBackwards()) {
+      task.getPositionConstraint().asLateAsPossible();
+    } else {
+      task.getPositionConstraint().asSoonAsPossible();
+    }
+  }
+
+  /**
+   * Searches for init date or end constraints on order element and order element parents.
+   *
+   * @param task
+   * @return <code>true</code> if a constraint have been applied, otherwise
+   * <code>false</code>
+   */
+  private boolean applyConstraintsInOrderElementParents(Task task) {
+    boolean scheduleBackwards = getOrder().isScheduleBackwards();
+    OrderElement current = this;
+
+    while (current != null) {
+      boolean applied = current.applyConstraintBasedOnInitOrEndDate(task, scheduleBackwards);
+      if (applied) {
+        return true;
+      }
+      current = current.getParent();
+    }
+
+    return false;
+  }
+
+  protected boolean applyConstraintBasedOnInitOrEndDate(Task task, boolean scheduleBackwards) {
+    TaskPositionConstraint constraint = task.getPositionConstraint();
+
+    if (getInitDate() != null && (getDeadline() == null || !scheduleBackwards)) {
+      constraint.notEarlierThan(IntraDayDate.startOfDay(LocalDate.fromDateFields(this.getInitDate())));
+      return true;
+    }
+
+    return false;
+  }
+
+  public Set<DirectCriterionRequirement> getDirectCriterionRequirement() {
+    return criterionRequirementHandler.getDirectCriterionRequirement(criterionRequirements);
+  }
+
+  public SchedulingState.Type getSchedulingStateType() {
+    return getCurrentSchedulingData().getSchedulingStateType();
+  }
+
+  public TaskSource getTaskSource() {
+    return getCurrentSchedulingData().getTaskSource();
+  }
+
+  public TaskElement getTaskElement() {
+    TaskSource taskSource = getTaskSource();
+    return taskSource == null ? null : taskSource.getTask();
+  }
+
+  public Set<TaskElement> getTaskElements() {
+    return getTaskSource() == null
+            ? Collections.emptySet()
+            : Collections.singleton(getTaskSource().getTask());
+  }
+
+  public List<TaskSource> getTaskSourcesFromBottomToTop() {
+    List<TaskSource> result = new ArrayList<>();
+    taskSourcesFromBottomToTop(result);
+    return result;
+  }
+
+  public List<TaskSource> getAllScenariosTaskSourcesFromBottomToTop() {
+    List<TaskSource> result = new ArrayList<>();
+    allScenariosTaskSourcesFromBottomToTop(result);
+    return result;
+  }
+
+  public List<SchedulingDataForVersion> getSchedulingDataForVersionFromBottomToTop() {
+    List<SchedulingDataForVersion> result = new ArrayList<>();
+    schedulingDataForVersionFromBottomToTop(result);
+    return result;
+  }
+
+  private void schedulingDataForVersionFromBottomToTop(List<SchedulingDataForVersion> result) {
+    for (OrderElement each : getChildren()) {
+      each.schedulingDataForVersionFromBottomToTop(result);
+    }
+    result.addAll(schedulingDataForVersion.values());
+  }
+
+  private void taskSourcesFromBottomToTop(List<TaskSource> result) {
+    for (OrderElement each : getChildren()) {
+      each.taskSourcesFromBottomToTop(result);
+    }
+
+    if (getTaskSource() != null) {
+      result.add(getTaskSource());
+    }
+  }
+
+  private void allScenariosTaskSourcesFromBottomToTop(List<TaskSource> result) {
+    for (OrderElement each : getChildren()) {
+      each.allScenariosTaskSourcesFromBottomToTop(result);
+    }
+
+    for (Entry<OrderVersion, SchedulingDataForVersion> each : schedulingDataForVersion.entrySet()) {
+      TaskSource taskSource = each.getValue().getTaskSource();
+      if (taskSource != null) {
+        result.add(taskSource);
+      }
+    }
+  }
+
+  @Valid
+  public Set<MaterialAssignment> getMaterialAssignments() {
+    return Collections.unmodifiableSet(materialAssignments);
+  }
+
+  public void addMaterialAssignment(MaterialAssignment materialAssignment) {
+    materialAssignments.add(materialAssignment);
+    materialAssignment.setOrderElement(this);
+  }
+
+  public void removeMaterialAssignment(MaterialAssignment materialAssignment) {
+    materialAssignments.remove(materialAssignment);
+  }
+
+  public BigDecimal getTotalMaterialAssignmentUnits() {
+    BigDecimal result = BigDecimal.ZERO;
+
+    final Set<MaterialAssignment> materialAssignments = getMaterialAssignments();
+
+    for (MaterialAssignment each : materialAssignments) {
+      result = result.add(each.getUnits());
+    }
+    return result;
+  }
+
+  public BigDecimal getTotalMaterialAssignmentPrice() {
+    BigDecimal result = new BigDecimal(0);
+
+    final Set<MaterialAssignment> materialAssignments = getMaterialAssignments();
+
+    for (MaterialAssignment each : materialAssignments) {
+      result = result.add(each.getTotalPrice());
+    }
+    return result;
+  }
+
+  public Order getOrder() {
+    return parent == null ? null : parent.getOrder();
+  }
+
+  @Valid
+  public Set<TaskQualityForm> getTaskQualityForms() {
+    return Collections.unmodifiableSet(taskQualityForms);
+  }
+
+  public Set<QualityForm> getQualityForms() {
+    Set<QualityForm> result = new HashSet<>();
+    for (TaskQualityForm each : taskQualityForms) {
+      result.add(each.getQualityForm());
+    }
+    return result;
+  }
+
+  public void setTaskQualityFormItems(Set<TaskQualityForm> taskQualityForms) {
+    this.taskQualityForms = taskQualityForms;
+  }
+
+  public TaskQualityForm addTaskQualityForm(QualityForm qualityForm) throws ValidationException {
+    checkUniqueQualityForm(qualityForm);
+    TaskQualityForm taskQualityForm = TaskQualityForm.create(this, qualityForm);
+    this.taskQualityForms.add(taskQualityForm);
+
+    return taskQualityForm;
+  }
+
+  public void removeTaskQualityForm(TaskQualityForm taskQualityForm) {
+    this.taskQualityForms.remove(taskQualityForm);
+  }
+
+  private void checkUniqueQualityForm(QualityForm qualityForm) throws ValidationException, IllegalArgumentException {
+    Validate.notNull(qualityForm);
+    for (TaskQualityForm taskQualityForm : getTaskQualityForms()) {
+
+      if (qualityForm.equals(taskQualityForm.getQualityForm())) {
+
+        throw new ValidationException(ValidationException.invalidValue(
+                _("Quality form already exists"),
+                "name",
+                qualityForm.getName(),
+                qualityForm));
+      }
+    }
+  }
+
+  @Override
+  public boolean isUniqueCodeConstraint() {
+    // The automatic checking of this constraint is avoided because it uses the wrong code property
+    return true;
+  }
+
+  @AssertTrue(message = "code is already used in another project")
+  public boolean isCodeRepeatedInAnotherOrderConstraint() {
+    return StringUtils.isBlank(getCode()) ||
+            !Registry.getOrderElementDAO().existsByCodeInAnotherOrderAnotherTransaction(this);
+  }
+
+  @AssertTrue(message = "a label can not be assigned twice in the same branch")
+  public boolean isLabelNotRepeatedInTheSameBranchConstraint() {
+    return checkConstraintLabelNotRepeatedInTheSameBranch(new HashSet<>());
+  }
+
+  private boolean checkConstraintLabelNotRepeatedInTheSameBranch(HashSet<Label> parentLabels) {
+    HashSet<Label> withThisLabels = new HashSet<>(parentLabels);
+    for (Label label : getLabels()) {
+      if (containsLabel(withThisLabels, label)) {
         return false;
+      }
+      withThisLabels.add(label);
     }
-
-    public boolean checkAncestorsNoOtherLabelRepeated(Label newLabel) {
-        for (Label label : labels) {
-            if (label.isEqualTo(newLabel)) {
-                return false;
-            }
-        }
-
-        return !(parent != null && !parent.checkAncestorsNoOtherLabelRepeated(newLabel));
-    }
-
-    private void removeLabelOnChildren(Label newLabel) {
-        Label toRemove = null;
-
-        for (Label label : labels) {
-            if (label.equals(newLabel)) {
-                toRemove = label;
-                break;
-            }
-        }
-
-        if (toRemove != null) {
-            removeLabel(toRemove);
-        }
-
-        for (OrderElement child : getChildren()) {
-            child.removeLabelOnChildren(newLabel);
-        }
-    }
-
-    public boolean containsOrderElement(String code) {
-        for (OrderElement child : getChildren()) {
-            if (child.getCode().equals(code)) {
-                return true;
-            }
-        }
-
+    for (OrderElement child : getChildren()) {
+      if (!child.checkConstraintLabelNotRepeatedInTheSameBranch(withThisLabels)) {
         return false;
+      }
     }
 
-    public OrderElement getOrderElement(String code) {
-        if (code == null) {
-            return null;
-        }
+    return true;
+  }
 
-        for (OrderElement child : getChildren()) {
-            if (child.getCode().equals(code)) {
-                return child;
-            }
-        }
-
-        return null;
+  private boolean containsLabel(HashSet<Label> labels, Label label) {
+    for (Label each : labels) {
+      if (each.isEqualTo(label)) {
+        return true;
+      }
     }
 
-    public boolean containsLabel(String code) {
-        for (Label label : getLabels()) {
-            if (label.getCode().equals(code)) {
-                return true;
-            }
-        }
+    return false;
+  }
 
+  public boolean checkAncestorsNoOtherLabelRepeated(Label newLabel) {
+    for (Label label : labels) {
+      if (label.isEqualTo(newLabel)) {
         return false;
+      }
     }
 
-    public boolean containsLabels(Set<Label> labels) {
-        Integer matches = 0;
-        for (Label label : labels) {
-            if (containsLabel(label.getCode())) {
-                matches++;
-            }
-        }
-        return matches == labels.size();
+    return !(parent != null && !parent.checkAncestorsNoOtherLabelRepeated(newLabel));
+  }
+
+  private void removeLabelOnChildren(Label newLabel) {
+    Label toRemove = null;
+
+    for (Label label : labels) {
+      if (label.equals(newLabel)) {
+        toRemove = label;
+        break;
+      }
     }
 
-    public boolean containsCriterion(String code) {
-        for (CriterionRequirement criterionRequirement : getDirectCriterionRequirement()) {
-            if (criterionRequirement.getCriterion().getCode().equals(code)) {
-                return true;
-            }
-        }
-
-        return false;
+    if (toRemove != null) {
+      removeLabel(toRemove);
     }
 
-    public boolean containsCriteria(Set<Criterion> criteria) {
-        Integer matches = 0;
-        for (Criterion criterion : criteria) {
-            if (containsCriterion(criterion.getCode())) {
-                matches++;
-            }
-        }
-        return matches == criteria.size();
+    for (OrderElement child : getChildren()) {
+      child.removeLabelOnChildren(newLabel);
+    }
+  }
+
+  public boolean containsOrderElement(String code) {
+    for (OrderElement child : getChildren()) {
+      if (child.getCode().equals(code)) {
+        return true;
+      }
     }
 
-    public boolean containsMaterialAssignment(String materialCode) {
-        for (MaterialAssignment materialAssignment : getMaterialAssignments()) {
-            if (materialAssignment.getMaterial().getCode().equals(materialCode)) {
-                return true;
-            }
-        }
+    return false;
+  }
 
-        return false;
+  public OrderElement getOrderElement(String code) {
+    if (code == null) {
+      return null;
     }
 
-    public MaterialAssignment getMaterialAssignment(String materialCode) {
-        for (MaterialAssignment materialAssignment : getMaterialAssignments()) {
-            if (materialAssignment.getMaterial().getCode().equals(materialCode)) {
-                return materialAssignment;
-            }
-        }
-
-        return null;
+    for (OrderElement child : getChildren()) {
+      if (child.getCode().equals(code)) {
+        return child;
+      }
     }
 
-    public DirectAdvanceAssignment getDirectAdvanceAssignmentSubcontractor() {
-        for (DirectAdvanceAssignment directAdvanceAssignment : directAdvanceAssignments) {
+    return null;
+  }
 
-            if (directAdvanceAssignment.getAdvanceType().getUnitName()
-                    .equals(PredefinedAdvancedTypes.SUBCONTRACTOR.getTypeName())) {
-
-                return directAdvanceAssignment;
-            }
-        }
-
-        return null;
+  public boolean containsLabel(String code) {
+    for (Label label : getLabels()) {
+      if (label.getCode().equals(code)) {
+        return true;
+      }
     }
 
-    public DirectAdvanceAssignment addSubcontractorAdvanceAssignment()
-            throws DuplicateValueTrueReportGlobalAdvanceException, DuplicateAdvanceAssignmentForOrderElementException {
+    return false;
+  }
 
-        boolean reportGlobalAdvance = false;
-        if (getReportGlobalAdvanceAssignment() == null) {
-            reportGlobalAdvance = true;
-        }
+  public boolean containsLabels(Set<Label> labels) {
+    Integer matches = 0;
+    for (Label label : labels) {
+      if (containsLabel(label.getCode())) {
+        matches++;
+      }
+    }
+    return matches == labels.size();
+  }
 
-        DirectAdvanceAssignment directAdvanceAssignment =
-                DirectAdvanceAssignment.create(reportGlobalAdvance, new BigDecimal(100));
+  public boolean containsCriterion(String code) {
+    for (CriterionRequirement criterionRequirement : getDirectCriterionRequirement()) {
+      if (criterionRequirement.getCriterion().getCode().equals(code)) {
+        return true;
+      }
+    }
 
-        directAdvanceAssignment.setAdvanceType(PredefinedAdvancedTypes.SUBCONTRACTOR.getType());
+    return false;
+  }
 
-        addAdvanceAssignment(directAdvanceAssignment);
+  public boolean containsCriteria(Set<Criterion> criteria) {
+    Integer matches = 0;
+    for (Criterion criterion : criteria) {
+      if (containsCriterion(criterion.getCode())) {
+        matches++;
+      }
+    }
+    return matches == criteria.size();
+  }
+
+  public boolean containsMaterialAssignment(String materialCode) {
+    for (MaterialAssignment materialAssignment : getMaterialAssignments()) {
+      if (materialAssignment.getMaterial().getCode().equals(materialCode)) {
+        return true;
+      }
+    }
+
+    return false;
+  }
+
+  public MaterialAssignment getMaterialAssignment(String materialCode) {
+    for (MaterialAssignment materialAssignment : getMaterialAssignments()) {
+      if (materialAssignment.getMaterial().getCode().equals(materialCode)) {
+        return materialAssignment;
+      }
+    }
+
+    return null;
+  }
+
+  public DirectAdvanceAssignment getDirectAdvanceAssignmentSubcontractor() {
+    for (DirectAdvanceAssignment directAdvanceAssignment : directAdvanceAssignments) {
+
+      if (directAdvanceAssignment.getAdvanceType().getUnitName()
+              .equals(PredefinedAdvancedTypes.SUBCONTRACTOR.getTypeName())) {
 
         return directAdvanceAssignment;
+      }
     }
 
-    public InfoComponentWithCode getInfoComponent() {
-        if (infoComponent == null) {
-            infoComponent = new InfoComponentWithCode();
+    return null;
+  }
+
+  public DirectAdvanceAssignment addSubcontractorAdvanceAssignment()
+          throws DuplicateValueTrueReportGlobalAdvanceException, DuplicateAdvanceAssignmentForOrderElementException {
+
+    boolean reportGlobalAdvance = false;
+    if (getReportGlobalAdvanceAssignment() == null) {
+      reportGlobalAdvance = true;
+    }
+
+    DirectAdvanceAssignment directAdvanceAssignment =
+            DirectAdvanceAssignment.create(reportGlobalAdvance, new BigDecimal(100));
+
+    directAdvanceAssignment.setAdvanceType(PredefinedAdvancedTypes.SUBCONTRACTOR.getType());
+
+    addAdvanceAssignment(directAdvanceAssignment);
+
+    return directAdvanceAssignment;
+  }
+
+  public InfoComponentWithCode getInfoComponent() {
+    if (infoComponent == null) {
+      infoComponent = new InfoComponentWithCode();
+    }
+
+    return infoComponent;
+  }
+
+  @Override
+  public OrderElement getThis() {
+    return this;
+  }
+
+  public String getExternalCode() {
+    return externalCode;
+  }
+
+  public void setExternalCode(String externalCode) {
+    this.externalCode = externalCode;
+  }
+
+  public abstract OrderLine calculateOrderLineForSubcontract();
+
+  public Set<MaterialAssignment> getAllMaterialAssignments() {
+    Set<MaterialAssignment> result = new HashSet<>();
+
+    result.addAll(getMaterialAssignments());
+
+    for (OrderElement orderElement : getChildren()) {
+      result.addAll(orderElement.getAllMaterialAssignments());
+    }
+
+    return result;
+  }
+
+  /**
+   * Calculate if the tasks of the planification point has finished.
+   */
+
+  public boolean isFinishPlanificationPointTask() {
+    // Look up into the order elements tree
+    TaskElement task = lookToUpAssignedTask();
+    if (task != null) {
+      return task.getOrderElement().isFinishedAdvance();
+    }
+
+    // Look down into the order elements tree
+    List<TaskElement> listTask = lookToDownAssignedTask();
+    if (!listTask.isEmpty()) {
+      for (TaskElement taskElement : listTask) {
+        if (!taskElement.getOrderElement().isFinishedAdvance()) {
+          return false;
         }
-
-        return infoComponent;
+      }
     }
 
-    @Override
-    public OrderElement getThis() {
-        return this;
+    // Not exist assigned task
+    return (Registry.getOrderDAO().loadOrderAvoidingProxyFor(this)).isFinishedAdvance();
+  }
+
+  private TaskElement lookToUpAssignedTask() {
+    OrderElement current = this;
+    while (current != null) {
+      if (isSchedulingPoint()) {
+        return getAssociatedTaskElement();
+      }
+      current = current.getParent();
     }
+    return null;
+  }
 
-    public void setExternalCode(String externalCode) {
-        this.externalCode = externalCode;
-    }
-
-    public String getExternalCode() {
-        return externalCode;
-    }
-
-    public abstract OrderLine calculateOrderLineForSubcontract();
-
-    public Set<MaterialAssignment> getAllMaterialAssignments() {
-        Set<MaterialAssignment> result = new HashSet<>();
-
-        result.addAll(getMaterialAssignments());
-
-        for (OrderElement orderElement : getChildren()) {
-            result.addAll(orderElement.getAllMaterialAssignments());
-        }
-
-        return result;
-    }
-
-    /**
-     * Calculate if the tasks of the planification point has finished.
-     */
-
-    public boolean isFinishPlanificationPointTask() {
-        // Look up into the order elements tree
-        TaskElement task = lookToUpAssignedTask();
+  private List<TaskElement> lookToDownAssignedTask() {
+    List<TaskElement> resultTask = new ArrayList<>();
+    for (OrderElement child : getAllChildren()) {
+      if (child.isSchedulingPoint()) {
+        TaskElement task = child.getAssociatedTaskElement();
         if (task != null) {
-            return task.getOrderElement().isFinishedAdvance();
+          resultTask.add(task);
         }
+      }
+    }
 
-        // Look down into the order elements tree
-        List<TaskElement> listTask = lookToDownAssignedTask();
-        if (!listTask.isEmpty()) {
-            for (TaskElement taskElement : listTask) {
-                if (!taskElement.getOrderElement().isFinishedAdvance()) {
-                    return false;
-                }
-            }
+    return resultTask;
+  }
+
+  public boolean isFinishedAdvance() {
+    BigDecimal measuredProgress = getAdvancePercentage();
+    measuredProgress = measuredProgress.setScale(0, BigDecimal.ROUND_UP).multiply(new BigDecimal(100));
+
+    return measuredProgress.compareTo(new BigDecimal(100)) == 0;
+  }
+
+  @Override
+  protected IIntegrationEntityDAO<OrderElement> getIntegrationEntityDAO() {
+    return Registry.getOrderElementDAO();
+  }
+
+  public void markAsDirtyLastAdvanceMeasurementForSpreading() {
+    if (parent != null) {
+      parent.markAsDirtyLastAdvanceMeasurementForSpreading();
+    }
+
+    dirtyLastAdvanceMeasurementForSpreading = true;
+  }
+
+  public SumChargedEffort getSumChargedEffort() {
+    return sumChargedEffort;
+  }
+
+  public void setSumChargedEffort(SumChargedEffort sumChargedHours) {
+    this.sumChargedEffort = sumChargedHours;
+  }
+
+  public void updateAdvancePercentageTaskElement() {
+    BigDecimal advancePercentage = this.getAdvancePercentage();
+    if (this.getTaskSource() != null && this.getTaskSource().getTask() != null) {
+      this.getTaskSource().getTask().setAdvancePercentage(advancePercentage);
+    }
+
+    if (parent != null) {
+      parent.updateAdvancePercentageTaskElement();
+    }
+  }
+
+  public void setCodeAutogenerated(Boolean codeAutogenerated) {
+    if (getOrder().equals(this)) {
+      super.setCodeAutogenerated(codeAutogenerated);
+    }
+  }
+
+  public Boolean isCodeAutogenerated() {
+    if (getOrder().equals(this)) {
+      return super.isCodeAutogenerated();
+    }
+    return (getOrder() != null) ? getOrder().isCodeAutogenerated() : false;
+  }
+
+  @AssertTrue(message = "a quality form cannot be assigned twice to the same task")
+  public boolean isUniqueQualityFormConstraint() {
+    Set<QualityForm> qualityForms = new HashSet<>();
+    for (TaskQualityForm each : taskQualityForms) {
+      QualityForm qualityForm = each.getQualityForm();
+
+      if (qualityForms.contains(qualityForm)) {
+        return false;
+      }
+
+      qualityForms.add(qualityForm);
+    }
+    return true;
+  }
+
+  public void removeDirectAdvancesInList(Set<DirectAdvanceAssignment> directAdvanceAssignments) {
+    for (DirectAdvanceAssignment each : directAdvanceAssignments) {
+      removeAdvanceAssignment(getAdvanceAssignmentByType(each.getAdvanceType()));
+    }
+
+    for (OrderElement each : getChildren()) {
+      each.removeDirectAdvancesInList(directAdvanceAssignments);
+    }
+  }
+
+  protected Set<DirectAdvanceAssignment> getDirectAdvanceAssignmentsAndAllInAncest() {
+    Set<DirectAdvanceAssignment> result = new HashSet<>();
+
+    result.addAll(directAdvanceAssignments);
+
+    if (getParent() != null) {
+      result.addAll(getParent().getDirectAdvanceAssignmentsAndAllInAncest());
+    }
+
+    return result;
+  }
+
+  protected void updateSpreadAdvance() {
+    if (getReportGlobalAdvanceAssignment() == null) {
+      // Set PERCENTAGE type as spread if any
+      String type = PredefinedAdvancedTypes.PERCENTAGE.getTypeName();
+      for (DirectAdvanceAssignment each : directAdvanceAssignments) {
+
+        if (each.getAdvanceType() != null &&
+                each.getAdvanceType().getType() != null &&
+                each.getAdvanceType().getType().equals(type)) {
+
+          each.setReportGlobalAdvance(true);
+
+          return;
         }
+      }
 
-        // Not exist assigned task
-        return (Registry.getOrderDAO().loadOrderAvoidingProxyFor(this)).isFinishedAdvance();
+      // Otherwise, set first advance assignment
+      if (!directAdvanceAssignments.isEmpty()) {
+        directAdvanceAssignments.iterator().next().setReportGlobalAdvance(true);
+
+        return;
+      }
     }
+  }
 
-    private TaskElement lookToUpAssignedTask() {
-        OrderElement current = this;
-        while (current != null) {
-            if (isSchedulingPoint()) {
-                return getAssociatedTaskElement();
-            }
-            current = current.getParent();
-        }
-        return null;
-    }
+  public List<OrderVersion> getOrderVersions() {
+    return new ArrayList<>(schedulingDataForVersion.keySet());
+  }
 
-    private List<TaskElement> lookToDownAssignedTask() {
-        List<TaskElement> resultTask = new ArrayList<>();
-        for (OrderElement child : getAllChildren()) {
-            if (child.isSchedulingPoint()) {
-                TaskElement task = child.getAssociatedTaskElement();
-                if (task != null) {
-                    resultTask.add(task);
-                }
-            }
-        }
+  @Override
+  public String toString() {
+    return super.toString() + " :: " + getName();
+  }
 
-        return resultTask;
-    }
+  public List<WorkReportLine> getWorkReportLines(boolean sortedByDate) {
+    return Registry.getWorkReportLineDAO().findByOrderElementAndChildren(this, sortedByDate);
+  }
 
-    public boolean isFinishedAdvance() {
-        BigDecimal measuredProgress = getAdvancePercentage();
-        measuredProgress = measuredProgress.setScale(0, BigDecimal.ROUND_UP).multiply(new BigDecimal(100));
+  /**
+   * Gets workReportLines of this order-element between the specified
+   * <code>startDate</code> and <code>endDate</code>.
+   *
+   * @param startDate    the startDate
+   * @param endDate      the endDate
+   * @param sortedByDate
+   * @return list of workReportLines
+   */
+  public List<WorkReportLine> getWorkReportLines(Date startDate, Date endDate, boolean sortedByDate) {
+    return Registry
+            .getWorkReportLineDAO()
+            .findByOrderElementAndChildrenFilteredByDate(this, startDate, endDate, sortedByDate);
+  }
 
-        return measuredProgress.compareTo(new BigDecimal(100)) == 0;
-    }
-
-    @Override
-    protected IIntegrationEntityDAO<OrderElement> getIntegrationEntityDAO() {
-        return Registry.getOrderElementDAO();
-    }
-
-    public void markAsDirtyLastAdvanceMeasurementForSpreading() {
-        if (parent != null) {
-            parent.markAsDirtyLastAdvanceMeasurementForSpreading();
-        }
-
-        dirtyLastAdvanceMeasurementForSpreading = true;
-    }
-
-    public void setSumChargedEffort(SumChargedEffort sumChargedHours) {
-        this.sumChargedEffort = sumChargedHours;
-    }
-
-    public SumChargedEffort getSumChargedEffort() {
-        return sumChargedEffort;
-    }
-
-    public void updateAdvancePercentageTaskElement() {
-        BigDecimal advancePercentage = this.getAdvancePercentage();
-        if (this.getTaskSource() != null && this.getTaskSource().getTask() != null) {
-            this.getTaskSource().getTask().setAdvancePercentage(advancePercentage);
-        }
-
-        if (parent != null) {
-            parent.updateAdvancePercentageTaskElement();
-        }
-    }
-
-    public void setCodeAutogenerated(Boolean codeAutogenerated) {
-        if ( getOrder().equals(this) ) {
-            super.setCodeAutogenerated(codeAutogenerated);
-        }
-    }
-
-    public Boolean isCodeAutogenerated() {
-        if ( getOrder().equals(this) ) {
-            return super.isCodeAutogenerated();
-        }
-        return (getOrder() != null) ? getOrder().isCodeAutogenerated() : false;
-    }
-
-    @AssertTrue(message = "a quality form cannot be assigned twice to the same task")
-    public boolean isUniqueQualityFormConstraint() {
-        Set<QualityForm> qualityForms = new HashSet<>();
-        for (TaskQualityForm each : taskQualityForms) {
-            QualityForm qualityForm = each.getQualityForm();
-
-            if ( qualityForms.contains(qualityForm) ) {
-                return false;
-            }
-
-            qualityForms.add(qualityForm);
-        }
+  /**
+   * Checks if it has nay consolidated advance, if not checks if any parent has it.
+   */
+  public boolean hasAnyConsolidatedAdvance() {
+    for (DirectAdvanceAssignment each : directAdvanceAssignments) {
+      if (each.hasAnyConsolidationValue()) {
         return true;
+      }
     }
 
-    public void removeDirectAdvancesInList(Set<DirectAdvanceAssignment> directAdvanceAssignments) {
-        for (DirectAdvanceAssignment each : directAdvanceAssignments) {
-            removeAdvanceAssignment(getAdvanceAssignmentByType(each.getAdvanceType()));
+    for (IndirectAdvanceAssignment each : getIndirectAdvanceAssignments()) {
+      if (each.hasAnyConsolidationValue()) {
+        return true;
+      }
+    }
+
+    if (parent != null) {
+      return parent.hasAnyConsolidatedAdvance();
+    }
+
+    return false;
+  }
+
+  public abstract BigDecimal getBudget();
+
+  public SumExpenses getSumExpenses() {
+    return this.sumExpenses;
+  }
+
+  public void setSumExpenses(SumExpenses sumExpenses) {
+    this.sumExpenses = sumExpenses;
+  }
+
+  public boolean isOrder() {
+    return false;
+  }
+
+  public boolean hasTimesheetsReportingHours() {
+    return sumChargedEffort != null && sumChargedEffort.getFirstTimesheetDate() != null;
+  }
+
+  public boolean isFinishedTimesheets() {
+    return sumChargedEffort == null ? false : sumChargedEffort.isFinishedTimesheets();
+  }
+
+  @Override
+  public boolean isUpdatedFromTimesheets() {
+    TaskElement taskElement = getTaskElement();
+
+    return taskElement == null ? false : taskElement.isUpdatedFromTimesheets();
+  }
+
+  public Date getFirstTimesheetDate() {
+    return sumChargedEffort == null ? null : sumChargedEffort.getFirstTimesheetDate();
+  }
+
+  public Date getLastTimesheetDate() {
+    return sumChargedEffort == null ? null : sumChargedEffort.getLastTimesheetDate();
+  }
+
+  public void detachFromParent() {
+    parent = null;
+  }
+
+  public AdvanceMeasurement getLastAdvanceMeasurement() {
+    DirectAdvanceAssignment advanceAssignment = getReportGlobalAdvanceAssignment();
+    return advanceAssignment == null ? null : advanceAssignment.getLastAdvanceMeasurement();
+  }
+
+  public String getEffortAsString() {
+    SumChargedEffort sumChargedEffort = getSumChargedEffort();
+
+    EffortDuration effort = sumChargedEffort != null
+            ? sumChargedEffort.getTotalChargedEffort()
+            : EffortDuration.zero();
+
+    return effort.toFormattedString();
+  }
+
+  public boolean isJiraIssue() {
+    String code = getCode();
+    return code == null
+            ? false
+            : code.startsWith(PredefinedConnectorProperties.JIRA_CODE_PREFIX);
+  }
+
+  public boolean isConvertedToContainer() {
+    return false;
+  }
+
+  public BigDecimal getTotalBudget() {
+    return getBudget().add(getResourcesBudget());
+  }
+
+  public BigDecimal getSubstractedBudget() {
+    return getBudget().subtract(getResourcesBudget());
+  }
+
+  public BigDecimal getResourcesBudget() {
+    return Registry.getTransactionService().runOnReadOnlyTransaction(
+            () -> calculateBudgetFromCriteriaAndCostCategories());
+  }
+
+  public BigDecimal calculateBudgetFromCriteriaAndCostCategories() {
+    BigDecimal totalBudget = new BigDecimal(0);
+
+    Configuration configuration = Registry.getConfigurationDAO().getConfiguration();
+    TypeOfWorkHours typeofWorkHours = configuration.getBudgetDefaultTypeOfWorkHours();
+
+    if (!configuration.isEnabledAutomaticBudget() || (configuration.getBudgetDefaultTypeOfWorkHours() == null)) {
+      return totalBudget;
+    }
+
+    BigDecimal costPerHour = new BigDecimal(0);
+    BigDecimal hours;
+
+    for (HoursGroup hoursGroup : getHoursGroups()) {
+      hours = new BigDecimal(hoursGroup.getWorkingHours());
+
+      for (CriterionRequirement crit : hoursGroup.getCriterionRequirements()) {
+        CostCategory costcat = crit.getCriterion().getCostCategory();
+
+        if (costcat != null) {
+
+          IHourCostDAO hourCostDAO = Registry.getHourCostDAO();
+          costPerHour = hourCostDAO.getPriceCostFromCriterionAndType(costcat, typeofWorkHours);
+
         }
-
-        for (OrderElement each : getChildren()) {
-            each.removeDirectAdvancesInList(directAdvanceAssignments);
-        }
+        totalBudget = totalBudget.add(costPerHour.multiply(hours));
+      }
+      if (hoursGroup.getCriterionRequirements().size() > 1) {
+        totalBudget = totalBudget.divide(new BigDecimal(hoursGroup.getCriterionRequirements().size()));
+      }
     }
 
-    protected Set<DirectAdvanceAssignment> getDirectAdvanceAssignmentsAndAllInAncest() {
-        Set<DirectAdvanceAssignment> result = new HashSet<>();
+    return totalBudget;
+  }
 
-        result.addAll(directAdvanceAssignments);
+  /**
+   * Returns with margin calculated hours for this orderElement.
+   */
+  public EffortDuration getWithMarginCalculatedHours() {
+    return calculateWorkHoursWithMargin();
+  }
 
-        if ( getParent() != null ) {
-            result.addAll(getParent().getDirectAdvanceAssignmentsAndAllInAncest());
-        }
+  /**
+   * Calculates the work hours with the margin {@link Order#getHoursMargin()} for this orderElement.
+   *
+   * @return calculated work hours
+   */
+  private EffortDuration calculateWorkHoursWithMargin() {
+    BigDecimal margin =
+            this.getOrder().getHoursMargin() != null
+                    ? new BigDecimal(this.getOrder().getHoursMargin()).setScale(2)
+                    : BigDecimal.ZERO;
 
-        return result;
-    }
+    BigDecimal hundred = new BigDecimal(100);
 
-    protected void updateSpreadAdvance() {
-        if ( getReportGlobalAdvanceAssignment() == null ) {
-            // Set PERCENTAGE type as spread if any
-            String type = PredefinedAdvancedTypes.PERCENTAGE.getTypeName();
-            for (DirectAdvanceAssignment each : directAdvanceAssignments) {
+    BigDecimal estimatedHours = new BigDecimal(getWorkHours()).setScale(2);
 
-                if ( each.getAdvanceType() != null &&
-                        each.getAdvanceType().getType() != null &&
-                        each.getAdvanceType().getType().equals(type) ) {
+    BigDecimal marginHours = estimatedHours.multiply(margin).divide(hundred, 2, BigDecimal.ROUND_HALF_EVEN);
 
-                    each.setReportGlobalAdvance(true);
+    BigDecimal result = estimatedHours.add(marginHours);
 
-                    return;
-                }
-            }
+    return EffortDuration.fromHoursAsBigDecimal(result);
+  }
 
-            // Otherwise, set first advance assignment
-            if ( !directAdvanceAssignments.isEmpty() ) {
-                directAdvanceAssignments.iterator().next().setReportGlobalAdvance(true);
+  /**
+   * Returns with margin calculated budget for this orderElement.
+   */
+  public BigDecimal getWithMarginCalculatedBudget() {
+    return calculateBudgetWithMargin();
+  }
 
-                return;
-            }
-        }
-    }
+  /**
+   * Calculates the budget with the margin {@link Order#getBudgetMargin()} for this orderElement.
+   *
+   * @return calculated budget
+   */
+  private BigDecimal calculateBudgetWithMargin() {
+    BigDecimal margin =
+            this.getOrder().getBudgetMargin() != null
+                    ? new BigDecimal(this.getOrder().getBudgetMargin())
+                    : BigDecimal.ZERO;
 
-    public List<OrderVersion> getOrderVersions() {
-        return new ArrayList<>(schedulingDataForVersion.keySet());
-    }
+    BigDecimal hundred = new BigDecimal(100);
 
-    @Override
-    public String toString() {
-        return super.toString() + " :: " + getName();
-    }
+    BigDecimal budget = getBudget();
+    BigDecimal marginBudget = budget.multiply(margin).divide(hundred, 2, BigDecimal.ROUND_HALF_EVEN);
 
-    public List<WorkReportLine> getWorkReportLines(boolean sortedByDate) {
-        return Registry.getWorkReportLineDAO().findByOrderElementAndChildren(this, sortedByDate);
-    }
-
-    /**
-     * Gets workReportLines of this order-element between the specified
-     * <code>startDate</code> and <code>endDate</code>.
-     *
-     * @param startDate
-     *            the startDate
-     * @param endDate
-     *            the endDate
-     * @param sortedByDate
-     * @return list of workReportLines
-     */
-    public List<WorkReportLine> getWorkReportLines(Date startDate, Date endDate, boolean sortedByDate) {
-        return Registry
-                .getWorkReportLineDAO()
-                .findByOrderElementAndChildrenFilteredByDate(this, startDate, endDate, sortedByDate);
-    }
-
-    /**
-     * Checks if it has nay consolidated advance, if not checks if any parent has it.
-     */
-    public boolean hasAnyConsolidatedAdvance() {
-        for (DirectAdvanceAssignment each : directAdvanceAssignments) {
-            if (each.hasAnyConsolidationValue()) {
-                return true;
-            }
-        }
-
-        for (IndirectAdvanceAssignment each : getIndirectAdvanceAssignments()) {
-            if (each.hasAnyConsolidationValue()) {
-                return true;
-            }
-        }
-
-        if (parent != null) {
-            return parent.hasAnyConsolidatedAdvance();
-        }
-
-        return false;
-    }
-
-    public abstract BigDecimal getBudget();
-
-    public void setSumExpenses(SumExpenses sumExpenses) {
-        this.sumExpenses = sumExpenses;
-    }
-
-    public SumExpenses getSumExpenses() {
-        return this.sumExpenses;
-    }
-
-    public boolean isOrder() {
-        return false;
-    }
-
-    public boolean hasTimesheetsReportingHours() {
-        return sumChargedEffort != null && sumChargedEffort.getFirstTimesheetDate() != null;
-    }
-
-    public boolean isFinishedTimesheets() {
-        return sumChargedEffort == null ? false : sumChargedEffort.isFinishedTimesheets();
-    }
-
-    @Override
-    public boolean isUpdatedFromTimesheets() {
-        TaskElement taskElement = getTaskElement();
-
-        return taskElement == null ? false : taskElement.isUpdatedFromTimesheets();
-    }
-
-    public Date getFirstTimesheetDate() {
-        return sumChargedEffort == null ? null : sumChargedEffort.getFirstTimesheetDate();
-    }
-
-    public Date getLastTimesheetDate() {
-        return sumChargedEffort == null ? null : sumChargedEffort.getLastTimesheetDate();
-    }
-
-    public void detachFromParent() {
-        parent = null;
-    }
-
-    public AdvanceMeasurement getLastAdvanceMeasurement() {
-        DirectAdvanceAssignment advanceAssignment = getReportGlobalAdvanceAssignment();
-        return advanceAssignment == null ? null : advanceAssignment.getLastAdvanceMeasurement();
-    }
-
-    public String getEffortAsString() {
-        SumChargedEffort sumChargedEffort = getSumChargedEffort();
-
-        EffortDuration effort = sumChargedEffort != null
-                ? sumChargedEffort.getTotalChargedEffort()
-                : EffortDuration.zero();
-
-        return effort.toFormattedString();
-    }
-
-    public boolean isJiraIssue() {
-        String code = getCode();
-        return code == null
-                ? false
-                : code.startsWith(PredefinedConnectorProperties.JIRA_CODE_PREFIX);
-    }
-
-    public boolean isConvertedToContainer() {
-        return false;
-    }
-
-    public BigDecimal getTotalBudget() {
-        return getBudget().add(getResourcesBudget());
-    }
-
-    public BigDecimal getSubstractedBudget() {
-        return getBudget().subtract(getResourcesBudget());
-    }
-
-    public BigDecimal getResourcesBudget() {
-        return Registry.getTransactionService().runOnReadOnlyTransaction(
-                () -> calculateBudgetFromCriteriaAndCostCategories());
-    }
-
-    public BigDecimal calculateBudgetFromCriteriaAndCostCategories() {
-        BigDecimal totalBudget = new BigDecimal(0);
-
-        Configuration configuration = Registry.getConfigurationDAO().getConfiguration();
-        TypeOfWorkHours typeofWorkHours = configuration.getBudgetDefaultTypeOfWorkHours();
-
-        if (!configuration.isEnabledAutomaticBudget() || (configuration.getBudgetDefaultTypeOfWorkHours() == null)) {
-            return totalBudget;
-        }
-
-        BigDecimal costPerHour = new BigDecimal(0);
-        BigDecimal hours;
-
-        for (HoursGroup hoursGroup : getHoursGroups()) {
-            hours = new BigDecimal(hoursGroup.getWorkingHours());
-
-            for (CriterionRequirement crit : hoursGroup.getCriterionRequirements()) {
-                CostCategory costcat = crit.getCriterion().getCostCategory();
-
-                if (costcat != null) {
-
-                    IHourCostDAO hourCostDAO = Registry.getHourCostDAO();
-                    costPerHour = hourCostDAO.getPriceCostFromCriterionAndType(costcat, typeofWorkHours);
-
-                }
-                totalBudget = totalBudget.add(costPerHour.multiply(hours));
-            }
-            if (hoursGroup.getCriterionRequirements().size() > 1) {
-                totalBudget = totalBudget.divide(new BigDecimal(hoursGroup.getCriterionRequirements().size()));
-            }
-        }
-
-        return totalBudget;
-    }
-
-    /**
-     * Returns with margin calculated hours for this orderElement.
-     */
-    public EffortDuration getWithMarginCalculatedHours() {
-        return calculateWorkHoursWithMargin();
-    }
-
-    /**
-     * Calculates the work hours with the margin {@link Order#getHoursMargin()} for this orderElement.
-     *
-     * @return calculated work hours
-     */
-    private EffortDuration calculateWorkHoursWithMargin() {
-        BigDecimal margin =
-                this.getOrder().getHoursMargin() != null
-                        ? new BigDecimal(this.getOrder().getHoursMargin()).setScale(2)
-                        : BigDecimal.ZERO;
-
-        BigDecimal hundred = new BigDecimal(100);
-
-        BigDecimal estimatedHours = new BigDecimal(getWorkHours()).setScale(2);
-
-        BigDecimal marginHours = estimatedHours.multiply(margin).divide(hundred, 2, BigDecimal.ROUND_HALF_EVEN);
-
-        BigDecimal result = estimatedHours.add(marginHours);
-
-        return EffortDuration.fromHoursAsBigDecimal(result);
-    }
-
-    /**
-     * Returns with margin calculated budget for this orderElement.
-     */
-    public BigDecimal getWithMarginCalculatedBudget() {
-        return calculateBudgetWithMargin();
-    }
-
-    /**
-     * Calculates the budget with the margin {@link Order#getBudgetMargin()} for this orderElement.
-     *
-     * @return calculated budget
-     */
-    private BigDecimal calculateBudgetWithMargin() {
-        BigDecimal margin =
-                this.getOrder().getBudgetMargin() != null
-                        ? new BigDecimal(this.getOrder().getBudgetMargin())
-                        : BigDecimal.ZERO;
-
-        BigDecimal hundred = new BigDecimal(100);
-
-        BigDecimal budget = getBudget();
-        BigDecimal marginBudget = budget.multiply(margin).divide(hundred, 2, BigDecimal.ROUND_HALF_EVEN);
-
-        return budget.add(marginBudget);
-    }
+    return budget.add(marginBudget);
+  }
 
 }

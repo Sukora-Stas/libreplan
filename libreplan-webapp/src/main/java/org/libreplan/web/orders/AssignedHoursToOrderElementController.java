@@ -43,162 +43,162 @@ import java.util.List;
  */
 public class AssignedHoursToOrderElementController extends GenericForwardComposer {
 
-    private IAssignedHoursToOrderElementModel assignedHoursToOrderElementModel;
+  private IAssignedHoursToOrderElementModel assignedHoursToOrderElementModel;
 
-    private IOrderElementModel orderElementModel;
+  private IOrderElementModel orderElementModel;
 
-    private Vbox orderElementHours;
+  private Vbox orderElementHours;
 
-    private Progressmeter hoursProgressBar;
+  private Progressmeter hoursProgressBar;
 
-    private Progressmeter exceedHoursProgressBar;
+  private Progressmeter exceedHoursProgressBar;
 
-    private Progressmeter moneyCostProgressBar;
+  private Progressmeter moneyCostProgressBar;
 
-    private Progressmeter exceedMoneyCostProgressBar;
+  private Progressmeter exceedMoneyCostProgressBar;
 
-    public AssignedHoursToOrderElementController() {
-        if ( assignedHoursToOrderElementModel == null ) {
-            assignedHoursToOrderElementModel =
-                    (IAssignedHoursToOrderElementModel) SpringUtil.getBean("assignedHoursToOrderElementModel");
-        }
-
-        if ( orderElementModel == null ) {
-            orderElementModel = (IOrderElementModel) SpringUtil.getBean("orderElementModel");
-        }
+  public AssignedHoursToOrderElementController() {
+    if (assignedHoursToOrderElementModel == null) {
+      assignedHoursToOrderElementModel =
+              (IAssignedHoursToOrderElementModel) SpringUtil.getBean("assignedHoursToOrderElementModel");
     }
 
-    @Override
-    public void doAfterCompose(Component comp) throws Exception {
-        super.doAfterCompose(comp);
-        comp.setAttribute("assignedHoursToOrderElementController", this, true);
+    if (orderElementModel == null) {
+      orderElementModel = (IOrderElementModel) SpringUtil.getBean("orderElementModel");
+    }
+  }
+
+  @Override
+  public void doAfterCompose(Component comp) throws Exception {
+    super.doAfterCompose(comp);
+    comp.setAttribute("assignedHoursToOrderElementController", this, true);
+  }
+
+  public List<WorkReportLineDTO> getWorkReportLines() {
+    return assignedHoursToOrderElementModel.getWorkReportLines();
+  }
+
+  public String getTotalAssignedDirectEffort() {
+    return assignedHoursToOrderElementModel.getAssignedDirectEffort().toFormattedString();
+  }
+
+  public String getTotalAssignedEffort() {
+    return assignedHoursToOrderElementModel.getTotalAssignedEffort().toFormattedString();
+  }
+
+  public String getTotalDirectExpenses() {
+    return assignedHoursToOrderElementModel.getTotalDirectExpenses();
+  }
+
+  public String getTotalIndirectExpenses() {
+    return assignedHoursToOrderElementModel.getTotalIndirectExpenses();
+  }
+
+  public String getTotalExpenses() {
+    return assignedHoursToOrderElementModel.getTotalExpenses();
+  }
+
+  public String getEffortChildren() {
+    return assignedHoursToOrderElementModel.getAssignedDirectEffortChildren().toFormattedString();
+  }
+
+  public String getEstimatedEffort() {
+    return assignedHoursToOrderElementModel.getEstimatedEffort().toFormattedString();
+  }
+
+  public int getProgressWork() {
+    return assignedHoursToOrderElementModel.getProgressWork();
+  }
+
+  public BigDecimal getBudget() {
+    return assignedHoursToOrderElementModel.getBudget();
+  }
+
+  public BigDecimal getResourcesBudget() {
+    return assignedHoursToOrderElementModel.getResourcesBudget();
+  }
+
+  public BigDecimal getCalculatedBudget() {
+    return assignedHoursToOrderElementModel.getCalculatedBudget();
+  }
+
+  public BigDecimal getMoneyCost() {
+    return assignedHoursToOrderElementModel.getMoneyCost();
+  }
+
+  public BigDecimal getCostOfHours() {
+    return assignedHoursToOrderElementModel.getCostOfHours();
+  }
+
+  public BigDecimal getCostOfExpenses() {
+    return assignedHoursToOrderElementModel.getCostOfExpenses();
+  }
+
+  public BigDecimal getMoneyCostPercentage() {
+    return assignedHoursToOrderElementModel.getMoneyCostPercentage();
+  }
+
+  public void openWindow(IOrderElementModel orderElementModel) {
+    setOrderElementModel(orderElementModel);
+    assignedHoursToOrderElementModel.initOrderElement(getOrderElement());
+
+    if (orderElementHours != null) {
+      Util.createBindingsFor(orderElementHours);
+      Util.reloadBindings(orderElementHours);
     }
 
-    public List<WorkReportLineDTO> getWorkReportLines() {
-        return assignedHoursToOrderElementModel.getWorkReportLines();
+    paintProgressBars();
+  }
+
+  void paintProgressBars() {
+    viewPercentage();
+    showMoneyCostPercentageBars();
+  }
+
+  public void setOrderElementModel(IOrderElementModel orderElementModel) {
+    this.orderElementModel = orderElementModel;
+  }
+
+  private OrderElement getOrderElement() {
+    return orderElementModel.getOrderElement();
+  }
+
+  /**
+   * This method shows the percentage of the imputed hours with respect to the estimated hours.
+   * If the hours imputed is greater that the hours estimated then show the exceed percentage of hours.
+   */
+  private void viewPercentage() {
+    if (this.getProgressWork() > 100) {
+      hoursProgressBar.setValue(100);
+
+      exceedHoursProgressBar.setVisible(true);
+      String exceedValue = String.valueOf(getProgressWork() - 100);
+      exceedHoursProgressBar.setWidth(exceedValue + "px");
+    } else {
+      hoursProgressBar.setValue(getProgressWork());
+      exceedHoursProgressBar.setVisible(false);
     }
+  }
 
-    public String getTotalAssignedDirectEffort() {
-        return assignedHoursToOrderElementModel.getAssignedDirectEffort().toFormattedString();
+  private void showMoneyCostPercentageBars() {
+    BigDecimal moneyCostPercentage = getMoneyCostPercentage();
+    if (moneyCostPercentage.compareTo(new BigDecimal(100)) > 0) {
+      moneyCostProgressBar.setValue(100);
+
+      exceedMoneyCostProgressBar.setVisible(true);
+      exceedMoneyCostProgressBar.setWidth(moneyCostPercentage.subtract(new BigDecimal(100)).intValue() + "px");
+    } else {
+      moneyCostProgressBar.setValue(moneyCostPercentage.intValue());
+      exceedMoneyCostProgressBar.setVisible(false);
     }
+  }
 
-    public String getTotalAssignedEffort() {
-        return assignedHoursToOrderElementModel.getTotalAssignedEffort().toFormattedString();
-    }
+  public List<ExpenseSheetLine> getExpenseSheetLines() {
+    return assignedHoursToOrderElementModel.getExpenseSheetLines();
+  }
 
-    public String getTotalDirectExpenses() {
-        return assignedHoursToOrderElementModel.getTotalDirectExpenses();
-    }
-
-    public String getTotalIndirectExpenses() {
-        return assignedHoursToOrderElementModel.getTotalIndirectExpenses();
-    }
-
-    public String getTotalExpenses() {
-        return assignedHoursToOrderElementModel.getTotalExpenses();
-    }
-
-    public String getEffortChildren() {
-        return assignedHoursToOrderElementModel.getAssignedDirectEffortChildren().toFormattedString();
-    }
-
-    public String getEstimatedEffort() {
-        return assignedHoursToOrderElementModel.getEstimatedEffort().toFormattedString();
-    }
-
-    public int getProgressWork() {
-        return assignedHoursToOrderElementModel.getProgressWork();
-    }
-
-    public BigDecimal getBudget() {
-        return assignedHoursToOrderElementModel.getBudget();
-    }
-
-    public BigDecimal getResourcesBudget() {
-        return assignedHoursToOrderElementModel.getResourcesBudget();
-    }
-
-    public BigDecimal getCalculatedBudget() {
-        return assignedHoursToOrderElementModel.getCalculatedBudget();
-    }
-
-    public BigDecimal getMoneyCost() {
-        return assignedHoursToOrderElementModel.getMoneyCost();
-    }
-
-    public BigDecimal getCostOfHours() {
-        return assignedHoursToOrderElementModel.getCostOfHours();
-    }
-
-    public BigDecimal getCostOfExpenses() {
-        return assignedHoursToOrderElementModel.getCostOfExpenses();
-    }
-
-    public BigDecimal getMoneyCostPercentage() {
-        return assignedHoursToOrderElementModel.getMoneyCostPercentage();
-    }
-
-    public void openWindow(IOrderElementModel orderElementModel) {
-        setOrderElementModel(orderElementModel);
-        assignedHoursToOrderElementModel.initOrderElement(getOrderElement());
-
-        if (orderElementHours != null) {
-            Util.createBindingsFor(orderElementHours);
-            Util.reloadBindings(orderElementHours);
-        }
-
-        paintProgressBars();
-    }
-
-    void paintProgressBars() {
-        viewPercentage();
-        showMoneyCostPercentageBars();
-    }
-
-    public void setOrderElementModel(IOrderElementModel orderElementModel) {
-        this.orderElementModel = orderElementModel;
-    }
-
-    private OrderElement getOrderElement() {
-        return orderElementModel.getOrderElement();
-    }
-
-    /**
-     * This method shows the percentage of the imputed hours with respect to the estimated hours.
-     * If the hours imputed is greater that the hours estimated then show the exceed percentage of hours.
-     */
-    private void viewPercentage() {
-        if (this.getProgressWork() > 100) {
-            hoursProgressBar.setValue(100);
-
-            exceedHoursProgressBar.setVisible(true);
-            String exceedValue = String.valueOf(getProgressWork() - 100);
-            exceedHoursProgressBar.setWidth(exceedValue + "px");
-        } else {
-            hoursProgressBar.setValue(getProgressWork());
-            exceedHoursProgressBar.setVisible(false);
-        }
-    }
-
-    private void showMoneyCostPercentageBars() {
-        BigDecimal moneyCostPercentage = getMoneyCostPercentage();
-        if (moneyCostPercentage.compareTo(new BigDecimal(100)) > 0) {
-            moneyCostProgressBar.setValue(100);
-
-            exceedMoneyCostProgressBar.setVisible(true);
-            exceedMoneyCostProgressBar.setWidth(moneyCostPercentage.subtract(new BigDecimal(100)).intValue() + "px");
-        } else {
-            moneyCostProgressBar.setValue(moneyCostPercentage.intValue());
-            exceedMoneyCostProgressBar.setVisible(false);
-        }
-    }
-
-    public List<ExpenseSheetLine> getExpenseSheetLines() {
-        return assignedHoursToOrderElementModel.getExpenseSheetLines();
-    }
-
-    public String getCurrencySymbol() {
-        return Util.getCurrencySymbol();
-    }
+  public String getCurrencySymbol() {
+    return Util.getCurrencySymbol();
+  }
 
 }

@@ -41,85 +41,85 @@ import org.zkoss.zul.TreeModel;
 public class AssignedMaterialsToOrderElementController
         extends AssignedMaterialsController<OrderElement, MaterialAssignment> {
 
-    private IAssignedMaterialsToOrderElementModel assignedMaterialsToOrderElementModel;
+  private IAssignedMaterialsToOrderElementModel assignedMaterialsToOrderElementModel;
 
-    public AssignedMaterialsToOrderElementController() {
-        assignedMaterialsToOrderElementModel =
-                (IAssignedMaterialsToOrderElementModel) SpringUtil.getBean("assignedMaterialsToOrderElementModel");
+  public AssignedMaterialsToOrderElementController() {
+    assignedMaterialsToOrderElementModel =
+            (IAssignedMaterialsToOrderElementModel) SpringUtil.getBean("assignedMaterialsToOrderElementModel");
+  }
+
+  @Override
+  protected IAssignedMaterialsModel<OrderElement, MaterialAssignment> getModel() {
+    return assignedMaterialsToOrderElementModel;
+  }
+
+  @Override
+  protected void createAssignmentsBoxComponent(Component parent) {
+    Executions.createComponents("/orders/_assignmentsBox.zul", parent, new HashMap<String, String>());
+  }
+
+  @Override
+  protected void initializeEdition(OrderElement orderElement) {
+    assignedMaterialsToOrderElementModel.initEdit(orderElement);
+  }
+
+  @Override
+  public TreeModel getMaterialCategories() {
+    return assignedMaterialsToOrderElementModel.getMaterialCategories();
+  }
+
+  @Override
+  public TreeModel getAllMaterialCategories() {
+    return assignedMaterialsToOrderElementModel.getAllMaterialCategories();
+  }
+
+  @Override
+  public BigDecimal getTotalUnits() {
+    BigDecimal result = BigDecimal.ZERO;
+
+    final OrderElement orderElement = getOrderElement();
+    if (orderElement != null) {
+      result = result.add(orderElement.getTotalMaterialAssignmentUnits());
     }
+    return result;
+  }
 
-    @Override
-    protected IAssignedMaterialsModel<OrderElement, MaterialAssignment> getModel() {
-        return assignedMaterialsToOrderElementModel;
+  public BigDecimal getTotalPrice() {
+    BigDecimal result = new BigDecimal(0);
+
+    final OrderElement orderElement = getOrderElement();
+    if (orderElement != null) {
+      result = orderElement.getTotalMaterialAssignmentPrice();
     }
+    return result.setScale(2, RoundingMode.HALF_UP);
+  }
 
-    @Override
-    protected void createAssignmentsBoxComponent(Component parent) {
-        Executions.createComponents("/orders/_assignmentsBox.zul", parent, new HashMap<String, String>());
-    }
+  private OrderElement getOrderElement() {
+    return assignedMaterialsToOrderElementModel.getOrderElement();
+  }
 
-    @Override
-    protected void initializeEdition(OrderElement orderElement) {
-        assignedMaterialsToOrderElementModel.initEdit(orderElement);
-    }
+  @Override
+  protected MaterialAssignment copyFrom(MaterialAssignment assignment) {
+    return MaterialAssignment.create(assignment);
+  }
 
-    @Override
-    public TreeModel getMaterialCategories() {
-        return assignedMaterialsToOrderElementModel.getMaterialCategories();
-    }
+  @Override
+  protected Material getMaterial(MaterialAssignment materialAssignment) {
+    return materialAssignment.getMaterial();
+  }
 
-    @Override
-    public TreeModel getAllMaterialCategories() {
-        return assignedMaterialsToOrderElementModel.getAllMaterialCategories();
-    }
+  @Override
+  protected Double getTotalPrice(MaterialAssignment materialAssignment) {
+    return materialAssignment.getTotalPrice().doubleValue();
+  }
 
-    @Override
-    public BigDecimal getTotalUnits() {
-        BigDecimal result = BigDecimal.ZERO;
+  @Override
+  protected BigDecimal getUnits(MaterialAssignment assignment) {
+    return assignment.getUnits();
+  }
 
-        final OrderElement orderElement = getOrderElement();
-        if (orderElement != null) {
-            result = result.add(orderElement.getTotalMaterialAssignmentUnits());
-        }
-        return result;
-    }
-
-    public BigDecimal getTotalPrice() {
-        BigDecimal result = new BigDecimal(0);
-
-        final OrderElement orderElement = getOrderElement();
-        if (orderElement != null) {
-            result = orderElement.getTotalMaterialAssignmentPrice();
-        }
-        return result.setScale(2, RoundingMode.HALF_UP);
-    }
-
-    private OrderElement getOrderElement() {
-        return assignedMaterialsToOrderElementModel.getOrderElement();
-    }
-
-    @Override
-    protected MaterialAssignment copyFrom(MaterialAssignment assignment) {
-        return MaterialAssignment.create(assignment);
-    }
-
-    @Override
-    protected Material getMaterial(MaterialAssignment materialAssignment) {
-        return materialAssignment.getMaterial();
-    }
-
-    @Override
-    protected Double getTotalPrice(MaterialAssignment materialAssignment) {
-        return materialAssignment.getTotalPrice().doubleValue();
-    }
-
-    @Override
-    protected BigDecimal getUnits(MaterialAssignment assignment) {
-        return assignment.getUnits();
-    }
-
-    protected void setUnits(MaterialAssignment assignment, BigDecimal units) {
-        assignment.setUnits(units);
-    }
+  protected void setUnits(MaterialAssignment assignment, BigDecimal units) {
+    assignment.setUnits(units);
+  }
 
 }

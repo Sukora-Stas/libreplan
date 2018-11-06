@@ -40,98 +40,94 @@ import org.zkoss.zul.Popup;
  */
 public class TemplateFinderPopup extends HtmlMacroComponent {
 
-    private Component finderPlaceholder;
+  private Component finderPlaceholder;
 
-    private Popup popup;
+  private Popup popup;
 
-    private IOnResult onResult;
+  private IOnResult onResult;
 
-    private BandboxSearch bandboxSearch;
+  private BandboxSearch bandboxSearch;
 
-    private Button acceptButton;
+  private Button acceptButton;
 
-    private Button cancelButton;
+  private Button cancelButton;
 
-    private Caption caption;
+  private Caption caption;
 
-    public interface IOnResult<T extends OrderElementTemplate> {
-        void found(T template);
+  /**
+   * @param ref      this is passed to {@link Popup#open(Component, String)}
+   * @param position this is pased to {@link Popup#open(Component, String)}
+   * @param onResult
+   * @see Popup#open(Component, String)
+   */
+  public void openForSubElemenetCreation(Component ref, String position, IOnResult<OrderElementTemplate> onResult) {
+    this.onResult = onResult;
+    setupPopUp(ref, position, "templatesEligibleForSubElement");
+  }
+
+  /**
+   * @param ref      this is passed to {@link Popup#open(Component, String)}
+   * @param position this is pased to {@link Popup#open(Component, String)}
+   * @param onResult
+   * @see Popup#open(Component, String)
+   */
+  public void openForOrderCreation(Component ref, String position, IOnResult<OrderTemplate> onResult) {
+    this.onResult = onResult;
+    setupPopUp(ref, position, "templatesEligibleForOrder");
+  }
+
+  private void setupPopUp(Component ref, String position, String finderName) {
+    if (bandboxSearch != null) {
+      finderPlaceholder.removeChild(bandboxSearch);
     }
 
-    /**
-     * @param ref
-     *            this is passed to {@link Popup#open(Component, String)}
-     * @param position
-     *            this is pased to {@link Popup#open(Component, String)}
-     * @param onResult
-     * @see Popup#open(Component, String)
-     */
-    public void openForSubElemenetCreation(Component ref, String position, IOnResult<OrderElementTemplate> onResult) {
-        this.onResult = onResult;
-        setupPopUp(ref, position, "templatesEligibleForSubElement");
+    bandboxSearch = new BandboxSearch();
+    bandboxSearch.setFinder(finderName);
+    bandboxSearch.setWidthBandbox("300px");
+    bandboxSearch.setWidthListbox("600px");
+    finderPlaceholder.appendChild(bandboxSearch);
+    bandboxSearch.afterCompose();
+    popup.open(ref, position);
+    bandboxSearch.foucusOnInput();
+  }
+
+  private void onAccept() {
+    Object selectedElement = bandboxSearch.getSelectedElement();
+
+    if (selectedElement != null) {
+      onResult.found((OrderElementTemplate) selectedElement);
     }
 
-    /**
-     * @param ref
-     *            this is passed to {@link Popup#open(Component, String)}
-     * @param position
-     *            this is pased to {@link Popup#open(Component, String)}
-     * @param onResult
-     * @see Popup#open(Component, String)
-     */
-    public void openForOrderCreation(Component ref, String position, IOnResult<OrderTemplate> onResult) {
-        this.onResult = onResult;
-        setupPopUp(ref, position, "templatesEligibleForOrder");
-    }
+    popup.close();
+  }
 
-    private void setupPopUp(Component ref, String position, String finderName) {
-        if (bandboxSearch != null) {
-            finderPlaceholder.removeChild(bandboxSearch);
-        }
+  private void onCancel() {
+    popup.close();
+  }
 
-        bandboxSearch = new BandboxSearch();
-        bandboxSearch.setFinder(finderName);
-        bandboxSearch.setWidthBandbox("300px");
-        bandboxSearch.setWidthListbox("600px");
-        finderPlaceholder.appendChild(bandboxSearch);
-        bandboxSearch.afterCompose();
-        popup.open(ref, position);
-        bandboxSearch.foucusOnInput();
-    }
+  @Override
+  public void afterCompose() {
+    super.afterCompose();
 
-    private void onAccept() {
-        Object selectedElement = bandboxSearch.getSelectedElement();
+    acceptButton = (Button) getFellow("acceptButton");
+    acceptButton.setLabel(_("Create task"));
+    acceptButton.setClass("add-button");
+    acceptButton.addEventListener(Events.ON_CLICK, event -> onAccept());
 
-        if (selectedElement != null) {
-            onResult.found((OrderElementTemplate) selectedElement);
-        }
+    cancelButton = (Button) getFellow("cancelButton");
+    cancelButton.setLabel(_("Cancel"));
+    cancelButton.setClass("add-button");
+    cancelButton.addEventListener(Events.ON_CLICK, event -> onCancel());
 
-        popup.close();
-    }
+    finderPlaceholder = getFellow("finderPlaceholder");
+    popup = (Popup) getFellow("finderPopup");
 
-    private void onCancel() {
-        popup.close();
-    }
+    caption = (Caption) getFellow("finderCaption");
+    caption.setLabel(_("Choosing Template"));
+  }
 
-    @Override
-    public void afterCompose() {
-        super.afterCompose();
-
-        acceptButton = (Button) getFellow("acceptButton");
-        acceptButton.setLabel(_("Create task"));
-        acceptButton.setClass("add-button");
-        acceptButton.addEventListener(Events.ON_CLICK, event -> onAccept());
-
-        cancelButton = (Button) getFellow("cancelButton");
-        cancelButton.setLabel(_("Cancel"));
-        cancelButton.setClass("add-button");
-        cancelButton.addEventListener(Events.ON_CLICK, event -> onCancel());
-
-        finderPlaceholder = getFellow("finderPlaceholder");
-        popup = (Popup) getFellow("finderPopup");
-
-        caption = (Caption) getFellow("finderCaption");
-        caption.setLabel(_("Choosing Template"));
-    }
+  public interface IOnResult<T extends OrderElementTemplate> {
+    void found(T template);
+  }
 
 }

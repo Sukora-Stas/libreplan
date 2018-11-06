@@ -34,53 +34,53 @@ import java.util.Date;
 
 public class OrderFile extends BaseEntity {
 
-    private String name;
+  private String name;
 
-    private String type;
+  private String type;
 
-    private Date date;
+  private Date date;
 
-    private User uploader;
+  private User uploader;
 
-    private OrderElement parent;
+  private OrderElement parent;
 
-    public String getName() {
-        return name;
-    }
+  public String getName() {
+    return name;
+  }
 
-    public void setName(String name) {
-        this.name = name;
-    }
+  public void setName(String name) {
+    this.name = name;
+  }
 
-    public String getType() {
-        return type;
-    }
+  public String getType() {
+    return type;
+  }
 
-    public void setType(String type) {
-        this.type = type;
-    }
+  public void setType(String type) {
+    this.type = type;
+  }
 
-    public Date getDate() {
-        return date;
-    }
+  public Date getDate() {
+    return date;
+  }
 
-    public void setDate(Date date) {
-        this.date = date;
-    }
+  public void setDate(Date date) {
+    this.date = date;
+  }
 
-    public User getUploader() {
-        return uploader;
-    }
+  public User getUploader() {
+    return uploader;
+  }
 
-    public void setUploader(User uploader) {
-        this.uploader = uploader;
-    }
+  public void setUploader(User uploader) {
+    this.uploader = uploader;
+  }
 
-    public OrderElement getParent() {
-        return parent;
-    }
+  public OrderElement getParent() {
+    return parent;
+  }
 
-    public void setParent(OrderElement parent) {
-        this.parent = parent;
-    }
+  public void setParent(OrderElement parent) {
+    this.parent = parent;
+  }
 }

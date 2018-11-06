@@ -47,105 +47,105 @@ public class AssignedMaterialsToOrderElementModel
         extends AssignedMaterialsModel<OrderElement, MaterialAssignment>
         implements IAssignedMaterialsToOrderElementModel {
 
-    @Autowired
-    private IOrderElementDAO orderElementDAO;
+  @Autowired
+  private IOrderElementDAO orderElementDAO;
 
-    private OrderElement orderElement;
+  private OrderElement orderElement;
 
-    @Override
-    protected void assignAndReattach(OrderElement element) {
-        this.orderElement = element;
-        orderElementDAO.reattach(this.orderElement);
+  @Override
+  protected void assignAndReattach(OrderElement element) {
+    this.orderElement = element;
+    orderElementDAO.reattach(this.orderElement);
+  }
+
+  @Override
+  protected void initializeMaterialAssignments() {
+    initializeMaterialAssignments(this.orderElement.getMaterialAssignments());
+  }
+
+  private void initializeMaterialAssignments(Set<MaterialAssignment> materialAssignments) {
+    for (MaterialAssignment each : materialAssignments) {
+      each.getStatus();
+      reattachMaterial(each.getMaterial());
+      initializeMaterialCategory(each.getMaterial().getCategory());
     }
+  }
 
-    @Override
-    protected void initializeMaterialAssignments() {
-        initializeMaterialAssignments(this.orderElement.getMaterialAssignments());
-    }
+  @Override
+  public OrderElement getOrderElement() {
+    return orderElement;
+  }
 
-    private void initializeMaterialAssignments(Set<MaterialAssignment> materialAssignments) {
-        for (MaterialAssignment each : materialAssignments) {
-            each.getStatus();
-            reattachMaterial(each.getMaterial());
-            initializeMaterialCategory(each.getMaterial().getCategory());
+  @Override
+  protected List<MaterialAssignment> getAssignments() {
+    return new ArrayList<>(orderElement.getMaterialAssignments());
+  }
+
+  @Override
+  protected Material getMaterial(MaterialAssignment assignment) {
+    return assignment.getMaterial();
+  }
+
+  @Override
+  protected MaterialCategory removeAssignment(MaterialAssignment materialAssignment) {
+    orderElement.removeMaterialAssignment(materialAssignment);
+    return materialAssignment.getMaterial().getCategory();
+  }
+
+  @Override
+  @Transactional(readOnly = true)
+  public void addMaterialAssignment(Material material) {
+    MaterialAssignment materialAssignment = MaterialAssignment.create(material);
+    materialAssignment.setEstimatedAvailability(orderElement.getInitDate());
+    addMaterialAssignment(materialAssignment);
+  }
+
+  @Override
+  protected MaterialCategory addAssignment(MaterialAssignment materialAssignment) {
+    orderElement.addMaterialAssignment(materialAssignment);
+    return materialAssignment.getMaterial().getCategory();
+  }
+
+  @Override
+  protected BigDecimal getUnits(MaterialAssignment assignment) {
+    return assignment.getUnits();
+  }
+
+  @Override
+  public BigDecimal getPrice(MaterialCategory materialCategory) {
+    BigDecimal result = new BigDecimal(0);
+
+    if (orderElement != null) {
+
+      for (MaterialAssignment materialAssignment : orderElement.getMaterialAssignments()) {
+        final Material material = materialAssignment.getMaterial();
+
+        if (materialCategory.equals(material.getCategory())) {
+          result = result.add(materialAssignment.getTotalPrice());
         }
+      }
     }
 
-    @Override
-    public OrderElement getOrderElement() {
-        return orderElement;
-    }
+    return result;
+  }
 
-    @Override
-    protected List<MaterialAssignment> getAssignments() {
-        return new ArrayList<>(orderElement.getMaterialAssignments());
-    }
+  @Override
+  protected BigDecimal getTotalPrice(MaterialAssignment materialAssignment) {
+    return materialAssignment.getTotalPrice();
+  }
 
-    @Override
-    protected Material getMaterial(MaterialAssignment assignment) {
-        return assignment.getMaterial();
-    }
+  @Override
+  protected boolean isInitialized() {
+    return orderElement != null;
+  }
 
-    @Override
-    protected MaterialCategory removeAssignment(MaterialAssignment materialAssignment) {
-        orderElement.removeMaterialAssignment(materialAssignment);
-        return materialAssignment.getMaterial().getCategory();
-    }
+  @Override
+  public boolean isCurrentUnitType(Object assignment, UnitType unitType) {
+    MaterialAssignment material = (MaterialAssignment) assignment;
 
-    @Override
-    @Transactional(readOnly = true)
-    public void addMaterialAssignment(Material material) {
-        MaterialAssignment materialAssignment = MaterialAssignment.create(material);
-        materialAssignment.setEstimatedAvailability(orderElement.getInitDate());
-        addMaterialAssignment(materialAssignment);
-    }
-
-    @Override
-    protected MaterialCategory addAssignment(MaterialAssignment materialAssignment) {
-        orderElement.addMaterialAssignment(materialAssignment);
-        return materialAssignment.getMaterial().getCategory();
-    }
-
-    @Override
-    protected BigDecimal getUnits(MaterialAssignment assignment) {
-        return assignment.getUnits();
-    }
-
-    @Override
-    public BigDecimal getPrice(MaterialCategory materialCategory) {
-        BigDecimal result = new BigDecimal(0);
-
-        if (orderElement != null) {
-
-            for (MaterialAssignment materialAssignment : orderElement.getMaterialAssignments()) {
-                final Material material = materialAssignment.getMaterial();
-
-                if (materialCategory.equals(material.getCategory())) {
-                    result = result.add(materialAssignment.getTotalPrice());
-                }
-            }
-        }
-
-        return result;
-    }
-
-    @Override
-    protected BigDecimal getTotalPrice(MaterialAssignment materialAssignment) {
-        return materialAssignment.getTotalPrice();
-    }
-
-    @Override
-    protected boolean isInitialized() {
-        return orderElement != null;
-    }
-
-    @Override
-    public boolean isCurrentUnitType(Object assignment, UnitType unitType) {
-        MaterialAssignment material = (MaterialAssignment) assignment;
-
-        return (material != null) &&
-                (material.getMaterial().getUnitType() != null) &&
-                (unitType.getId().equals(material.getMaterial().getUnitType().getId()));
-    }
+    return (material != null) &&
+            (material.getMaterial().getUnitType() != null) &&
+            (unitType.getId().equals(material.getMaterial().getUnitType().getId()));
+  }
 
 }

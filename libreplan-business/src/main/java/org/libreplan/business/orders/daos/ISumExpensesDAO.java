@@ -33,42 +33,42 @@ import org.libreplan.business.orders.entities.SumExpenses;
  */
 public interface ISumExpensesDAO extends IGenericDAO<SumExpenses, Long> {
 
-    /**
-     * Update the {@link SumExpenses} objects with the changes in the
-     * {@link ExpenseSheetLine} set passed as argument. <br />
-     *
-     * If the {@link ExpenseSheetLine} is new, the value is added to the
-     * corresponding {@link SumExpenses}. Otherwise, the difference of
-     * value is added or subtracted as required. <br />
-     *
-     * If there is not {@link SumExpenses} associated to the
-     * {@link OrderElement} yet, it is created on demand.
-     *
-     * @param expenseSheetLineSet
-     */
-    void updateRelatedSumExpensesWithExpenseSheetLineSet(Set<ExpenseSheetLine> expenseSheetLineSet);
+  /**
+   * Update the {@link SumExpenses} objects with the changes in the
+   * {@link ExpenseSheetLine} set passed as argument. <br />
+   * <p>
+   * If the {@link ExpenseSheetLine} is new, the value is added to the
+   * corresponding {@link SumExpenses}. Otherwise, the difference of
+   * value is added or subtracted as required. <br />
+   * <p>
+   * If there is not {@link SumExpenses} associated to the
+   * {@link OrderElement} yet, it is created on demand.
+   *
+   * @param expenseSheetLineSet
+   */
+  void updateRelatedSumExpensesWithExpenseSheetLineSet(Set<ExpenseSheetLine> expenseSheetLineSet);
 
-    /**
-     * Update the {@link SumExpenses} objects removing the values from the
-     * {@link ExpenseSheetLine} set passed as argument. <br />
-     *
-     * If the {@link ExpenseSheetLine} is new, nothing is substracted. Otherwise,
-     * the actual value saved in the database is substracted and not the one
-     * coming in the objects passed.
-     *
-     * @param expenseSheetLineSet
-     */
+  /**
+   * Update the {@link SumExpenses} objects removing the values from the
+   * {@link ExpenseSheetLine} set passed as argument. <br />
+   * <p>
+   * If the {@link ExpenseSheetLine} is new, nothing is substracted. Otherwise,
+   * the actual value saved in the database is substracted and not the one
+   * coming in the objects passed.
+   *
+   * @param expenseSheetLineSet
+   */
 
-    void updateRelatedSumExpensesWithDeletedExpenseSheetLineSet(
-            Set<ExpenseSheetLine> expenseSheetLineSet);
+  void updateRelatedSumExpensesWithDeletedExpenseSheetLineSet(
+          Set<ExpenseSheetLine> expenseSheetLineSet);
 
-    SumExpenses findByOrderElement(OrderElement orderElement);
+  SumExpenses findByOrderElement(OrderElement orderElement);
 
-    /**
-    * Recalculates all the {@link SumExpenses} objets of an {@link Order}.
-    * This is needed when some elements are moved inside the {@link Order}.
-    *
-    * @param orderId
-    */
-    void recalculateSumExpenses(Long orderId);
+  /**
+   * Recalculates all the {@link SumExpenses} objets of an {@link Order}.
+   * This is needed when some elements are moved inside the {@link Order}.
+   *
+   * @param orderId
+   */
+  void recalculateSumExpenses(Long orderId);
 }

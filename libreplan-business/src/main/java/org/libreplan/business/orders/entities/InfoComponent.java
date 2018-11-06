@@ -22,37 +22,37 @@ package org.libreplan.business.orders.entities;
 
 
 /**
- * @author  Óscar González Fernández <ogonzalez@igalia.com>
+ * @author Óscar González Fernández <ogonzalez@igalia.com>
  */
 public class InfoComponent {
 
-    private String name;
+  private String name;
 
-    private String description;
+  private String description;
 
-    public InfoComponent() {
-    }
+  public InfoComponent() {
+  }
 
-    public void setName(String name) {
-        this.name = name;
-    }
+  public String getName() {
+    return name;
+  }
 
-    public String getName() {
-        return name;
-    }
+  public void setName(String name) {
+    this.name = name;
+  }
 
-    public void setDescription(String description) {
-        this.description = description;
-    }
+  public String getDescription() {
+    return description;
+  }
 
-    public String getDescription() {
-        return description;
-    }
+  public void setDescription(String description) {
+    this.description = description;
+  }
 
-    public InfoComponent copy() {
-        InfoComponent result = new InfoComponent();
-        result.setName(getName());
-        result.setDescription(getDescription());
-        return result;
-    }
+  public InfoComponent copy() {
+    InfoComponent result = new InfoComponent();
+    result.setName(getName());
+    result.setDescription(getDescription());
+    return result;
+  }
 }

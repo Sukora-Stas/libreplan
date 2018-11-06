@@ -24,12 +24,10 @@ package org.libreplan.web.orders.criterionrequirements;
 import org.zkoss.zk.ui.HtmlMacroComponent;
 
 /**
- *
  * @author Diego Pino Garcia <dpino@igalia.com>
- *
  */
 public abstract class CriterionRequirementComponent extends HtmlMacroComponent {
 
-    public abstract AssignedCriterionRequirementController<?, ?> getController();
+  public abstract AssignedCriterionRequirementController<?, ?> getController();
 
 }

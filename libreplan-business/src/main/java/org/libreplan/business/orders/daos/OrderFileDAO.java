@@ -37,24 +37,24 @@ import java.util.List;
 @Repository
 public class OrderFileDAO extends GenericDAOHibernate<OrderFile, Long> implements IOrderFileDAO {
 
-    @Override
-    public List<OrderFile> getAll() {
-        return list(OrderFile.class);
-    }
+  @Override
+  public List<OrderFile> getAll() {
+    return list(OrderFile.class);
+  }
 
-    @Override
-    public void delete(OrderFile file) {
-        try {
-            remove(file.getId());
-        } catch (InstanceNotFoundException ignored) {
-        }
+  @Override
+  public void delete(OrderFile file) {
+    try {
+      remove(file.getId());
+    } catch (InstanceNotFoundException ignored) {
     }
+  }
 
-    @Override
-    public List<OrderFile> findByParent(OrderElement parent) {
-        return getSession()
-                .createCriteria(OrderFile.class)
-                .add(Restrictions.eq("parent", parent))
-                .list();
-    }
+  @Override
+  public List<OrderFile> findByParent(OrderElement parent) {
+    return getSession()
+            .createCriteria(OrderFile.class)
+            .add(Restrictions.eq("parent", parent))
+            .list();
+  }
 }

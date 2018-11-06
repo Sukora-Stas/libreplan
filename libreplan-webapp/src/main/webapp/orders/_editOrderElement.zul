@@ -37,7 +37,7 @@
 <?component name="listOrderElementTaskQualityForms" inline="true" macroURI="_listOrderElementTaskQualityForms.zul"?>
 
 <window id="${arg.top_id}" title="@{i18n:_('Edit task')}" width="1050px" left="50px" visible="false" closable="true"
-        onClose="orderElementController.close(event)" >
+        onClose="orderElementController.close(event)">
 
     <tabbox id="tabboxOrderElement">
         <tabs>
@@ -65,7 +65,7 @@
 
         <tabpanels>
             <tabpanel id="tabPanelDetails">
-                <orderElementDetails id="orderElementDetails" />
+                <orderElementDetails id="orderElementDetails"/>
             </tabpanel>
 
             <tabpanel style="overflow:auto">

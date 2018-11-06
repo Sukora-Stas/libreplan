@@ -32,9 +32,9 @@ import org.libreplan.business.orders.entities.OrderElement;
 public interface IAssignedMaterialsToOrderElementModel
         extends IAssignedMaterialsModel<OrderElement, MaterialAssignment> {
 
-    boolean isCurrentUnitType(Object assignment, UnitType unitType);
+  boolean isCurrentUnitType(Object assignment, UnitType unitType);
 
-    OrderElement getOrderElement();
+  OrderElement getOrderElement();
 
-    void initEdit(OrderElement orderElement);
+  void initEdit(OrderElement orderElement);
 }

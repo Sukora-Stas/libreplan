@@ -19,14 +19,14 @@
 
 <groupbox id="timGroupBox"
           style="margin-top: 5px" closable="false">
-    <caption label="${i18n:_('Tim sync information')}" />
+    <caption label="${i18n:_('Tim sync information')}"/>
     <separator spacing="10px"/>
     <hbox width="100%">
         <separator spacing="10px" width="100%"/>
         <grid hflex="min">
             <columns>
-                <column width="200px" />
-                <column  />
+                <column width="200px"/>
+                <column/>
             </columns>
             <rows>
                 <row>
@@ -43,7 +43,7 @@
                         <textbox id="txtProductCode" value=""
                                  width="350px"/>
                         <button label="${i18n:_('Export to Tim')}" id="exportToTimButton"
-                                onClick="timSynchronizationController.startExportToTim()" />
+                                onClick="timSynchronizationController.startExportToTim()"/>
                     </hbox>
                 </row>
             </rows>

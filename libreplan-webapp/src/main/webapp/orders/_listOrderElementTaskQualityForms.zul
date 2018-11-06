@@ -27,7 +27,7 @@
             <panelchildren>
                 <!-- Assign quality form -->
                 <vbox>
-                    <label value="${i18n:_('Assign quality form')}" />
+                    <label value="${i18n:_('Assign quality form')}"/>
                     <hbox style="margin-left: 5px;">
                         <bandboxSearch id="bdQualityForms" finder="QualityFormBandboxFinder"
                                        model="@{assignedTaskQualityFormsController.notAssignedQualityForms}"
@@ -42,17 +42,17 @@
 
                 <grid id="assignedTaskQualityForms" height="300px"
                       fixedLayout="true"
-                      rowRenderer = "@{assignedTaskQualityFormsController.taskQualityFormsRowRenderer}"
+                      rowRenderer="@{assignedTaskQualityFormsController.taskQualityFormsRowRenderer}"
                       model="@{assignedTaskQualityFormsController.taskQualityForms}"
-                      onInitRender ="assignedTaskQualityFormsController.sortTaskQualityForms();">
+                      onInitRender="assignedTaskQualityFormsController.sortTaskQualityForms();">
                     <columns>
                         <column width="25px"/>
                         <column label="${i18n:_('Task quality form name')}"
                                 sort="auto(lower(qualityForm.name))"
                                 sortDirection="descending"/>
-                        <column label="${i18n:_('Type')}" />
-                        <column label="${i18n:_('Report progress')}" />
-                        <column label="${i18n:_('Operations')}" />
+                        <column label="${i18n:_('Type')}"/>
+                        <column label="${i18n:_('Report progress')}"/>
+                        <column label="${i18n:_('Operations')}"/>
                     </columns>
                 </grid>
 

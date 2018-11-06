@@ -24,12 +24,11 @@ import org.zkoss.zk.ui.HtmlMacroComponent;
 
 /**
  * @author Óscar González Fernández <ogonzalez@igalia.com>
- *
  */
 public abstract class LabelsAssignmentComponent extends HtmlMacroComponent {
 
-    private AssignedLabelsToOrderElementController controller = new AssignedLabelsToOrderElementController();
+  private AssignedLabelsToOrderElementController controller = new AssignedLabelsToOrderElementController();
 
-    public abstract AssignedLabelsController<?, ?> getController();
+  public abstract AssignedLabelsController<?, ?> getController();
 
 }

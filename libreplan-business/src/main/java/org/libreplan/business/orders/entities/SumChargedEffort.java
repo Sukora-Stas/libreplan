@@ -37,103 +37,104 @@ import org.libreplan.business.workreports.entities.WorkReportLine;
  */
 public class SumChargedEffort extends BaseEntity {
 
-    private OrderElement orderElement;
+  private OrderElement orderElement;
 
-    private EffortDuration directChargedEffort = EffortDuration.zero();
+  private EffortDuration directChargedEffort = EffortDuration.zero();
 
-    private EffortDuration indirectChargedEffort = EffortDuration.zero();
+  private EffortDuration indirectChargedEffort = EffortDuration.zero();
 
-    private Date firstTimesheetDate;
+  private Date firstTimesheetDate;
 
-    private Date lastTimesheetDate;
+  private Date lastTimesheetDate;
 
-    /**
-     * Finished according to timesheets. If <code>true</code> it means that
-     * there's a {@link WorkReportLine} marking as finished this
-     * {@link OrderElement}.
-     */
-    private Boolean finishedTimesheets = false;
+  /**
+   * Finished according to timesheets. If <code>true</code> it means that
+   * there's a {@link WorkReportLine} marking as finished this
+   * {@link OrderElement}.
+   */
+  private Boolean finishedTimesheets = false;
 
-    protected SumChargedEffort() {}
+  protected SumChargedEffort() {
+  }
 
-    private SumChargedEffort(OrderElement orderElement) {
-        this.orderElement = orderElement;
-    }
+  private SumChargedEffort(OrderElement orderElement) {
+    this.orderElement = orderElement;
+  }
 
-    public static SumChargedEffort create(OrderElement orderElement) {
-        return create(new SumChargedEffort(orderElement));
-    }
+  public static SumChargedEffort create(OrderElement orderElement) {
+    return create(new SumChargedEffort(orderElement));
+  }
 
-    public OrderElement getOrderElement() {
-        return orderElement;
-    }
+  public OrderElement getOrderElement() {
+    return orderElement;
+  }
 
-    public void addDirectChargedEffort(EffortDuration directChargedEffort) {
-        this.directChargedEffort = this.directChargedEffort.plus(directChargedEffort);
-    }
+  public void addDirectChargedEffort(EffortDuration directChargedEffort) {
+    this.directChargedEffort = this.directChargedEffort.plus(directChargedEffort);
+  }
 
-    public void subtractDirectChargedEffort(EffortDuration directChargedEffort) {
-        this.directChargedEffort = this.directChargedEffort.minus(directChargedEffort);
-    }
+  public void subtractDirectChargedEffort(EffortDuration directChargedEffort) {
+    this.directChargedEffort = this.directChargedEffort.minus(directChargedEffort);
+  }
 
-    public EffortDuration getDirectChargedEffort() {
-        return directChargedEffort;
-    }
+  public EffortDuration getDirectChargedEffort() {
+    return directChargedEffort;
+  }
 
-    public void addIndirectChargedEffort(EffortDuration indirectChargedEffort) {
-        this.indirectChargedEffort = this.indirectChargedEffort.plus(indirectChargedEffort);
-    }
+  public void addIndirectChargedEffort(EffortDuration indirectChargedEffort) {
+    this.indirectChargedEffort = this.indirectChargedEffort.plus(indirectChargedEffort);
+  }
 
-    public void subtractIndirectChargedEffort(EffortDuration indirectChargedEffort) {
-        this.indirectChargedEffort = this.indirectChargedEffort.minus(indirectChargedEffort);
-    }
+  public void subtractIndirectChargedEffort(EffortDuration indirectChargedEffort) {
+    this.indirectChargedEffort = this.indirectChargedEffort.minus(indirectChargedEffort);
+  }
 
-    public EffortDuration getIndirectChargedEffort() {
-        return indirectChargedEffort;
-    }
+  public EffortDuration getIndirectChargedEffort() {
+    return indirectChargedEffort;
+  }
 
-    public EffortDuration getTotalChargedEffort() {
-        return directChargedEffort.plus(indirectChargedEffort);
-    }
+  public EffortDuration getTotalChargedEffort() {
+    return directChargedEffort.plus(indirectChargedEffort);
+  }
 
-    public boolean isZero() {
-        return directChargedEffort.isZero() && indirectChargedEffort.isZero();
-    }
+  public boolean isZero() {
+    return directChargedEffort.isZero() && indirectChargedEffort.isZero();
+  }
 
-    public void reset() {
-        directChargedEffort = EffortDuration.zero();
-        indirectChargedEffort = EffortDuration.zero();
-        firstTimesheetDate = null;
-        lastTimesheetDate = null;
-    }
+  public void reset() {
+    directChargedEffort = EffortDuration.zero();
+    indirectChargedEffort = EffortDuration.zero();
+    firstTimesheetDate = null;
+    lastTimesheetDate = null;
+  }
 
-    public Date getFirstTimesheetDate() {
-        return firstTimesheetDate;
-    }
+  public Date getFirstTimesheetDate() {
+    return firstTimesheetDate;
+  }
 
-    public void setFirstTimesheetDate(Date firstTimesheetDate) {
-        this.firstTimesheetDate = firstTimesheetDate;
-    }
+  public void setFirstTimesheetDate(Date firstTimesheetDate) {
+    this.firstTimesheetDate = firstTimesheetDate;
+  }
 
-    public Date getLastTimesheetDate() {
-        return lastTimesheetDate;
-    }
+  public Date getLastTimesheetDate() {
+    return lastTimesheetDate;
+  }
 
-    public void setLastTimesheetDate(Date lastTimesheetDate) {
-        this.lastTimesheetDate = lastTimesheetDate;
-    }
+  public void setLastTimesheetDate(Date lastTimesheetDate) {
+    this.lastTimesheetDate = lastTimesheetDate;
+  }
 
-    public void setTimesheetDates(Date firstTimesheetDate, Date lastTimesheetDate) {
-        setFirstTimesheetDate(firstTimesheetDate);
-        setLastTimesheetDate(lastTimesheetDate);
-    }
+  public void setTimesheetDates(Date firstTimesheetDate, Date lastTimesheetDate) {
+    setFirstTimesheetDate(firstTimesheetDate);
+    setLastTimesheetDate(lastTimesheetDate);
+  }
 
-    public Boolean isFinishedTimesheets() {
-        return finishedTimesheets;
-    }
+  public Boolean isFinishedTimesheets() {
+    return finishedTimesheets;
+  }
 
-    public void setFinishedTimesheets(Boolean finishedTimesheets) {
-        this.finishedTimesheets = BooleanUtils.isTrue(finishedTimesheets);
-    }
+  public void setFinishedTimesheets(Boolean finishedTimesheets) {
+    this.finishedTimesheets = BooleanUtils.isTrue(finishedTimesheets);
+  }
 
 }

@@ -31,99 +31,99 @@ import java.util.Date;
  */
 public class RiskRegister extends BaseEntity {
 
-    private String description;
+  private String description;
 
-    private String response;
+  private String response;
 
-    private String excecutor;
+  private String excecutor;
 
-    private Date dateEndRisk;
+  private Date dateEndRisk;
 
-    private String status;
+  private String status;
 
-    public RiskRegister() {
-    }
+  public RiskRegister() {
+  }
 
-    public RiskRegister(String description, String response, String excecutor, Date dateEndRisk, String status) {
-        this.description = description;
-        this.response = response;
-        this.excecutor = excecutor;
-        this.dateEndRisk = dateEndRisk;
-        this.status = status;
-    }
+  public RiskRegister(String description, String response, String excecutor, Date dateEndRisk, String status) {
+    this.description = description;
+    this.response = response;
+    this.excecutor = excecutor;
+    this.dateEndRisk = dateEndRisk;
+    this.status = status;
+  }
 
-    public String getDescription() {
-        return description;
-    }
+  public String getDescription() {
+    return description;
+  }
 
-    public void setDescription(String description) {
-        this.description = description;
-    }
+  public void setDescription(String description) {
+    this.description = description;
+  }
 
-    public String getResponse() {
-        return response;
-    }
+  public String getResponse() {
+    return response;
+  }
 
-    public void setResponse(String response) {
-        this.response = response;
-    }
+  public void setResponse(String response) {
+    this.response = response;
+  }
 
-    public String getExcecutor() {
-        return excecutor;
-    }
+  public String getExcecutor() {
+    return excecutor;
+  }
 
-    public void setExcecutor(String excecutor) {
-        this.excecutor = excecutor;
-    }
+  public void setExcecutor(String excecutor) {
+    this.excecutor = excecutor;
+  }
 
-    public Date getDateEndRisk() {
-        return dateEndRisk;
-    }
+  public Date getDateEndRisk() {
+    return dateEndRisk;
+  }
 
-    public void setDateEndRisk(Date dateEndRisk) {
-        this.dateEndRisk = dateEndRisk;
-    }
+  public void setDateEndRisk(Date dateEndRisk) {
+    this.dateEndRisk = dateEndRisk;
+  }
 
-    public String getStatus() {
-        return status;
-    }
+  public String getStatus() {
+    return status;
+  }
 
-    public void setStatus(String status) {
-        this.status = status;
-    }
+  public void setStatus(String status) {
+    this.status = status;
+  }
 
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) return true;
+    if (o == null || getClass() != o.getClass()) return false;
 
-        RiskRegister that = (RiskRegister) o;
+    RiskRegister that = (RiskRegister) o;
 
-        if (description != null ? !description.equals(that.description) : that.description != null) return false;
-        if (response != null ? !response.equals(that.response) : that.response != null) return false;
-        if (excecutor != null ? !excecutor.equals(that.excecutor) : that.excecutor != null) return false;
-        if (dateEndRisk != null ? !dateEndRisk.equals(that.dateEndRisk) : that.dateEndRisk != null) return false;
-        return status != null ? status.equals(that.status) : that.status == null;
-    }
+    if (description != null ? !description.equals(that.description) : that.description != null) return false;
+    if (response != null ? !response.equals(that.response) : that.response != null) return false;
+    if (excecutor != null ? !excecutor.equals(that.excecutor) : that.excecutor != null) return false;
+    if (dateEndRisk != null ? !dateEndRisk.equals(that.dateEndRisk) : that.dateEndRisk != null) return false;
+    return status != null ? status.equals(that.status) : that.status == null;
+  }
 
-    @Override
-    public int hashCode() {
-        int result = description != null ? description.hashCode() : 0;
-        result = 31 * result + (response != null ? response.hashCode() : 0);
-        result = 31 * result + (excecutor != null ? excecutor.hashCode() : 0);
-        result = 31 * result + (dateEndRisk != null ? dateEndRisk.hashCode() : 0);
-        result = 31 * result + (status != null ? status.hashCode() : 0);
-        return result;
-    }
+  @Override
+  public int hashCode() {
+    int result = description != null ? description.hashCode() : 0;
+    result = 31 * result + (response != null ? response.hashCode() : 0);
+    result = 31 * result + (excecutor != null ? excecutor.hashCode() : 0);
+    result = 31 * result + (dateEndRisk != null ? dateEndRisk.hashCode() : 0);
+    result = 31 * result + (status != null ? status.hashCode() : 0);
+    return result;
+  }
 
-    @Override
-    public String toString() {
-        return "RiskRegister{" +
-                "description='" + description + '\'' +
-                ", response='" + response + '\'' +
-                ", excecutor='" + excecutor + '\'' +
-                ", dateEndRisk=" + dateEndRisk +
-                ", status='" + status + '\'' +
-                '}';
-    }
+  @Override
+  public String toString() {
+    return "RiskRegister{" +
+            "description='" + description + '\'' +
+            ", response='" + response + '\'' +
+            ", excecutor='" + excecutor + '\'' +
+            ", dateEndRisk=" + dateEndRisk +
+            ", status='" + status + '\'' +
+            '}';
+  }
 }

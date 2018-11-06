@@ -38,90 +38,90 @@ import static org.libreplan.web.I18nHelper._;
  */
 public abstract class TreeElementOperationsController<T> {
 
-    protected Tree tree;
+  protected Tree tree;
 
-    public void editSelectedElement() {
-        if (tree.getSelectedCount() == 1) {
-            showEditElement(tree.getSelectedItem());
-        } else {
-            showSelectAnElementError();
-        }
+  public void editSelectedElement() {
+    if (tree.getSelectedCount() == 1) {
+      showEditElement(tree.getSelectedItem());
+    } else {
+      showSelectAnElementError();
     }
+  }
 
-    protected void showSelectAnElementError() {
-        Messagebox.show(_("Please select a task"));
+  protected void showSelectAnElementError() {
+    Messagebox.show(_("Please select a task"));
+  }
+
+  protected abstract void showEditElement(Treeitem treeitem);
+
+  public void moveSelectedElementUp() {
+    if (tree.getSelectedCount() == 1) {
+      Treeitem item = tree.getSelectedItem();
+      up(item.getValue());
+      Treeitem brother = (Treeitem) item.getPreviousSibling();
+
+      if (brother != null) {
+        brother.setSelected(true);
+      }
+    } else {
+      showSelectAnElementError();
     }
+  }
 
-    protected abstract void showEditElement(Treeitem treeitem);
+  protected abstract void up(T element);
 
-    public void moveSelectedElementUp() {
-        if (tree.getSelectedCount() == 1) {
-            Treeitem item =  tree.getSelectedItem();
-            up(item.getValue());
-            Treeitem brother = (Treeitem) item.getPreviousSibling();
+  public void moveSelectedElementDown() {
+    if (tree.getSelectedCount() == 1) {
+      Treeitem item = tree.getSelectedItem();
+      down(item.getValue());
+      Treeitem brother = (Treeitem) item.getNextSibling();
 
-            if (brother != null) {
-                brother.setSelected(true);
-            }
-        } else {
-            showSelectAnElementError();
-        }
+      if (brother != null) {
+        brother.setSelected(true);
+      }
+    } else {
+      showSelectAnElementError();
     }
+  }
 
-    protected abstract void up(T element);
+  protected abstract void down(T element);
 
-    public void moveSelectedElementDown() {
-        if (tree.getSelectedCount() == 1) {
-            Treeitem item =  tree.getSelectedItem();
-            down(item.getValue());
-            Treeitem brother = (Treeitem) item.getNextSibling();
+  public void indentSelectedElement() {
+    if (tree.getSelectedCount() == 1) {
+      int page = tree.getActivePage();
+      indent(getSelectedElement());
 
-            if (brother != null) {
-                brother.setSelected(true);
-            }
-        } else {
-            showSelectAnElementError();
-        }
+      if (tree.getPageCount() > page) {
+        tree.setActivePage(page);
+      }
+    } else {
+      showSelectAnElementError();
     }
+  }
 
-    protected abstract void down(T element);
+  protected abstract T getSelectedElement();
 
-    public void indentSelectedElement() {
-        if (tree.getSelectedCount() == 1) {
-            int page = tree.getActivePage();
-            indent(getSelectedElement());
+  protected abstract void indent(T element);
 
-            if (tree.getPageCount() > page) {
-                tree.setActivePage(page);
-            }
-        } else {
-            showSelectAnElementError();
-        }
+  public void unindentSelectedElement() {
+    if (tree.getSelectedCount() == 1) {
+      unindent(getSelectedElement());
+    } else {
+      showSelectAnElementError();
     }
+  }
 
-    protected abstract T getSelectedElement();
+  protected abstract void unindent(T element);
 
-    protected abstract void indent(T element);
-
-    public void unindentSelectedElement() {
-        if (tree.getSelectedCount() == 1) {
-            unindent(getSelectedElement());
-        } else {
-            showSelectAnElementError();
-        }
+  public void deleteSelectedElement() {
+    if (tree.getSelectedCount() == 1) {
+      remove(getSelectedElement());
+    } else {
+      showSelectAnElementError();
     }
+  }
 
-    protected abstract void unindent(T element);
-
-    public void deleteSelectedElement() {
-        if (tree.getSelectedCount() == 1) {
-            remove(getSelectedElement());
-        } else {
-            showSelectAnElementError();
-        }
-    }
-
-    protected abstract void remove(T element);
+  protected abstract void remove(T element);
 
 }
 
@@ -132,120 +132,121 @@ public abstract class TreeElementOperationsController<T> {
  */
 class OrderElementOperations extends TreeElementOperationsController<OrderElement> {
 
-    private OrderElementTreeController treeController;
+  private OrderElementTreeController treeController;
 
-    private IOrderModel orderModel;
+  private IOrderModel orderModel;
 
-    private OrderElementController orderElementController;
+  private OrderElementController orderElementController;
 
-    private IOrderTemplatesControllerEntryPoints orderTemplates;
+  private IOrderTemplatesControllerEntryPoints orderTemplates;
 
-    private OrderElementOperations() {}
+  private OrderElementOperations() {
+  }
 
-    public static OrderElementOperations build() {
-        return new OrderElementOperations();
+  public static OrderElementOperations build() {
+    return new OrderElementOperations();
+  }
+
+  public OrderElementOperations tree(Tree tree) {
+    super.tree = tree;
+
+    return this;
+  }
+
+  public OrderElementOperations treeController(OrderElementTreeController treeController) {
+    this.treeController = treeController;
+
+    return this;
+  }
+
+  public OrderElementOperations orderModel(IOrderModel orderModel) {
+    this.orderModel = orderModel;
+
+    return this;
+  }
+
+  public OrderElementOperations orderElementController(OrderElementController orderElementController) {
+    this.orderElementController = orderElementController;
+
+    return this;
+  }
+
+  public OrderElementOperations orderTemplates(IOrderTemplatesControllerEntryPoints orderTemplates) {
+    this.orderTemplates = orderTemplates;
+
+    return this;
+  }
+
+  @Override
+  protected OrderElement getSelectedElement() {
+    return treeController.getSelectedNode();
+  }
+
+  @Override
+  protected void up(OrderElement element) {
+    treeController.up(element);
+  }
+
+  @Override
+  protected void down(OrderElement element) {
+    treeController.down(element);
+  }
+
+  @Override
+  protected void indent(OrderElement element) {
+    treeController.indent(element);
+  }
+
+  @Override
+  protected void unindent(OrderElement element) {
+    treeController.unindent(element);
+  }
+
+  @Override
+  protected void remove(OrderElement element) {
+    treeController.remove(element);
+  }
+
+  @Override
+  protected void showEditElement(Treeitem item) {
+    OrderElement orderElement = item.getValue();
+    treeController.markModifiedTreeitem(item.getTreerow());
+    IOrderElementModel model = orderModel.getOrderElementModel(orderElement);
+    orderElementController.openWindow(model);
+    treeController.refreshRow(item);
+  }
+
+  public void createTemplateFromSelectedElement() {
+    if (tree.getSelectedCount() == 1) {
+      createTemplate(getSelectedElement());
+    } else {
+      showSelectAnElementError();
     }
+  }
 
-    public OrderElementOperations tree(Tree tree) {
-        super.tree = tree;
+  private void createTemplate(OrderElement element) {
+    if (element.isNewObject()) {
+      notifyTemplateCantBeCreated();
 
-        return this;
+      return;
     }
-
-    public OrderElementOperations treeController(OrderElementTreeController treeController) {
-        this.treeController = treeController;
-
-        return this;
+    if (showConfirmCreateTemplateDialog() == Messagebox.OK) {
+      orderTemplates.goToCreateTemplateFrom(element);
     }
+  }
 
-    public OrderElementOperations orderModel(IOrderModel orderModel) {
-        this.orderModel = orderModel;
+  private int showConfirmCreateTemplateDialog() {
+    return Messagebox.show(
+            _("Unsaved changes will be lost. Would you like to continue?"),
+            _("Confirm create template"), Messagebox.OK | Messagebox.CANCEL, Messagebox.QUESTION);
+  }
 
-        return this;
-    }
-
-    public OrderElementOperations orderElementController(OrderElementController orderElementController) {
-        this.orderElementController = orderElementController;
-
-        return this;
-    }
-
-    public OrderElementOperations orderTemplates(IOrderTemplatesControllerEntryPoints orderTemplates) {
-        this.orderTemplates = orderTemplates;
-
-        return this;
-    }
-
-    @Override
-    protected OrderElement getSelectedElement() {
-        return treeController.getSelectedNode();
-    }
-
-    @Override
-    protected void up(OrderElement element) {
-        treeController.up(element);
-    }
-
-    @Override
-    protected void down(OrderElement element) {
-        treeController.down(element);
-    }
-
-    @Override
-    protected void indent(OrderElement element) {
-        treeController.indent(element);
-    }
-
-    @Override
-    protected void unindent(OrderElement element) {
-        treeController.unindent(element);
-    }
-
-    @Override
-    protected void remove(OrderElement element) {
-        treeController.remove(element);
-    }
-
-    @Override
-    protected void showEditElement(Treeitem item) {
-        OrderElement orderElement = item.getValue();
-        treeController.markModifiedTreeitem(item.getTreerow());
-        IOrderElementModel model = orderModel.getOrderElementModel(orderElement);
-        orderElementController.openWindow(model);
-        treeController.refreshRow(item);
-    }
-
-    public void createTemplateFromSelectedElement() {
-        if (tree.getSelectedCount() == 1) {
-            createTemplate(getSelectedElement());
-        } else {
-            showSelectAnElementError();
-        }
-    }
-
-    private void createTemplate(OrderElement element) {
-        if (element.isNewObject()) {
-            notifyTemplateCantBeCreated();
-
-            return;
-        }
-        if (showConfirmCreateTemplateDialog() == Messagebox.OK) {
-            orderTemplates.goToCreateTemplateFrom(element);
-        }
-    }
-
-    private int showConfirmCreateTemplateDialog() {
-        return Messagebox.show(
-                _("Unsaved changes will be lost. Would you like to continue?"),
-                _("Confirm create template"), Messagebox.OK | Messagebox.CANCEL, Messagebox.QUESTION);
-    }
-
-    private void notifyTemplateCantBeCreated() {
-        Messagebox.show(
-                _("Templates can only be created out of existent tasks." +
-                        "You are trying to create a template out of a new task.\n" +
-                        "Please save your project before proceeding."),
-                _("Operation cannot be done"), Messagebox.OK, Messagebox.INFORMATION);
-    }
+  private void notifyTemplateCantBeCreated() {
+    Messagebox.show(
+            _("Templates can only be created out of existent tasks." +
+                    "You are trying to create a template out of a new task.\n" +
+                    "Please save your project before proceeding."),
+            _("Operation cannot be done"), Messagebox.OK, Messagebox.INFORMATION);
+  }
 
 }

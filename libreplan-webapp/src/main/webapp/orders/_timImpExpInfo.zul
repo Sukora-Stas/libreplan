@@ -18,14 +18,15 @@
 -->
 
 <window id="winTimImpExpInfo" title="${i18n:_('LibrePlan: Tim import export info')}"
-    width="500px" border="normal" mode="modal">
+        width="500px" border="normal" mode="modal">
     <div>
         <vbox>
             <label value="${arg.action} ${i18n:_('was successful')}" sclass="remarked" if="${arg.showSuccess}"/>
-            <label value="${arg.action} ${i18n:_('is not completed for the following reasons:')}" sclass="remarked" if="${not arg.showSuccess}"/>
+            <label value="${arg.action} ${i18n:_('is not completed for the following reasons:')}" sclass="remarked"
+                   if="${not arg.showSuccess}"/>
             <listbox model="${arg.failedReasons}"/>
         </vbox>
     </div>
     <button id="closeBtn" label="${i18n:_('Close')}" onClick="winTimImpExpInfo.detach()"
-        sclass="cancel-button global-action"/>
+            sclass="cancel-button global-action"/>
 </window>

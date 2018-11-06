@@ -41,224 +41,224 @@ import org.zkoss.zul.TreeModel;
  */
 public abstract class AssignedMaterialsModel<T, A> implements IAssignedMaterialsModel<T, A> {
 
-    @Autowired
-    private IMaterialCategoryDAO categoryDAO;
+  @Autowired
+  private IMaterialCategoryDAO categoryDAO;
 
-    @Autowired
-    private IMaterialDAO materialDAO;
+  @Autowired
+  private IMaterialDAO materialDAO;
 
-    @Autowired
-    private IUnitTypeDAO unitTypeDAO;
+  @Autowired
+  private IUnitTypeDAO unitTypeDAO;
 
-    private MutableTreeModel<MaterialCategory> materialCategories = MutableTreeModel.create(MaterialCategory.class);
+  private MutableTreeModel<MaterialCategory> materialCategories = MutableTreeModel.create(MaterialCategory.class);
 
-    private MutableTreeModel<MaterialCategory> allMaterialCategories = MutableTreeModel.create(MaterialCategory.class);
+  private MutableTreeModel<MaterialCategory> allMaterialCategories = MutableTreeModel.create(MaterialCategory.class);
 
-    private List<Material> matchingMaterials = new ArrayList<>();
+  private List<Material> matchingMaterials = new ArrayList<>();
 
-    private List<UnitType> unitTypes = new ArrayList<>();
+  private List<UnitType> unitTypes = new ArrayList<>();
 
-    @Transactional(readOnly = true)
-    public void initEdit(T element) {
-        assignAndReattach(element);
-        materialCategories = MutableTreeModel.create(MaterialCategory.class);
-        initializeMaterialAssignments();
+  @Transactional(readOnly = true)
+  public void initEdit(T element) {
+    assignAndReattach(element);
+    materialCategories = MutableTreeModel.create(MaterialCategory.class);
+    initializeMaterialAssignments();
 
-        // Initialize matching materials
-        matchingMaterials.clear();
-        matchingMaterials.addAll(materialDAO.getAll());
-        initializeMaterials(matchingMaterials);
+    // Initialize matching materials
+    matchingMaterials.clear();
+    matchingMaterials.addAll(materialDAO.getAll());
+    initializeMaterials(matchingMaterials);
+  }
+
+  protected abstract void initializeMaterialAssignments();
+
+  protected abstract void assignAndReattach(T element);
+
+  protected void reattachMaterial(Material material) {
+    materialDAO.reattachUnmodifiedEntity(material);
+  }
+
+  private void initializeMaterials(Collection<Material> materials) {
+    for (Material each : materials) {
+      initializeMaterial(each);
     }
+  }
 
-    protected abstract void initializeMaterialAssignments();
-
-    protected abstract void assignAndReattach(T element);
-
-    protected void reattachMaterial(Material material) {
-        materialDAO.reattachUnmodifiedEntity(material);
+  protected void initializeMaterialCategories(
+          Collection<MaterialCategory> materialCategories) {
+    for (MaterialCategory each : materialCategories) {
+      initializeMaterialCategory(each);
     }
+  }
 
-    private void initializeMaterials(Collection<Material> materials) {
-        for (Material each : materials) {
-            initializeMaterial(each);
+  protected void initializeMaterialCategory(MaterialCategory materialCategory) {
+    categoryDAO.reattach(materialCategory);
+    materialCategory.getName();
+    initializeMaterials(materialCategory.getMaterials());
+    initializeMaterialCategories(materialCategory.getSubcategories());
+  }
+
+  private void initializeMaterial(Material material) {
+    material.getDescription();
+    material.getCategory().getName();
+    material.getUnitType().getMeasure();
+  }
+
+  @Transactional(readOnly = true)
+  public MutableTreeModel<MaterialCategory> getMaterialCategories() {
+    if (isInitialized() && materialCategories.isEmpty()) {
+      feedTree(materialCategories, getAssignments());
+      initializeMaterialCategories(materialCategories.asList());
+    }
+    return materialCategories;
+  }
+
+  protected abstract List<A> getAssignments();
+
+  protected abstract Material getMaterial(A assignment);
+
+  private void feedTree(MutableTreeModel<MaterialCategory> tree, Collection<? extends A> materialAssignments) {
+    for (A each : materialAssignments) {
+      final Material material = getMaterial(each);
+      addCategory(tree, material.getCategory());
+    }
+  }
+
+  /**
+   * Adds category to treeModel If category.parent is not in treeModel add it to treeModel recursively.
+   */
+  private void addCategory(
+          MutableTreeModel<MaterialCategory> materialCategories, MaterialCategory materialCategory) {
+
+    categoryDAO.reattach(materialCategory);
+    final MaterialCategory parent = materialCategory.getParent();
+    if (!materialCategories.contains(parent, materialCategory)) {
+      if (parent == null) {
+        materialCategories.addToRoot(materialCategory);
+      } else {
+        addCategory(materialCategories, parent);
+        materialCategories.add(parent, materialCategory);
+      }
+    }
+  }
+
+  @Transactional(readOnly = true)
+  public TreeModel getAllMaterialCategories() {
+    if (allMaterialCategories.isEmpty()) {
+      feedTree(allMaterialCategories, categoryDAO.getAll());
+      initializeMaterialCategories(allMaterialCategories.asList());
+    }
+    return allMaterialCategories;
+  }
+
+  private void feedTree(MutableTreeModel<MaterialCategory> tree, List<MaterialCategory> materialCategories) {
+    for (MaterialCategory each : materialCategories) {
+      addCategory(tree, each);
+    }
+  }
+
+  protected abstract boolean isInitialized();
+
+  public List<A> getAssignedMaterials(MaterialCategory materialCategory) {
+    List<A> result = new ArrayList<>();
+
+    if (isInitialized()) {
+
+      for (A each : getAssignments()) {
+
+        final Material material = getMaterial(each);
+
+        if (materialCategory == null || materialCategory.getId().equals(material.getCategory().getId())) {
+          result.add(each);
         }
+      }
     }
 
-    protected void initializeMaterialCategories(
-            Collection<MaterialCategory> materialCategories) {
-        for (MaterialCategory each : materialCategories) {
-            initializeMaterialCategory(each);
+    return result;
+  }
+
+  @Transactional(readOnly = true)
+  public void searchMaterials(String text, MaterialCategory materialCategory) {
+    matchingMaterials = materialDAO.findMaterialsInCategoryAndSubCategories(text, materialCategory);
+    initializeMaterials(matchingMaterials);
+  }
+
+  public List<Material> getMatchingMaterials() {
+    return matchingMaterials;
+  }
+
+  @Transactional(readOnly = true)
+  public void addMaterialAssignment(A materialAssignment) {
+    MaterialCategory category = addAssignment(materialAssignment);
+    addCategory(materialCategories, category);
+  }
+
+  protected abstract MaterialCategory addAssignment(A materialAssignment);
+
+  protected abstract MaterialCategory removeAssignment(A materialAssignment);
+
+  @Transactional(readOnly = true)
+  public void removeMaterialAssignment(A materialAssignment) {
+    MaterialCategory materialCategory = removeAssignment(materialAssignment);
+    removeCategory(materialCategories, materialCategory);
+  }
+
+  private void removeCategory(
+          MutableTreeModel<MaterialCategory> materialCategories, MaterialCategory materialCategory) {
+
+    categoryDAO.reattach(materialCategory);
+
+    final boolean canDelete =
+            materialCategory.getSubcategories().isEmpty() && getAssignedMaterials(materialCategory).isEmpty();
+
+    if (canDelete) {
+      materialCategories.remove(materialCategory);
+      final MaterialCategory parent = materialCategory.getParent();
+      if (parent != null) {
+        removeCategory(materialCategories, parent);
+      }
+    }
+  }
+
+  @Override
+  public BigDecimal getUnits(MaterialCategory materialCategory) {
+    BigDecimal result = BigDecimal.ZERO;
+    if (isInitialized()) {
+      for (A each : getAssignments()) {
+        final Material material = getMaterial(each);
+        if (materialCategory.equals(material.getCategory())) {
+          result = result.add(getUnits(each));
         }
+      }
     }
+    return result;
+  }
 
-    protected void initializeMaterialCategory(MaterialCategory materialCategory) {
-        categoryDAO.reattach(materialCategory);
-        materialCategory.getName();
-        initializeMaterials(materialCategory.getMaterials());
-        initializeMaterialCategories(materialCategory.getSubcategories());
-    }
+  protected abstract BigDecimal getUnits(A assignment);
 
-    private void initializeMaterial(Material material) {
-        material.getDescription();
-        material.getCategory().getName();
-        material.getUnitType().getMeasure();
-    }
-
-    @Transactional(readOnly = true)
-    public MutableTreeModel<MaterialCategory> getMaterialCategories() {
-        if (isInitialized() && materialCategories.isEmpty()) {
-            feedTree(materialCategories, getAssignments());
-            initializeMaterialCategories(materialCategories.asList());
+  public BigDecimal getPrice(MaterialCategory category) {
+    BigDecimal result = new BigDecimal(0);
+    if (isInitialized()) {
+      for (A each : getAssignments()) {
+        final Material material = getMaterial(each);
+        if (category.equals(material.getCategory())) {
+          result = result.add(getTotalPrice(each));
         }
-        return materialCategories;
+      }
     }
+    return result;
+  }
 
-    protected abstract List<A> getAssignments();
+  protected abstract BigDecimal getTotalPrice(A each);
 
-    protected abstract Material getMaterial(A assignment);
+  @Override
+  @Transactional(readOnly = true)
+  public void loadUnitTypes() {
+    unitTypes = unitTypeDAO.findAll();
+  }
 
-    private void feedTree(MutableTreeModel<MaterialCategory> tree, Collection<? extends A> materialAssignments) {
-        for (A each : materialAssignments) {
-            final Material material = getMaterial(each);
-            addCategory(tree, material.getCategory());
-        }
-    }
-
-    /**
-     * Adds category to treeModel If category.parent is not in treeModel add it to treeModel recursively.
-     */
-    private void addCategory(
-            MutableTreeModel<MaterialCategory> materialCategories, MaterialCategory materialCategory) {
-
-        categoryDAO.reattach(materialCategory);
-        final MaterialCategory parent = materialCategory.getParent();
-        if (!materialCategories.contains(parent, materialCategory)) {
-            if (parent == null) {
-                materialCategories.addToRoot(materialCategory);
-            } else {
-                addCategory(materialCategories, parent);
-                materialCategories.add(parent, materialCategory);
-            }
-        }
-    }
-
-    @Transactional(readOnly = true)
-    public TreeModel getAllMaterialCategories() {
-        if (allMaterialCategories.isEmpty()) {
-            feedTree(allMaterialCategories, categoryDAO.getAll());
-            initializeMaterialCategories(allMaterialCategories.asList());
-        }
-        return allMaterialCategories;
-    }
-
-    private void feedTree(MutableTreeModel<MaterialCategory> tree, List<MaterialCategory> materialCategories) {
-        for (MaterialCategory each : materialCategories) {
-            addCategory(tree, each);
-        }
-    }
-
-    protected abstract boolean isInitialized();
-
-    public List<A> getAssignedMaterials(MaterialCategory materialCategory) {
-        List<A> result = new ArrayList<>();
-
-        if (isInitialized()) {
-
-            for (A each : getAssignments()) {
-
-                final Material material = getMaterial(each);
-
-                if (materialCategory == null || materialCategory.getId().equals(material.getCategory().getId())) {
-                    result.add(each);
-                }
-            }
-        }
-
-        return result;
-    }
-
-    @Transactional(readOnly = true)
-    public void searchMaterials(String text, MaterialCategory materialCategory) {
-        matchingMaterials = materialDAO.findMaterialsInCategoryAndSubCategories(text, materialCategory);
-        initializeMaterials(matchingMaterials);
-    }
-
-    public List<Material> getMatchingMaterials() {
-        return matchingMaterials;
-    }
-
-    @Transactional(readOnly = true)
-    public void addMaterialAssignment(A materialAssignment) {
-        MaterialCategory category = addAssignment(materialAssignment);
-        addCategory(materialCategories, category);
-    }
-
-    protected abstract MaterialCategory addAssignment(A materialAssignment);
-
-    protected abstract MaterialCategory removeAssignment(A materialAssignment);
-
-    @Transactional(readOnly = true)
-    public void removeMaterialAssignment(A materialAssignment) {
-        MaterialCategory materialCategory = removeAssignment(materialAssignment);
-        removeCategory(materialCategories, materialCategory);
-    }
-
-    private void removeCategory(
-            MutableTreeModel<MaterialCategory> materialCategories, MaterialCategory materialCategory) {
-
-        categoryDAO.reattach(materialCategory);
-
-        final boolean canDelete =
-                materialCategory.getSubcategories().isEmpty() && getAssignedMaterials(materialCategory).isEmpty();
-
-        if (canDelete) {
-            materialCategories.remove(materialCategory);
-            final MaterialCategory parent = materialCategory.getParent();
-            if (parent != null) {
-                removeCategory(materialCategories, parent);
-            }
-        }
-    }
-
-    @Override
-    public BigDecimal getUnits(MaterialCategory materialCategory) {
-        BigDecimal result = BigDecimal.ZERO;
-        if (isInitialized()) {
-            for (A each : getAssignments()) {
-                final Material material = getMaterial(each);
-                if (materialCategory.equals(material.getCategory())) {
-                    result = result.add(getUnits(each));
-                }
-            }
-        }
-        return result;
-    }
-
-    protected abstract BigDecimal getUnits(A assignment);
-
-    public BigDecimal getPrice(MaterialCategory category) {
-        BigDecimal result = new BigDecimal(0);
-        if (isInitialized()) {
-            for (A each : getAssignments()) {
-                final Material material = getMaterial(each);
-                if (category.equals(material.getCategory())) {
-                    result = result.add(getTotalPrice(each));
-                }
-            }
-        }
-        return result;
-    }
-
-    protected abstract BigDecimal getTotalPrice(A each);
-
-    @Override
-    @Transactional(readOnly = true)
-    public void loadUnitTypes() {
-        unitTypes = unitTypeDAO.findAll();
-    }
-
-    @Override
-    public List<UnitType> getUnitTypes() {
-        return unitTypes;
-    }
+  @Override
+  public List<UnitType> getUnitTypes() {
+    return unitTypes;
+  }
 }

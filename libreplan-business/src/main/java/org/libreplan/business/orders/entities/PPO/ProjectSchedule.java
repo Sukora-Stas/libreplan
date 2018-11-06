@@ -31,99 +31,99 @@ import java.util.Date;
  */
 public class ProjectSchedule extends BaseEntity {
 
-    private String task;
+  private String task;
 
-    private Date dateStart;
+  private Date dateStart;
 
-    private Date dateEnd;
+  private Date dateEnd;
 
-    private String response;
+  private String response;
 
-    private Double cost;
+  private Double cost;
 
-    public ProjectSchedule() {
-    }
+  public ProjectSchedule() {
+  }
 
-    public ProjectSchedule(String task, Date dateStart, Date dateEnd, String response, Double cost) {
-        this.task = task;
-        this.dateStart = dateStart;
-        this.dateEnd = dateEnd;
-        this.response = response;
-        this.cost = cost;
-    }
+  public ProjectSchedule(String task, Date dateStart, Date dateEnd, String response, Double cost) {
+    this.task = task;
+    this.dateStart = dateStart;
+    this.dateEnd = dateEnd;
+    this.response = response;
+    this.cost = cost;
+  }
 
-    public String getTask() {
-        return task;
-    }
+  public String getTask() {
+    return task;
+  }
 
-    public void setTask(String task) {
-        this.task = task;
-    }
+  public void setTask(String task) {
+    this.task = task;
+  }
 
-    public Date getDateStart() {
-        return dateStart;
-    }
+  public Date getDateStart() {
+    return dateStart;
+  }
 
-    public void setDateStart(Date dateStart) {
-        this.dateStart = dateStart;
-    }
+  public void setDateStart(Date dateStart) {
+    this.dateStart = dateStart;
+  }
 
-    public Date getDateEnd() {
-        return dateEnd;
-    }
+  public Date getDateEnd() {
+    return dateEnd;
+  }
 
-    public void setDateEnd(Date dateEnd) {
-        this.dateEnd = dateEnd;
-    }
+  public void setDateEnd(Date dateEnd) {
+    this.dateEnd = dateEnd;
+  }
 
-    public String getResponse() {
-        return response;
-    }
+  public String getResponse() {
+    return response;
+  }
 
-    public void setResponse(String response) {
-        this.response = response;
-    }
+  public void setResponse(String response) {
+    this.response = response;
+  }
 
-    public Double getCost() {
-        return cost;
-    }
+  public Double getCost() {
+    return cost;
+  }
 
-    public void setCost(Double cost) {
-        this.cost = cost;
-    }
+  public void setCost(Double cost) {
+    this.cost = cost;
+  }
 
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) return true;
+    if (o == null || getClass() != o.getClass()) return false;
 
-        ProjectSchedule that = (ProjectSchedule) o;
+    ProjectSchedule that = (ProjectSchedule) o;
 
-        if (task != null ? !task.equals(that.task) : that.task != null) return false;
-        if (dateStart != null ? !dateStart.equals(that.dateStart) : that.dateStart != null) return false;
-        if (dateEnd != null ? !dateEnd.equals(that.dateEnd) : that.dateEnd != null) return false;
-        if (response != null ? !response.equals(that.response) : that.response != null) return false;
-        return cost != null ? cost.equals(that.cost) : that.cost == null;
-    }
+    if (task != null ? !task.equals(that.task) : that.task != null) return false;
+    if (dateStart != null ? !dateStart.equals(that.dateStart) : that.dateStart != null) return false;
+    if (dateEnd != null ? !dateEnd.equals(that.dateEnd) : that.dateEnd != null) return false;
+    if (response != null ? !response.equals(that.response) : that.response != null) return false;
+    return cost != null ? cost.equals(that.cost) : that.cost == null;
+  }
 
-    @Override
-    public int hashCode() {
-        int result = task != null ? task.hashCode() : 0;
-        result = 31 * result + (dateStart != null ? dateStart.hashCode() : 0);
-        result = 31 * result + (dateEnd != null ? dateEnd.hashCode() : 0);
-        result = 31 * result + (response != null ? response.hashCode() : 0);
-        result = 31 * result + (cost != null ? cost.hashCode() : 0);
-        return result;
-    }
+  @Override
+  public int hashCode() {
+    int result = task != null ? task.hashCode() : 0;
+    result = 31 * result + (dateStart != null ? dateStart.hashCode() : 0);
+    result = 31 * result + (dateEnd != null ? dateEnd.hashCode() : 0);
+    result = 31 * result + (response != null ? response.hashCode() : 0);
+    result = 31 * result + (cost != null ? cost.hashCode() : 0);
+    return result;
+  }
 
-    @Override
-    public String toString() {
-        return "ProjectSchedule{" +
-                "task='" + task + '\'' +
-                ", dateStart=" + dateStart +
-                ", dateEnd=" + dateEnd +
-                ", response='" + response + '\'' +
-                ", cost=" + cost +
-                '}';
-    }
+  @Override
+  public String toString() {
+    return "ProjectSchedule{" +
+            "task='" + task + '\'' +
+            ", dateStart=" + dateStart +
+            ", dateEnd=" + dateEnd +
+            ", response='" + response + '\'' +
+            ", cost=" + cost +
+            '}';
+  }
 }

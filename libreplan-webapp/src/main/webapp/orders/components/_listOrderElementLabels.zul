@@ -32,13 +32,13 @@
                     <grid id="inheritedLabels" fixedLayout="true" sclass="margin-border"
                           model="@{assignedLabelsController.inheritedLabels}">
                         <columns>
-                            <column label="${i18n:_('Label type')}" />
-                            <column label="${i18n:_('Value')}" />
+                            <column label="${i18n:_('Label type')}"/>
+                            <column label="${i18n:_('Value')}"/>
                         </columns>
                         <rows>
                             <row self="@{each='label'}" value="@{label}">
-                                <label value="@{label.type.name}" />
-                                <label value="@{label.name}" />
+                                <label value="@{label.type.name}"/>
+                                <label value="@{label.name}"/>
                             </row>
                         </rows>
                     </grid>
@@ -54,13 +54,13 @@
                                          model="@{assignedLabelsController.labels}">
                         <columns>
                             <newdatasortablecolumn label="${i18n:_('Label type')}" sort="auto(lower(type.name))"/>
-                            <newdatasortablecolumn label="${i18n:_('Value')}" />
-                            <newdatasortablecolumn label="${i18n:_('Operations')}" />
+                            <newdatasortablecolumn label="${i18n:_('Value')}"/>
+                            <newdatasortablecolumn label="${i18n:_('Operations')}"/>
                         </columns>
                         <rows>
                             <row self="@{each='label'}" value="@{label}">
-                                <label value="@{label.type.name}" />
-                                <label value="@{label.name}" />
+                                <label value="@{label.type.name}"/>
+                                <label value="@{label.name}"/>
 
                                 <button sclass="icono"
                                         image="/common/img/ico_borrar1.png"
@@ -75,10 +75,10 @@
 
                     <!-- Assign label -->
                     <vbox>
-                        <label value="${i18n:_('Assign Label')}" />
+                        <label value="${i18n:_('Assign Label')}"/>
                         <hbox sclass="margin-border">
                             <bandboxSearch id="bdLabels" finder="LabelBandboxFinder"
-                                           model="@{assignedLabelsController.allLabels}" />
+                                           model="@{assignedLabelsController.allLabels}"/>
                             <button label="${i18n:_('Assign')}" sclass="add-button"
                                     onClick="assignedLabelsController.onAssignLabel()"
                             />
@@ -87,15 +87,15 @@
 
                     <!-- Create and assign label -->
                     <vbox>
-                        <label value="${i18n:_('Create and assign label')}" />
+                        <label value="${i18n:_('Create and assign label')}"/>
                     </vbox>
                     <hbox sclass="margin-border">
                         <autocomplete id="cbLabelType" onChange="txtLabelName.clearErrorMessage()"
-                                      finder="LabelTypeFinder" buttonVisible="true" />
-                        <textbox id="txtLabelName" />
+                                      finder="LabelTypeFinder" buttonVisible="true"/>
+                        <textbox id="txtLabelName"/>
                         <button id="buttonCreateAndAssign"
                                 label="${i18n:_('Create &amp; Assign')}" sclass="add-button"
-                                onClick="assignedLabelsController.onCreateAndAssign()" />
+                                onClick="assignedLabelsController.onCreateAndAssign()"/>
                     </hbox>
                 </panelchildren>
             </panel>

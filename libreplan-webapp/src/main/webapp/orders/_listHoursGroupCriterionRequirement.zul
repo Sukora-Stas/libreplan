@@ -20,7 +20,7 @@
 -->
 
 <panel title="${i18n:_('Criteria Requirement')}" border="normal">
-    <panelchildren >
+    <panelchildren>
         <newdatasortablegrid mold="paging" pageSize="5" fixedLayout="true"
                              emptyMessage="${i18n:_('No criterions')}"
                              model="@{hoursGroupWrapper.criterionRequirementWrappersView}">
@@ -45,19 +45,19 @@
                                          model="@{assignedCriterionRequirementController.criterionWithItsTypesWorker}"
                                          onSelect="assignedCriterionRequirementController.selectCriterionToHoursGroup(self.selectedItem, self.parent.parent,self.parent.parent.parent.parent.value);">
                                     <listhead>
-                                        <listheader label="Type" />
-                                        <listheader label="Criterion" />
+                                        <listheader label="Type"/>
+                                        <listheader label="Criterion"/>
                                     </listhead>
 
                                     <listitem self="@{each='criterionWithItsType'}" value="@{criterionWithItsType}">
-                                        <listcell label="@{criterionWithItsType.type.name}" />
-                                        <listcell label="@{criterionWithItsType.nameHierarchy}" />
+                                        <listcell label="@{criterionWithItsType.type.name}"/>
+                                        <listcell label="@{criterionWithItsType.nameHierarchy}"/>
                                     </listitem>
                                 </listbox>
                             </bandpopup>
                         </bandbox>
 
-                        <bandbox onChanging = "criterionRequirementsController.onChangingText(event);"
+                        <bandbox onChanging="criterionRequirementsController.onChangingText(event);"
                                  width="480px"
                                  visible="@{criterionRequirementWrapper.newDirectAndItsHoursGroupIsMachine}"
                                  value="@{criterionRequirementWrapper.criterionAndType}">
@@ -66,22 +66,22 @@
                                          forEach="@{assignedCriterionRequirementController.criterionWithItsTypesMachine}"
                                          onSelect="assignedCriterionRequirementController.selectCriterionToHoursGroup(self.selectedItem, self.parent.parent,self.parent.parent.parent.parent.value);">
                                     <listhead>
-                                        <listheader label="Type" />
-                                        <listheader label="Criterion" />
+                                        <listheader label="Type"/>
+                                        <listheader label="Criterion"/>
                                     </listhead>
 
                                     <listitem self="@{each='criterionWithItsType'}" value="@{criterionWithItsType}">
-                                        <listcell label="@{criterionWithItsType.type.name}" />
-                                        <listcell label="@{criterionWithItsType.nameHierarchy}" />
+                                        <listcell label="@{criterionWithItsType.type.name}"/>
+                                        <listcell label="@{criterionWithItsType.nameHierarchy}"/>
                                     </listitem>
                                 </listbox>
                             </bandpopup>
                         </bandbox>
 
-                        <bandbox onChanging ="criterionRequirementsController.onChangingText(event);"
+                        <bandbox onChanging="criterionRequirementsController.onChangingText(event);"
                                  width="480px"
-                                 visible ="@{criterionRequirementWrapper.newException}"
-                                 value = "@{criterionRequirementWrapper.criterionAndType}">
+                                 visible="@{criterionRequirementWrapper.newException}"
+                                 value="@{criterionRequirementWrapper.criterionAndType}">
                             <bandpopup>
                                 <!--
                                 I used forEach because of issue:
@@ -90,16 +90,17 @@
                                 http://forum.zkoss.org/question/37635/how-to-bind-2-listboxes-to-the-same-model-class/
                                 http://forum.zkoss.org/question/48489/cannot-find-associated-collectionitem-problem-in-gridcolumnlayout-with-two-listbox-in-two-columns/
                                 -->
-                                <listbox width="500px" height="150px" sizedByContent="true" forEach="@{hoursGroupWrapper.validCriterions}"
+                                <listbox width="500px" height="150px" sizedByContent="true"
+                                         forEach="@{hoursGroupWrapper.validCriterions}"
                                          onSelect="assignedCriterionRequirementController.selectCriterionToHoursGroup(self.selectedItem, self.parent.parent,self.parent.parent.parent.parent.value);">
                                     <listhead>
-                                        <listheader label="Type" />
-                                        <listheader label="Criterion" />
+                                        <listheader label="Type"/>
+                                        <listheader label="Criterion"/>
                                     </listhead>
 
                                     <listitem self="@{each='criterionWithItsType'}" value="@{criterionWithItsType}">
-                                        <listcell label="@{criterionWithItsType.type.name}" />
-                                        <listcell label="@{criterionWithItsType.nameHierarchy}" />
+                                        <listcell label="@{criterionWithItsType.type.name}"/>
+                                        <listcell label="@{criterionWithItsType.nameHierarchy}"/>
                                     </listitem>
                                 </listbox>
                             </bandpopup>
@@ -112,7 +113,7 @@
                     <label value="@{criterionRequirementWrapper.typeToHoursGroup}"/>
 
                     <hbox>
-                        <button visible = "@{assignedCriterionRequirementController.editableHoursGroup}"
+                        <button visible="@{assignedCriterionRequirementController.editableHoursGroup}"
                                 sclass="icono"
                                 image="/common/img/ico_borrar1.png"
                                 hoverImage="/common/img/ico_borrar.png"
@@ -120,7 +121,7 @@
                                 onClick="assignedCriterionRequirementController.removeCriterionToHoursGroup(self);">
                         </button>
 
-                        <button visible = "@{assignedCriterionRequirementController.readOnly}"
+                        <button visible="@{assignedCriterionRequirementController.readOnly}"
                                 sclass="icono"
                                 image="/common/img/ico_borrar_out.png"
                                 tooltiptext="${i18n:_('Disable Delete')}">

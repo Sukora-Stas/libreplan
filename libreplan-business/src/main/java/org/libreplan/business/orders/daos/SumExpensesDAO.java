@@ -52,233 +52,233 @@ import org.springframework.transaction.annotation.Transactional;
 @Scope(BeanDefinition.SCOPE_SINGLETON)
 public class SumExpensesDAO extends GenericDAOHibernate<SumExpenses, Long> implements ISumExpensesDAO {
 
-    @Autowired
-    private SessionFactory sessionFactory;
+  @Autowired
+  private SessionFactory sessionFactory;
 
-    @Autowired
-    private IExpenseSheetLineDAO expenseSheetLineDAO;
+  @Autowired
+  private IExpenseSheetLineDAO expenseSheetLineDAO;
 
-    @Autowired
-    private IAdHocTransactionService transactionService;
+  @Autowired
+  private IAdHocTransactionService transactionService;
 
-    @Autowired
-    private IOrderDAO orderDAO;
+  @Autowired
+  private IOrderDAO orderDAO;
 
-    private Map<OrderElement, SumExpenses> mapSumExpenses;
+  private Map<OrderElement, SumExpenses> mapSumExpenses;
 
-    @Override
-    public void updateRelatedSumExpensesWithExpenseSheetLineSet(Set<ExpenseSheetLine> expenseSheetLineSet) {
-        resetMapSumExpenses();
+  @Override
+  public void updateRelatedSumExpensesWithExpenseSheetLineSet(Set<ExpenseSheetLine> expenseSheetLineSet) {
+    resetMapSumExpenses();
 
-        for (ExpenseSheetLine expenseSheetLine : expenseSheetLineSet) {
-            updateRelatedSumExpensesWithAddedOrModifiedExpenseSheetLine(expenseSheetLine);
-        }
+    for (ExpenseSheetLine expenseSheetLine : expenseSheetLineSet) {
+      updateRelatedSumExpensesWithAddedOrModifiedExpenseSheetLine(expenseSheetLine);
     }
+  }
 
-    private void updateRelatedSumExpensesWithAddedOrModifiedExpenseSheetLine(final ExpenseSheetLine expenseSheetLine) {
-        boolean increase = true;
-        BigDecimal value = expenseSheetLine.getValue();
+  private void updateRelatedSumExpensesWithAddedOrModifiedExpenseSheetLine(final ExpenseSheetLine expenseSheetLine) {
+    boolean increase = true;
+    BigDecimal value = expenseSheetLine.getValue();
 
-        if (!expenseSheetLine.isNewObject()) {
-            BigDecimal previousValue = transactionService.runOnAnotherTransaction(new IOnTransaction<BigDecimal>() {
-                @Override
-                public BigDecimal execute() {
-                    try {
-                        return expenseSheetLineDAO.find(expenseSheetLine.getId())
-                                .getValue();
-                    } catch (InstanceNotFoundException e) {
-                        throw new RuntimeException(e);
-                    }
-                }
-            });
-
-            boolean isTaskDifferent =
-                    updateRelatedSumExpensesIfTheAssociatedTaskIsDifferent(previousValue, expenseSheetLine);
-
-            if (!isTaskDifferent) {
-                if (value.compareTo(previousValue) >= 0) {
-                    value = value.subtract(previousValue);
-                } else {
-                    increase = false;
-                    value = previousValue.subtract(value);
-                }
-            }
-        }
-
-        if (value != null && value.compareTo(BigDecimal.ZERO) > 0) {
-            if (increase) {
-                addDirectExpenses(expenseSheetLine.getOrderElement(), value);
-            } else {
-                substractDirectExpenses(expenseSheetLine.getOrderElement(), value);
-            }
-        }
-    }
-
-    private boolean updateRelatedSumExpensesIfTheAssociatedTaskIsDifferent(BigDecimal previousValue,
-                                                                           final ExpenseSheetLine expenseSheetLine) {
-        final OrderElement task = expenseSheetLine.getOrderElement();
-
-        OrderElement previousTask = transactionService.runOnAnotherTransaction(new IOnTransaction<OrderElement>() {
-            @Override
-            public OrderElement execute() {
-                try {
-
-                    OrderElement previousTask = expenseSheetLineDAO
-                            .find(expenseSheetLine.getId())
-                            .getOrderElement();
-
-                    if (task.getId().compareTo(previousTask.getId()) != 0) {
-                        initializeOrderElement(previousTask);
-                    }
-                    return previousTask;
-                } catch (InstanceNotFoundException e) {
-                    throw new RuntimeException(e);
-                }
-            }
-        });
-
-        if (task.getId().compareTo(previousTask.getId()) != 0) {
-            substractDirectExpenses(previousTask, previousValue);
-            return true;
-        }
-        return false;
-    }
-
-    private void initializeOrderElement(OrderElement orderElement) {
-        Hibernate.initialize(orderElement);
-        initializeOrder(orderElement);
-    }
-
-    private void initializeOrder(OrderElement orderElement) {
-        OrderLineGroup parent = orderElement.getParent();
-        while (parent != null) {
-            Hibernate.initialize(parent);
-            parent = parent.getParent();
-        }
-    }
-
-    private void addDirectExpenses(OrderElement orderElement, BigDecimal value) {
-        SumExpenses sumExpenses = getByOrderElement(orderElement);
-        if (sumExpenses == null) {
-            sumExpenses = SumExpenses.create(orderElement);
-        }
-
-        sumExpenses.addDirectExpenses(value);
-        save(sumExpenses);
-
-        addIndirectExpensesRecursively(orderElement.getParent(), value);
-    }
-
-    private void addIndirectExpensesRecursively(OrderElement orderElement, BigDecimal value) {
-        if (orderElement != null) {
-            SumExpenses sumExpenses = getByOrderElement(orderElement);
-            if (sumExpenses == null) {
-                sumExpenses = SumExpenses.create(orderElement);
-            }
-
-            sumExpenses.addIndirectExpenses(value);
-            save(sumExpenses);
-
-            addIndirectExpensesRecursively(orderElement.getParent(), value);
-        }
-    }
-
-    @Override
-    public void updateRelatedSumExpensesWithDeletedExpenseSheetLineSet(Set<ExpenseSheetLine> expenseSheetLineSet) {
-        resetMapSumExpenses();
-
-        for (ExpenseSheetLine expenseSheetLine : expenseSheetLineSet) {
-            updateRelatedSumExpensesWithDeletedExpenseSheetLine(expenseSheetLine);
-        }
-    }
-
-    private void resetMapSumExpenses() {
-        mapSumExpenses = new HashMap<>();
-    }
-
-    private void updateRelatedSumExpensesWithDeletedExpenseSheetLine(ExpenseSheetLine expenseSheetLine) {
-        if (expenseSheetLine.isNewObject()) {
-            // If the line hasn't been saved, we have nothing to update
-            return;
-        }
-
-        // Refresh data from database, because of changes not saved are not useful for the following operations
-        sessionFactory.getCurrentSession().refresh(expenseSheetLine);
-
-        substractDirectExpenses(expenseSheetLine.getOrderElement(), expenseSheetLine.getValue());
-    }
-
-    private void substractDirectExpenses(OrderElement orderElement, BigDecimal value) {
-        SumExpenses sumExpenses = getByOrderElement(orderElement);
-
-        sumExpenses.subtractDirectExpenses(value);
-        save(sumExpenses);
-
-        substractIndirectExpensesRecursively(orderElement.getParent(), value);
-    }
-
-    private void substractIndirectExpensesRecursively(OrderElement orderElement, BigDecimal value) {
-        if (orderElement != null) {
-            SumExpenses sumExpenses = getByOrderElement(orderElement);
-
-            sumExpenses.subtractIndirectExpenses(value);
-            save(sumExpenses);
-
-            substractIndirectExpensesRecursively(orderElement.getParent(), value);
-        }
-    }
-
-    private SumExpenses getByOrderElement(OrderElement orderElement) {
-        SumExpenses sumExpenses = mapSumExpenses.get(orderElement);
-        if (sumExpenses == null) {
-            sumExpenses = findByOrderElement(orderElement);
-            mapSumExpenses.put(orderElement, sumExpenses);
-        }
-        return sumExpenses;
-    }
-
-    @Override
-    public SumExpenses findByOrderElement(OrderElement orderElement) {
-        return (SumExpenses) getSession()
-                .createCriteria(getEntityClass())
-                .add(Restrictions.eq("orderElement", orderElement))
-                .uniqueResult();
-    }
-
-    @Override
-    @Transactional
-    public void recalculateSumExpenses(Long orderId) {
-        try {
-            Order order = orderDAO.find(orderId);
-            resetMapSumExpenses();
-            resetSumExpenses(order);
-            calculateDirectExpenses(order);
-        } catch (InstanceNotFoundException e) {
+    if (!expenseSheetLine.isNewObject()) {
+      BigDecimal previousValue = transactionService.runOnAnotherTransaction(new IOnTransaction<BigDecimal>() {
+        @Override
+        public BigDecimal execute() {
+          try {
+            return expenseSheetLineDAO.find(expenseSheetLine.getId())
+                    .getValue();
+          } catch (InstanceNotFoundException e) {
             throw new RuntimeException(e);
+          }
         }
+      });
+
+      boolean isTaskDifferent =
+              updateRelatedSumExpensesIfTheAssociatedTaskIsDifferent(previousValue, expenseSheetLine);
+
+      if (!isTaskDifferent) {
+        if (value.compareTo(previousValue) >= 0) {
+          value = value.subtract(previousValue);
+        } else {
+          increase = false;
+          value = previousValue.subtract(value);
+        }
+      }
     }
 
-    private void resetSumExpenses(OrderElement orderElement) {
-        SumExpenses sumExpenses = getByOrderElement(orderElement);
-        if (sumExpenses == null) {
-            sumExpenses = SumExpenses.create(orderElement);
-        }
-        sumExpenses.reset();
+    if (value != null && value.compareTo(BigDecimal.ZERO) > 0) {
+      if (increase) {
+        addDirectExpenses(expenseSheetLine.getOrderElement(), value);
+      } else {
+        substractDirectExpenses(expenseSheetLine.getOrderElement(), value);
+      }
+    }
+  }
 
-        for (OrderElement each : orderElement.getChildren()) {
-            resetSumExpenses(each);
+  private boolean updateRelatedSumExpensesIfTheAssociatedTaskIsDifferent(BigDecimal previousValue,
+                                                                         final ExpenseSheetLine expenseSheetLine) {
+    final OrderElement task = expenseSheetLine.getOrderElement();
+
+    OrderElement previousTask = transactionService.runOnAnotherTransaction(new IOnTransaction<OrderElement>() {
+      @Override
+      public OrderElement execute() {
+        try {
+
+          OrderElement previousTask = expenseSheetLineDAO
+                  .find(expenseSheetLine.getId())
+                  .getOrderElement();
+
+          if (task.getId().compareTo(previousTask.getId()) != 0) {
+            initializeOrderElement(previousTask);
+          }
+          return previousTask;
+        } catch (InstanceNotFoundException e) {
+          throw new RuntimeException(e);
         }
+      }
+    });
+
+    if (task.getId().compareTo(previousTask.getId()) != 0) {
+      substractDirectExpenses(previousTask, previousValue);
+      return true;
+    }
+    return false;
+  }
+
+  private void initializeOrderElement(OrderElement orderElement) {
+    Hibernate.initialize(orderElement);
+    initializeOrder(orderElement);
+  }
+
+  private void initializeOrder(OrderElement orderElement) {
+    OrderLineGroup parent = orderElement.getParent();
+    while (parent != null) {
+      Hibernate.initialize(parent);
+      parent = parent.getParent();
+    }
+  }
+
+  private void addDirectExpenses(OrderElement orderElement, BigDecimal value) {
+    SumExpenses sumExpenses = getByOrderElement(orderElement);
+    if (sumExpenses == null) {
+      sumExpenses = SumExpenses.create(orderElement);
     }
 
-    private void calculateDirectExpenses(OrderElement orderElement) {
-        for (OrderElement each : orderElement.getChildren()) {
-            calculateDirectExpenses(each);
-        }
+    sumExpenses.addDirectExpenses(value);
+    save(sumExpenses);
 
-        BigDecimal value = BigDecimal.ZERO;
-        for (ExpenseSheetLine line : expenseSheetLineDAO.findByOrderElement(orderElement)) {
-            value = value.add(line.getValue());
-        }
-        addDirectExpenses(orderElement, value);
+    addIndirectExpensesRecursively(orderElement.getParent(), value);
+  }
+
+  private void addIndirectExpensesRecursively(OrderElement orderElement, BigDecimal value) {
+    if (orderElement != null) {
+      SumExpenses sumExpenses = getByOrderElement(orderElement);
+      if (sumExpenses == null) {
+        sumExpenses = SumExpenses.create(orderElement);
+      }
+
+      sumExpenses.addIndirectExpenses(value);
+      save(sumExpenses);
+
+      addIndirectExpensesRecursively(orderElement.getParent(), value);
     }
+  }
+
+  @Override
+  public void updateRelatedSumExpensesWithDeletedExpenseSheetLineSet(Set<ExpenseSheetLine> expenseSheetLineSet) {
+    resetMapSumExpenses();
+
+    for (ExpenseSheetLine expenseSheetLine : expenseSheetLineSet) {
+      updateRelatedSumExpensesWithDeletedExpenseSheetLine(expenseSheetLine);
+    }
+  }
+
+  private void resetMapSumExpenses() {
+    mapSumExpenses = new HashMap<>();
+  }
+
+  private void updateRelatedSumExpensesWithDeletedExpenseSheetLine(ExpenseSheetLine expenseSheetLine) {
+    if (expenseSheetLine.isNewObject()) {
+      // If the line hasn't been saved, we have nothing to update
+      return;
+    }
+
+    // Refresh data from database, because of changes not saved are not useful for the following operations
+    sessionFactory.getCurrentSession().refresh(expenseSheetLine);
+
+    substractDirectExpenses(expenseSheetLine.getOrderElement(), expenseSheetLine.getValue());
+  }
+
+  private void substractDirectExpenses(OrderElement orderElement, BigDecimal value) {
+    SumExpenses sumExpenses = getByOrderElement(orderElement);
+
+    sumExpenses.subtractDirectExpenses(value);
+    save(sumExpenses);
+
+    substractIndirectExpensesRecursively(orderElement.getParent(), value);
+  }
+
+  private void substractIndirectExpensesRecursively(OrderElement orderElement, BigDecimal value) {
+    if (orderElement != null) {
+      SumExpenses sumExpenses = getByOrderElement(orderElement);
+
+      sumExpenses.subtractIndirectExpenses(value);
+      save(sumExpenses);
+
+      substractIndirectExpensesRecursively(orderElement.getParent(), value);
+    }
+  }
+
+  private SumExpenses getByOrderElement(OrderElement orderElement) {
+    SumExpenses sumExpenses = mapSumExpenses.get(orderElement);
+    if (sumExpenses == null) {
+      sumExpenses = findByOrderElement(orderElement);
+      mapSumExpenses.put(orderElement, sumExpenses);
+    }
+    return sumExpenses;
+  }
+
+  @Override
+  public SumExpenses findByOrderElement(OrderElement orderElement) {
+    return (SumExpenses) getSession()
+            .createCriteria(getEntityClass())
+            .add(Restrictions.eq("orderElement", orderElement))
+            .uniqueResult();
+  }
+
+  @Override
+  @Transactional
+  public void recalculateSumExpenses(Long orderId) {
+    try {
+      Order order = orderDAO.find(orderId);
+      resetMapSumExpenses();
+      resetSumExpenses(order);
+      calculateDirectExpenses(order);
+    } catch (InstanceNotFoundException e) {
+      throw new RuntimeException(e);
+    }
+  }
+
+  private void resetSumExpenses(OrderElement orderElement) {
+    SumExpenses sumExpenses = getByOrderElement(orderElement);
+    if (sumExpenses == null) {
+      sumExpenses = SumExpenses.create(orderElement);
+    }
+    sumExpenses.reset();
+
+    for (OrderElement each : orderElement.getChildren()) {
+      resetSumExpenses(each);
+    }
+  }
+
+  private void calculateDirectExpenses(OrderElement orderElement) {
+    for (OrderElement each : orderElement.getChildren()) {
+      calculateDirectExpenses(each);
+    }
+
+    BigDecimal value = BigDecimal.ZERO;
+    for (ExpenseSheetLine line : expenseSheetLineDAO.findByOrderElement(orderElement)) {
+      value = value.add(line.getValue());
+    }
+    addDirectExpenses(orderElement, value);
+  }
 }

@@ -24,46 +24,45 @@ package org.libreplan.business.orders.entities;
 import java.util.Set;
 
 /**
- *
  * @author Diego Pino Garcia <dpino@igalia.com>
  */
 public class HoursGroupOrderLineHandler extends HoursGroupHandler<OrderLine> {
 
-    private static final HoursGroupOrderLineHandler singleton =
-        new HoursGroupOrderLineHandler();
+  private static final HoursGroupOrderLineHandler singleton =
+          new HoursGroupOrderLineHandler();
 
-    private HoursGroupOrderLineHandler() {
+  private HoursGroupOrderLineHandler() {
 
-    }
+  }
 
-    public static HoursGroupOrderLineHandler getInstance() {
-        return singleton;
-    }
+  public static HoursGroupOrderLineHandler getInstance() {
+    return singleton;
+  }
 
-    @Override
-    protected HoursGroup createHoursGroup(OrderLine orderLine) {
-        return HoursGroup.create(orderLine);
-    }
+  @Override
+  protected HoursGroup createHoursGroup(OrderLine orderLine) {
+    return HoursGroup.create(orderLine);
+  }
 
-    @Override
-    protected Set<HoursGroup> getHoursGroup(OrderLine orderLine) {
-        return orderLine.myHoursGroups();
-    }
+  @Override
+  protected Set<HoursGroup> getHoursGroup(OrderLine orderLine) {
+    return orderLine.myHoursGroups();
+  }
 
-    @Override
-    protected void setHoursGroups(OrderLine orderLine,
-            Set<HoursGroup> hoursGroups) {
-        orderLine.setHoursGroups(hoursGroups);
-    }
+  @Override
+  protected void setHoursGroups(OrderLine orderLine,
+                                Set<HoursGroup> hoursGroups) {
+    orderLine.setHoursGroups(hoursGroups);
+  }
 
-    @Override
-    protected void addHoursGroup(OrderLine orderLine, HoursGroup hoursGroup) {
-        orderLine.doAddHoursGroup(hoursGroup);
-    }
+  @Override
+  protected void addHoursGroup(OrderLine orderLine, HoursGroup hoursGroup) {
+    orderLine.doAddHoursGroup(hoursGroup);
+  }
 
-    @Override
-    protected boolean hoursGroupsIsEmpty(OrderLine orderLine) {
-        return orderLine.getHoursGroups().isEmpty();
-    }
+  @Override
+  protected boolean hoursGroupsIsEmpty(OrderLine orderLine) {
+    return orderLine.getHoursGroups().isEmpty();
+  }
 
 }

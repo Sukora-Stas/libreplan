@@ -24,17 +24,17 @@
            tooltiptext="${i18n:_('Select required criteria set and press filter button')}"/>
 
     <textbox id="filterNameOrderElement" width="100px"
-             onChange="treeController.onApplyFilter()" />
+             onChange="treeController.onApplyFilter()"/>
 
     <label value="${i18n:_('with')}"/>
 
     <bandboxMultipleSearch id="bdFiltersOrderElement" widthBandbox="260px" widthListbox="550px"
-                           finder="orderElementsMultipleFiltersFinder" onChange="treeController.onApplyFilter()" />
+                           finder="orderElementsMultipleFiltersFinder" onChange="treeController.onApplyFilter()"/>
 
     <button id="optionsButton" label="${i18n:_('options')}" dir="reverse"
             image="/common/img/ico_dropdown.png" style="margin-top: -2px"
             tooltiptext="${i18n:_('Set Filter Options')}"
-            onClick='filterOptionsPopup.open(self,"after_end");' />
+            onClick='filterOptionsPopup.open(self,"after_end");'/>
 
     <button label="${i18n:_('Filter')}" dir="reverse"
             image="/common/img/ico_filter.png" style="margin-top: -2px"
@@ -48,14 +48,14 @@
             <label value="${i18n:_('from')}"/>
 
             <datebox id="filterStartDateOrderElement"
-                     constraint = "@{treeController.checkConstraintStartDate}"
-                     onChange="treeController.onApplyFilter()" />
+                     constraint="@{treeController.checkConstraintStartDate}"
+                     onChange="treeController.onApplyFilter()"/>
 
             <label value="${i18n:_('to')}"/>
 
             <datebox id="filterFinishDateOrderElement"
-                     constraint = "@{treeController.checkConstraintFinishDate}"
-                     onChange="treeController.onApplyFilter()" />
+                     constraint="@{treeController.checkConstraintFinishDate}"
+                     onChange="treeController.onApplyFilter()"/>
 
         </hbox>
 
@@ -64,7 +64,7 @@
             <checkbox id="labelsWithoutInheritance"
                       checked="false"
                       label="${i18n:_('Labels without inheritance')}"
-                      onChange="treeController.onApplyFilter()" />
+                      onChange="treeController.onApplyFilter()"/>
 
         </hbox>
     </popup>

@@ -44,122 +44,118 @@ import org.libreplan.business.resources.entities.ResourceEnum;
  */
 public class AggregatedHoursGroup {
 
-    private static class GroupingCriteria {
+  private final Set<Criterion> criterions;
+  private final List<HoursGroup> hoursGroup;
+  private ResourceEnum resourceType;
 
-        private static Map<GroupingCriteria, List<HoursGroup>> byCriterions(Collection<? extends HoursGroup> hours) {
-            Map<GroupingCriteria, List<HoursGroup>> result = new HashMap<>();
-            for (HoursGroup each : hours) {
-                GroupingCriteria key = asGroupingCriteria(each);
+  private AggregatedHoursGroup(GroupingCriteria groupingCriteria, List<HoursGroup> hours) {
+    this.criterions = Collections.unmodifiableSet(groupingCriteria.criterions);
+    this.hoursGroup = Collections.unmodifiableList(hours);
+    this.resourceType = groupingCriteria.type;
+  }
 
-                if (!result.containsKey(key)) {
-                    result.put(key, new ArrayList<>());
-                }
+  public static List<AggregatedHoursGroup> aggregate(HoursGroup... hours) {
+    return aggregate(Arrays.asList(hours));
+  }
 
-                result.get(key).add(each);
-            }
-
-            return result;
-        }
-
-        private static GroupingCriteria asGroupingCriteria(HoursGroup hoursGroup) {
-            return new GroupingCriteria(hoursGroup.getResourceType(), hoursGroup.getValidCriterions());
-        }
-
-        private final ResourceEnum type;
-
-        private final Set<Criterion> criterions;
-
-        private GroupingCriteria(ResourceEnum type, Set<Criterion> criterions) {
-            this.type = type;
-            this.criterions = criterions;
-        }
-
-        @Override
-        public int hashCode() {
-            return new HashCodeBuilder().append(type).append(criterions).toHashCode();
-        }
-
-        @Override
-        public boolean equals(Object obj) {
-            if (obj instanceof GroupingCriteria) {
-                GroupingCriteria other = (GroupingCriteria) obj;
-                return new EqualsBuilder().append(type, other.type).append(criterions, other.criterions).isEquals();
-            }
-
-            return false;
-        }
+  public static List<AggregatedHoursGroup> aggregate(Collection<? extends HoursGroup> hours) {
+    List<AggregatedHoursGroup> result = new ArrayList<>();
+    for (Entry<GroupingCriteria, List<HoursGroup>> entry : GroupingCriteria.byCriterions(hours).entrySet()) {
+      result.add(new AggregatedHoursGroup(entry.getKey(), entry.getValue()));
     }
 
-    public static List<AggregatedHoursGroup> aggregate(HoursGroup... hours) {
-        return aggregate(Arrays.asList(hours));
+    return result;
+  }
+
+  public static int sum(Collection<? extends AggregatedHoursGroup> aggregated) {
+    int result = 0;
+    for (AggregatedHoursGroup each : aggregated) {
+      result += each.getHours();
     }
 
-    public static List<AggregatedHoursGroup> aggregate(Collection<? extends HoursGroup> hours) {
-        List<AggregatedHoursGroup> result = new ArrayList<>();
-        for (Entry<GroupingCriteria, List<HoursGroup>> entry : GroupingCriteria.byCriterions(hours).entrySet()) {
-            result.add(new AggregatedHoursGroup(entry.getKey(), entry.getValue()));
-        }
+    return result;
+  }
 
-        return result;
+  public Set<Criterion> getCriterions() {
+    return criterions;
+  }
+
+  public List<HoursGroup> getHoursGroup() {
+    return hoursGroup;
+  }
+
+  public ResourceEnum getResourceType() {
+    return resourceType;
+  }
+
+  public int getHours() {
+    int result = 0;
+    for (HoursGroup each : hoursGroup) {
+      result += each.getWorkingHours();
     }
 
-    public static int sum(Collection<? extends AggregatedHoursGroup> aggregated) {
-        int result = 0;
-        for (AggregatedHoursGroup each : aggregated) {
-            result += each.getHours();
-        }
+    return result;
+  }
 
-        return result;
+  public String getCriterionsJoinedByComma() {
+    List<String> criterionNames = asNames(criterions);
+    Collections.sort(criterionNames);
+
+    return StringUtils.join(criterionNames, ", ");
+  }
+
+  private List<String> asNames(Set<Criterion> criterions) {
+    List<String> result = new ArrayList<>();
+    for (Criterion each : criterions) {
+      result.add(each.getName());
     }
 
+    return result;
+  }
+
+  private static class GroupingCriteria {
+
+    private final ResourceEnum type;
     private final Set<Criterion> criterions;
 
-    private final List<HoursGroup> hoursGroup;
-
-    private ResourceEnum resourceType;
-
-
-    private AggregatedHoursGroup(GroupingCriteria groupingCriteria, List<HoursGroup> hours) {
-        this.criterions = Collections.unmodifiableSet(groupingCriteria.criterions);
-        this.hoursGroup = Collections.unmodifiableList(hours);
-        this.resourceType = groupingCriteria.type;
+    private GroupingCriteria(ResourceEnum type, Set<Criterion> criterions) {
+      this.type = type;
+      this.criterions = criterions;
     }
 
-    public Set<Criterion> getCriterions() {
-        return criterions;
-    }
+    private static Map<GroupingCriteria, List<HoursGroup>> byCriterions(Collection<? extends HoursGroup> hours) {
+      Map<GroupingCriteria, List<HoursGroup>> result = new HashMap<>();
+      for (HoursGroup each : hours) {
+        GroupingCriteria key = asGroupingCriteria(each);
 
-    public List<HoursGroup> getHoursGroup() {
-        return hoursGroup;
-    }
-
-    public ResourceEnum getResourceType() {
-        return resourceType;
-    }
-
-    public int getHours() {
-        int result = 0;
-        for (HoursGroup each : hoursGroup) {
-            result += each.getWorkingHours();
+        if (!result.containsKey(key)) {
+          result.put(key, new ArrayList<>());
         }
 
-        return result;
+        result.get(key).add(each);
+      }
+
+      return result;
     }
 
-    public String getCriterionsJoinedByComma() {
-        List<String> criterionNames = asNames(criterions);
-        Collections.sort(criterionNames);
-
-        return StringUtils.join(criterionNames, ", ");
+    private static GroupingCriteria asGroupingCriteria(HoursGroup hoursGroup) {
+      return new GroupingCriteria(hoursGroup.getResourceType(), hoursGroup.getValidCriterions());
     }
 
-    private List<String> asNames(Set<Criterion> criterions) {
-        List<String> result = new ArrayList<>();
-        for (Criterion each : criterions) {
-            result.add(each.getName());
-        }
-
-        return result;
+    @Override
+    public int hashCode() {
+      return new HashCodeBuilder().append(type).append(criterions).toHashCode();
     }
+
+    @Override
+    public boolean equals(Object obj) {
+      if (obj instanceof GroupingCriteria) {
+        GroupingCriteria other = (GroupingCriteria) obj;
+        return new EqualsBuilder().append(type, other.type).append(criterions, other.criterions).isEquals();
+      }
+
+      return false;
+    }
+  }
 
 }

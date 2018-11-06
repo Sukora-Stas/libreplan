@@ -31,91 +31,91 @@ import org.libreplan.business.common.BaseEntity;
  */
 public class SumExpenses extends BaseEntity {
 
-    private OrderElement orderElement;
+  private OrderElement orderElement;
 
-    private BigDecimal totalDirectExpenses = BigDecimal.ZERO;
+  private BigDecimal totalDirectExpenses = BigDecimal.ZERO;
 
-    private BigDecimal totalIndirectExpenses = BigDecimal.ZERO;
+  private BigDecimal totalIndirectExpenses = BigDecimal.ZERO;
 
-    protected SumExpenses() {
+  protected SumExpenses() {
+  }
+
+  private SumExpenses(OrderElement orderElement) {
+    this.orderElement = orderElement;
+  }
+
+  public static SumExpenses create(OrderElement orderElement) {
+    return create(new SumExpenses(orderElement));
+  }
+
+  public OrderElement getOrderElement() {
+    return orderElement;
+  }
+
+  public void reset() {
+    resetDirectExpenses();
+    resetIndirectExpenses();
+  }
+
+  private void resetDirectExpenses() {
+    this.setTotalDirectExpenses(BigDecimal.ZERO);
+  }
+
+  private void resetIndirectExpenses() {
+    this.setTotalIndirectExpenses(BigDecimal.ZERO);
+  }
+
+  public BigDecimal getTotalDirectExpenses() {
+    return totalDirectExpenses;
+  }
+
+  public void setTotalDirectExpenses(BigDecimal totalDirectExpenses) {
+    this.totalDirectExpenses = totalDirectExpenses;
+  }
+
+  public BigDecimal getTotalIndirectExpenses() {
+    return totalIndirectExpenses;
+  }
+
+  public void setTotalIndirectExpenses(BigDecimal totalIndirectExpenses) {
+    this.totalIndirectExpenses = totalIndirectExpenses;
+  }
+
+  public void addDirectExpenses(BigDecimal directExpenses) {
+    this.totalDirectExpenses = this.totalDirectExpenses.add(directExpenses);
+  }
+
+  public void subtractDirectExpenses(BigDecimal directExpenses) {
+    this.totalDirectExpenses = this.totalDirectExpenses.subtract(directExpenses);
+    if (this.totalDirectExpenses.compareTo(BigDecimal.ZERO) < 0) {
+      this.resetDirectExpenses();
     }
+  }
 
-    private SumExpenses(OrderElement orderElement) {
-        this.orderElement = orderElement;
-    }
+  public void addIndirectExpenses(BigDecimal indirectExpenses) {
+    this.totalIndirectExpenses = this.totalIndirectExpenses.add(indirectExpenses);
+  }
 
-    public static SumExpenses create(OrderElement orderElement) {
-        return create(new SumExpenses(orderElement));
+  public void subtractIndirectExpenses(BigDecimal indirectExpenses) {
+    this.totalIndirectExpenses = this.totalIndirectExpenses.subtract(indirectExpenses);
+    if (this.totalIndirectExpenses.compareTo(BigDecimal.ZERO) < 0) {
+      this.resetIndirectExpenses();
     }
+  }
 
-    public OrderElement getOrderElement() {
-        return orderElement;
-    }
+  public boolean isTotalDirectExpensesZero() {
+    return isZero(this.totalDirectExpenses);
+  }
 
-    public void reset() {
-        resetDirectExpenses();
-        resetIndirectExpenses();
-    }
+  public boolean isTotalIndirectExpensesZero() {
+    return isZero(this.totalIndirectExpenses);
+  }
 
-    private void resetDirectExpenses() {
-        this.setTotalDirectExpenses(BigDecimal.ZERO);
-    }
+  public boolean isZero() {
+    return (isZero(this.totalIndirectExpenses) && isZero(this.totalDirectExpenses));
+  }
 
-    private void resetIndirectExpenses() {
-        this.setTotalIndirectExpenses(BigDecimal.ZERO);
-    }
-
-    public void setTotalDirectExpenses(BigDecimal totalDirectExpenses) {
-        this.totalDirectExpenses = totalDirectExpenses;
-    }
-
-    public BigDecimal getTotalDirectExpenses() {
-        return totalDirectExpenses;
-    }
-
-    public void setTotalIndirectExpenses(BigDecimal totalIndirectExpenses) {
-        this.totalIndirectExpenses = totalIndirectExpenses;
-    }
-
-    public BigDecimal getTotalIndirectExpenses() {
-        return totalIndirectExpenses;
-    }
-
-    public void addDirectExpenses(BigDecimal directExpenses) {
-        this.totalDirectExpenses = this.totalDirectExpenses.add(directExpenses);
-    }
-
-    public void subtractDirectExpenses(BigDecimal directExpenses) {
-        this.totalDirectExpenses = this.totalDirectExpenses.subtract(directExpenses);
-        if (this.totalDirectExpenses.compareTo(BigDecimal.ZERO) < 0) {
-            this.resetDirectExpenses();
-        }
-    }
-
-    public void addIndirectExpenses(BigDecimal indirectExpenses) {
-        this.totalIndirectExpenses = this.totalIndirectExpenses.add(indirectExpenses);
-    }
-
-    public void subtractIndirectExpenses(BigDecimal indirectExpenses) {
-        this.totalIndirectExpenses = this.totalIndirectExpenses.subtract(indirectExpenses);
-        if (this.totalIndirectExpenses.compareTo(BigDecimal.ZERO) < 0) {
-            this.resetIndirectExpenses();
-        }
-    }
-
-    public boolean isTotalDirectExpensesZero() {
-        return isZero(this.totalDirectExpenses);
-    }
-
-    public boolean isTotalIndirectExpensesZero() {
-        return isZero(this.totalIndirectExpenses);
-    }
-
-    public boolean isZero() {
-        return (isZero(this.totalIndirectExpenses) && isZero(this.totalDirectExpenses));
-    }
-
-    private boolean isZero(BigDecimal value) {
-        return ((value == null) || (value.compareTo(BigDecimal.ZERO) == 0));
-    }
+  private boolean isZero(BigDecimal value) {
+    return ((value == null) || (value.compareTo(BigDecimal.ZERO) == 0));
+  }
 }

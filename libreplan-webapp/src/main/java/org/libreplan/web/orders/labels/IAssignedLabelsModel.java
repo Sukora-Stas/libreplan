@@ -27,29 +27,28 @@ import org.libreplan.business.labels.entities.LabelType;
 
 /**
  * @author Óscar González Fernández <ogonzalez@igalia.com>
- *
  */
 public interface IAssignedLabelsModel<T> {
 
-    public abstract void init(T element);
+  public abstract void init(T element);
 
-    public abstract void initializeLabel(Label label);
+  public abstract void initializeLabel(Label label);
 
-    public abstract List<Label> getLabels();
+  public abstract List<Label> getLabels();
 
-    public abstract List<Label> getInheritedLabels();
+  public abstract List<Label> getInheritedLabels();
 
-    public abstract Label createLabel(String labelName, LabelType labelType);
+  public abstract Label createLabel(String labelName, LabelType labelType);
 
-    public abstract void assignLabel(Label label);
+  public abstract void assignLabel(Label label);
 
-    public abstract void deleteLabel(Label label);
+  public abstract void deleteLabel(Label label);
 
-    public abstract Label findLabelByNameAndType(String labelName,
-            LabelType labelType);
+  public abstract Label findLabelByNameAndType(String labelName,
+                                               LabelType labelType);
 
-    public abstract boolean isAssigned(Label label);
+  public abstract boolean isAssigned(Label label);
 
-    public abstract List<Label> getAllLabels();
+  public abstract List<Label> getAllLabels();
 
 }

@@ -34,10 +34,10 @@ import org.springframework.stereotype.Component;
 
 /**
  * Class to recalculate {@link SumExpenses} for an {@link Order}.<br />
- *
+ * <p>
  * This is needed to be called when some elements are moved in the {@link Order}
  * .<br />
- *
+ * <p>
  * This class uses a thread, in order to call one by one all the requests
  * received. Moreover, if there's any concurrency issue (because of some reports
  * were saving in the meanwhile) the recalculation is repeated again (with
@@ -51,70 +51,68 @@ import org.springframework.stereotype.Component;
 
 public class SumExpensesRecalculator implements ISumExpensesRecalculator {
 
-    private static final Log LOG = LogFactory.getLog(SumExpensesRecalculator.class);
+  /**
+   * Number of times that an order is tried to be recalculated if there is any
+   * concurrency issue.<br />
+   * <p>
+   * Concurrency problems could happen because while the recalculation is
+   * being done a {@link ExpenseSheet} is saved with elements in the same
+   * {@link Order}.
+   */
+  protected static final int MAX_ATTEMPS_BECAUSE_CONCURRENCY = 100;
+  private static final Log LOG = LogFactory.getLog(SumExpensesRecalculator.class);
+  @Autowired
+  private ISumExpensesDAO sumExpensesDAO;
 
-    /**
-     * Number of times that an order is tried to be recalculated if there is any
-     * concurrency issue.<br />
-     *
-     * Concurrency problems could happen because while the recalculation is
-     * being done a {@link ExpenseSheet} is saved with elements in the same
-     * {@link Order}.
-     */
-    protected static final int MAX_ATTEMPS_BECAUSE_CONCURRENCY = 100;
+  /**
+   * Single thread executor in order to perform the recalculations one by one.
+   */
+  private ExecutorService executor = Executors.newSingleThreadExecutor();
 
-    @Autowired
-    private ISumExpensesDAO sumExpensesDAO;
+  @Override
+  public void recalculate(Long orderId) {
+    LOG.info("Mark order (id=" + orderId + ") to be recalculated");
+    executor.execute(getRecalculationThread(orderId));
+  }
 
-    /**
-     * Single thread executor in order to perform the recalculations one by one.
-     */
-    private ExecutorService executor = Executors.newSingleThreadExecutor();
+  private Runnable getRecalculationThread(final Long orderId) {
+    return new Runnable() {
 
-    @Override
-    public void recalculate(Long orderId) {
-        LOG.info("Mark order (id=" + orderId + ") to be recalculated");
-        executor.execute(getRecalculationThread(orderId));
-    }
+      @Override
+      public void run() {
+        try {
+          recalculateSumExpensess(orderId);
+        } catch (InterruptedException e) {
+          throw new RuntimeException(e);
+        }
+      }
 
-    private Runnable getRecalculationThread(final Long orderId) {
-        return new Runnable() {
+      private void recalculateSumExpensess(Long orderId) throws InterruptedException {
+        recalculateSumExpensess(orderId, 0);
+      }
 
-            @Override
-            public void run() {
-                try {
-                    recalculateSumExpensess(orderId);
-                } catch (InterruptedException e) {
-                    throw new RuntimeException(e);
-                }
-            }
+      private void recalculateSumExpensess(Long orderId, int counter)
+              throws InterruptedException {
+        if (counter > MAX_ATTEMPS_BECAUSE_CONCURRENCY) {
+          LOG.error("Impossible to recalculate order (id=" + orderId
+                  + ") due to concurrency problems");
+          return;
+        }
 
-            private void recalculateSumExpensess(Long orderId) throws InterruptedException {
-                recalculateSumExpensess(orderId, 0);
-            }
+        try {
+          LOG.info("Recalculate order (id=" + orderId + ")");
+          sumExpensesDAO.recalculateSumExpenses(orderId);
+        } catch (OptimisticLockingFailureException e) {
+          // Wait 1 second and try again
+          LOG.info("Concurrency problem recalculating order (id=" + orderId
+                  + ") trying again in 1 second (attempt " + counter + ")");
+          Thread.sleep(1000);
 
-            private void recalculateSumExpensess(Long orderId, int counter)
-                    throws InterruptedException {
-                if (counter > MAX_ATTEMPS_BECAUSE_CONCURRENCY) {
-                    LOG.error("Impossible to recalculate order (id=" + orderId
-                            + ") due to concurrency problems");
-                    return;
-                }
-
-                try {
-                    LOG.info("Recalculate order (id=" + orderId + ")");
-                    sumExpensesDAO.recalculateSumExpenses(orderId);
-                } catch (OptimisticLockingFailureException e) {
-                    // Wait 1 second and try again
-                    LOG.info("Concurrency problem recalculating order (id=" + orderId
-                            + ") trying again in 1 second (attempt " + counter + ")");
-                    Thread.sleep(1000);
-
-                    counter++;
-                    recalculateSumExpensess(orderId, counter);
-                }
-            }
-        };
-    }
+          counter++;
+          recalculateSumExpensess(orderId, counter);
+        }
+      }
+    };
+  }
 
 }

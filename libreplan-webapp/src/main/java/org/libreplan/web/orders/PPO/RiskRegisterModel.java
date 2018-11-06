@@ -40,18 +40,18 @@ import java.util.List;
 @Scope(BeanDefinition.SCOPE_PROTOTYPE)
 public class RiskRegisterModel implements IRiskRegisterModel {
 
-    @Autowired
-    private IRiskRegisterDAO riskRegisterDAO;
+  @Autowired
+  private IRiskRegisterDAO riskRegisterDAO;
 
-    @Override
-    @Transactional
-    public void confirmSave(RiskRegister riskRegister) {
-        riskRegisterDAO.save(riskRegister);
-    }
+  @Override
+  @Transactional
+  public void confirmSave(RiskRegister riskRegister) {
+    riskRegisterDAO.save(riskRegister);
+  }
 
-    @Override
-    @Transactional
-    public List<RiskRegister> getRiskRegister() {
-        return riskRegisterDAO.getAll();
-    }
+  @Override
+  @Transactional
+  public List<RiskRegister> getRiskRegister() {
+    return riskRegisterDAO.getAll();
+  }
 }

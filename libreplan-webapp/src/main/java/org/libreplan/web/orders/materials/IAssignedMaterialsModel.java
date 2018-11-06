@@ -33,32 +33,32 @@ import org.zkoss.zul.TreeModel;
  */
 public interface IAssignedMaterialsModel<T, A> {
 
-    void initEdit(T entity);
+  void initEdit(T entity);
 
-    void addMaterialAssignment(Material material);
+  void addMaterialAssignment(Material material);
 
-    void addMaterialAssignment(A materialAssignment);
+  void addMaterialAssignment(A materialAssignment);
 
-    TreeModel getAllMaterialCategories();
+  TreeModel getAllMaterialCategories();
 
-    List<A> getAssignedMaterials(MaterialCategory materialCategory);
+  List<A> getAssignedMaterials(MaterialCategory materialCategory);
 
-    boolean isCurrentUnitType(Object assignment, UnitType unitType);
+  boolean isCurrentUnitType(Object assignment, UnitType unitType);
 
-    List<Material> getMatchingMaterials();
+  List<Material> getMatchingMaterials();
 
-    TreeModel getMaterialCategories();
+  TreeModel getMaterialCategories();
 
-    BigDecimal getPrice(MaterialCategory materialCategory);
+  BigDecimal getPrice(MaterialCategory materialCategory);
 
-    BigDecimal getUnits(MaterialCategory materialCategory);
+  BigDecimal getUnits(MaterialCategory materialCategory);
 
-    void removeMaterialAssignment(A materialAssignment);
+  void removeMaterialAssignment(A materialAssignment);
 
-    void searchMaterials(String text, MaterialCategory materialCategory);
+  void searchMaterials(String text, MaterialCategory materialCategory);
 
-    void loadUnitTypes();
+  void loadUnitTypes();
 
-    List<UnitType> getUnitTypes();
+  List<UnitType> getUnitTypes();
 
 }

@@ -35,8 +35,8 @@ import java.util.List;
 
 public interface IResourceApprovalSheetModel {
 
-    void confirmSave(ResourceApprovalSheet resourceApprovalSheet);
+  void confirmSave(ResourceApprovalSheet resourceApprovalSheet);
 
-    List<ResourceApprovalSheet> getApprovalSheet ();
+  List<ResourceApprovalSheet> getApprovalSheet();
 
 }

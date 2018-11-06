@@ -32,34 +32,35 @@ import org.libreplan.web.tree.EntitiesTree;
 
 /**
  * Model for a the {@link OrderElement} tree for a {@link Order} <br />
+ *
  * @author Lorenzo Tilve Álvaro <ltilve@igalia.com>
  * @author Diego Pino García <dpino@igalia.com>
  */
 public class OrderElementTreeModel extends EntitiesTree<OrderElement> {
 
-    public OrderElementTreeModel(OrderElement root,
-            List<OrderElement> orderElements) {
-        super(OrderElement.class, root, orderElements);
-    }
+  public OrderElementTreeModel(OrderElement root,
+                               List<OrderElement> orderElements) {
+    super(OrderElement.class, root, orderElements);
+  }
 
-    public OrderElementTreeModel(OrderElement root) {
-        super(OrderElement.class, root);
-    }
+  public OrderElementTreeModel(OrderElement root) {
+    super(OrderElement.class, root);
+  }
 
-    @Override
-    protected OrderElement createNewElement() {
-        OrderElement newOrderElement = OrderLine
-                .createOrderLineWithUnfixedPercentage(0);
-        newOrderElement.setName(_("New task"));
-        return newOrderElement;
-    }
+  @Override
+  protected OrderElement createNewElement() {
+    OrderElement newOrderElement = OrderLine
+            .createOrderLineWithUnfixedPercentage(0);
+    newOrderElement.setName(_("New task"));
+    return newOrderElement;
+  }
 
-    @Override
-    protected OrderElement createNewElement(String name, int hours) {
-        OrderLine newOrderElement = OrderLine
-                .createOrderLineWithUnfixedPercentage(hours);
-        newOrderElement.setName(name);
-        return newOrderElement;
-    }
+  @Override
+  protected OrderElement createNewElement(String name, int hours) {
+    OrderLine newOrderElement = OrderLine
+            .createOrderLineWithUnfixedPercentage(hours);
+    newOrderElement.setName(name);
+    return newOrderElement;
+  }
 
 }

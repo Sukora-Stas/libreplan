@@ -86,7 +86,7 @@
     </hbox>
 
 
-    <grid id="appSheetGrid"  height="100%" width="100%" style="margin-top: 10px">
+    <grid id="appSheetGrid" height="100%" width="100%" style="margin-top: 10px">
         <columns>
             <column label="Подразделение (наименование подрятчика)" width="100px"/>
             <column label="Роль в проекте"/>

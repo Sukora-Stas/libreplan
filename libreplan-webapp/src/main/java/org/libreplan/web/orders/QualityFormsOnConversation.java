@@ -33,50 +33,49 @@ import org.libreplan.business.qualityforms.entities.QualityFormItem;
 
 /**
  * @author Óscar González Fernández <ogonzalez@igalia.com>
- *
  */
 public class QualityFormsOnConversation {
 
-    private final IQualityFormDAO qualityFormDAO;
+  private final IQualityFormDAO qualityFormDAO;
 
-    private Set<QualityForm> qualityForms = new HashSet<QualityForm>();
+  private Set<QualityForm> qualityForms = new HashSet<QualityForm>();
 
-    public QualityFormsOnConversation(IQualityFormDAO qualityFormDAO) {
-        this.qualityFormDAO = qualityFormDAO;
+  public QualityFormsOnConversation(IQualityFormDAO qualityFormDAO) {
+    this.qualityFormDAO = qualityFormDAO;
+  }
+
+  public List<QualityForm> getQualityForms() {
+    return new ArrayList<QualityForm>(qualityForms);
+  }
+
+  public void initialize() {
+    qualityForms = new HashSet<QualityForm>(qualityFormDAO.getAll());
+    intialize(qualityForms);
+  }
+
+  private void intialize(Collection<QualityForm> qualityForms) {
+    for (QualityForm each : qualityForms) {
+      initialize(each);
     }
+  }
 
-    public List<QualityForm> getQualityForms() {
-        return new ArrayList<QualityForm>(qualityForms);
+  private void initialize(QualityForm qualityForm) {
+    qualityForm.getName();
+    qualityForm.getQualityFormType();
+    if (qualityForm.isReportAdvance()) {
+      AdvanceType advanceType = qualityForm.getAdvanceType();
+      advanceType.getUnitName();
     }
+    for (QualityFormItem qualityFormItem : qualityForm
+            .getQualityFormItems()) {
+      qualityFormItem.getName();
+    }
+  }
 
-    public void initialize() {
-        qualityForms = new HashSet<QualityForm>(qualityFormDAO.getAll());
-        intialize(qualityForms);
+  public void reattach() {
+    for (QualityForm each : qualityForms) {
+      qualityFormDAO.reattach(each);
     }
-
-    private void intialize(Collection<QualityForm> qualityForms) {
-        for (QualityForm each : qualityForms) {
-            initialize(each);
-        }
-    }
-
-    private void initialize(QualityForm qualityForm) {
-        qualityForm.getName();
-        qualityForm.getQualityFormType();
-        if (qualityForm.isReportAdvance()) {
-            AdvanceType advanceType = qualityForm.getAdvanceType();
-            advanceType.getUnitName();
-        }
-        for (QualityFormItem qualityFormItem : qualityForm
-                .getQualityFormItems()) {
-            qualityFormItem.getName();
-        }
-    }
-
-    public void reattach() {
-        for (QualityForm each : qualityForms) {
-            qualityFormDAO.reattach(each);
-        }
-    }
+  }
 
 }

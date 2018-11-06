@@ -22,16 +22,15 @@ package org.libreplan.web.orders.labels;
 
 /**
  * @author Óscar González Fernández <ogonzalez@igalia.com>
- *
  */
 public class LabelsAssignmentToOrderElementComponent extends
         LabelsAssignmentComponent {
 
-    private AssignedLabelsToOrderElementController controller = new AssignedLabelsToOrderElementController();
+  private AssignedLabelsToOrderElementController controller = new AssignedLabelsToOrderElementController();
 
-    @Override
-    public AssignedLabelsToOrderElementController getController() {
-        return controller;
-    }
+  @Override
+  public AssignedLabelsToOrderElementController getController() {
+    return controller;
+  }
 
 }

@@ -23,14 +23,15 @@
     <grid id="listing" model="@{controller.orders}" mold="paging"
           emptyMessage="${i18n:_('No projects')}"
           pageSize="15" span="0" sizedByContent="false"
-          rowRenderer= "@{controller.ordersRowRender}"
-          onInitRender ="controller.sortOrders();" sclass="clickable-rows projects-list">
+          rowRenderer="@{controller.ordersRowRender}"
+          onInitRender="controller.sortOrders();" sclass="clickable-rows projects-list">
         <columns sizable="true">
             <column label="${i18n:_('Name')}" sort="auto(lower(name))" sclass="name"/>
             <column label="${i18n:_('Code')}" sort="auto(lower(code))" align="center" hflex="min"/>
             <column id="columnDateStart" label="${i18n:_('Starting date')}" align="center"
                     sort="auto(initDate,deadline)" sortDirection="ascending" sclass="date" hflex="min"/>
-            <column label="${i18n:_('Deadline')}" sort="auto(deadline,initDate)" align="center" sclass="date" hflex="min"/>
+            <column label="${i18n:_('Deadline')}" sort="auto(deadline,initDate)" align="center" sclass="date"
+                    hflex="min"/>
             <column label="${i18n:_('Customer')}" sort="auto(customerReference)" hflex="min"/>
             <column label="${i18n:_('Total Budget')}" sort="auto(totalManualBudget)" align="right" hflex="min"/>
             <column label="${i18n:_('Planned Budget')}" sort="auto(totalBudget)" align="right" hflex="min"/>

@@ -32,5 +32,5 @@ import java.util.List;
  */
 public interface IProjectScheduleDAO extends IGenericDAO<ProjectSchedule, Long> {
 
-    List<ProjectSchedule> getAll();
+  List<ProjectSchedule> getAll();
 }

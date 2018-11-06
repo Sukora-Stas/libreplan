@@ -52,219 +52,215 @@ import org.zkoss.zul.Textbox;
  */
 public class DynamicDatebox extends GenericForwardComposer {
 
-    final Getter<Date> getter;
+  final Getter<Date> getter;
 
-    final Setter<Date> setter;
+  final Setter<Date> setter;
 
-    private Textbox dateTextBox;
+  private Textbox dateTextBox;
 
-    private Datebox dateBox;
+  private Datebox dateBox;
 
-    private DateFormat dateFormat;
+  private DateFormat dateFormat;
 
-    private boolean disabled = false;
+  private boolean disabled = false;
 
-    public DynamicDatebox(Getter<Date> getter, Setter<Date> setter) {
-        this.setter = setter;
-        this.getter = getter;
-        this.dateFormat = DateFormat.getDateInstance(DateFormat.SHORT, Locales.getCurrent());
+  public DynamicDatebox(Getter<Date> getter, Setter<Date> setter) {
+    this.setter = setter;
+    this.getter = getter;
+    this.dateFormat = DateFormat.getDateInstance(DateFormat.SHORT, Locales.getCurrent());
+  }
+
+  private static Textbox findTextBoxOfCell(List<Component> children) {
+    return ComponentsFinder.findComponentsOfType(Textbox.class, children).get(0);
+  }
+
+  private Datebox createDateBox() {
+    dateBox = new Datebox();
+    dateBox.setFormat("short");
+    dateBox.setValue(getter.get());
+    registerOnEnterOpenDateBox(dateBox);
+    registerBlurListener(dateBox);
+    registerOnChange(dateBox);
+    dateTextBox.getParent().appendChild(dateBox);
+    return dateBox;
+  }
+
+  private Datebox getDateBox() {
+    return dateBox;
+  }
+
+  /**
+   * When a text box associated to a datebox is requested to show the datebox, the corresponding datebox is shown.
+   *
+   * @param component the component that has received focus
+   */
+  private void userWantsDateBox(Component component) {
+    if (component == dateTextBox) {
+      showDateBox(dateTextBox);
     }
+  }
 
-    private Datebox createDateBox() {
-        dateBox = new Datebox();
-        dateBox.setFormat("short");
-        dateBox.setValue(getter.get());
-        registerOnEnterOpenDateBox(dateBox);
-        registerBlurListener(dateBox);
-        registerOnChange(dateBox);
-        dateTextBox.getParent().appendChild(dateBox);
-        return dateBox;
+  private void showDateBox(Textbox associatedTextBox) {
+    associatedTextBox.setVisible(false);
+    getDateBox();
+    createDateBox();
+    dateBox.setFocus(true);
+    dateBox.setOpen(true);
+  }
+
+  /**
+   * When the dateBox loses focus the corresponding textbox is shown instead.
+   *
+   * @param currentDateBox the component that has lost focus
+   */
+  private void dateBoxHasLostFocus(Datebox currentDateBox) {
+    if (currentDateBox == dateBox) {
+      hideDateBox(dateTextBox);
     }
+  }
 
-    private Datebox getDateBox() {
-        return dateBox;
-    }
+  private void hideDateBox(Textbox associatedTextBox) {
+    dateBox.detach();
+    associatedTextBox.setVisible(true);
+  }
 
-    /**
-     * When a text box associated to a datebox is requested to show the datebox, the corresponding datebox is shown.
-     *
-     * @param component
-     *            the component that has received focus
-     */
-    private void userWantsDateBox(Component component) {
-        if (component == dateTextBox) {
-            showDateBox(dateTextBox);
-        }
-    }
+  public void doAfterCompose(Component component) throws Exception {
+    findComponents((Hbox) component);
+    registerListeners();
+    updateComponents();
+    applyDisabledToElements(disabled);
+  }
 
-    private void showDateBox(Textbox associatedTextBox) {
-        associatedTextBox.setVisible(false);
-        getDateBox();
-        createDateBox();
-        dateBox.setFocus(true);
-        dateBox.setOpen(true);
-    }
+  private void registerListeners() {
+    registerOnEnterListener(dateTextBox);
 
-    /**
-     * When the dateBox loses focus the corresponding textbox is shown instead.
-     *
-     * @param currentDateBox
-     *            the component that has lost focus
-     */
-    private void dateBoxHasLostFocus(Datebox currentDateBox) {
-        if (currentDateBox == dateBox) {
-            hideDateBox(dateTextBox);
-        }
-    }
+    Util.bind(
+            dateTextBox,
+            new Util.Getter<String>() {
+              @Override
+              public String get() {
+                return asString(getter.get());
+              }
+            },
+            new Util.Setter<String>() {
+              @Override
+              public void set(String string) {
+                try {
+                  setter.set(fromString(string));
+                } catch (ParseException e) {
+                  throw new WrongValueException(
+                          dateTextBox,
+                          _("Date format is wrong. Please, use the following format: {0}", asString(new Date())));
+                }
+              }
+            });
 
-    private void hideDateBox(Textbox associatedTextBox) {
-        dateBox.detach();
-        associatedTextBox.setVisible(true);
-    }
+  }
 
+  private void findComponents(Hbox hbox) {
+    List<Component> children = hbox.getChildren();
+    assert children.size() == 1;
+    dateTextBox = findTextBoxOfCell(children);
+  }
 
-    public void doAfterCompose(Component component) throws Exception {
-        findComponents((Hbox) component);
-        registerListeners();
+  private void registerOnChange(Component component) {
+    component.addEventListener("onChange", new EventListener() {
+      @Override
+      public void onEvent(Event event) {
+        updateBean();
         updateComponents();
-        applyDisabledToElements(disabled);
+      }
+    });
+  }
+
+  private void registerOnEnterListener(final Textbox textBox) {
+    textBox.addEventListener("onOK", new EventListener() {
+      @Override
+      public void onEvent(Event event) {
+        userWantsDateBox(textBox);
+      }
+    });
+  }
+
+  private void registerOnEnterOpenDateBox(final Datebox currentDatebox) {
+    currentDatebox.addEventListener("onOK", new EventListener() {
+      @Override
+      public void onEvent(Event event) {
+        currentDatebox.setOpen(true);
+      }
+    });
+  }
+
+  private void registerBlurListener(final Datebox currentDatebox) {
+    currentDatebox.addEventListener("onBlur", new EventListener() {
+      @Override
+      public void onEvent(Event event) {
+        dateBoxHasLostFocus(currentDatebox);
+      }
+    });
+  }
+
+  private void updateBean() {
+    Date date = getDateBox().getValue();
+    setter.set(date);
+  }
+
+  public void updateComponents() {
+    getDateTextBox().setValue(asString(getter.get()));
+  }
+
+  private String asString(Date date) {
+    if (date == null) {
+      return "";
     }
+    return dateFormat.format(date);
+  }
 
-    private void registerListeners() {
-        registerOnEnterListener(dateTextBox);
-
-        Util.bind(
-                dateTextBox,
-                new Util.Getter<String>() {
-                    @Override
-                    public String get() {
-                        return asString(getter.get());
-                    }
-                },
-                new Util.Setter<String>() {
-                    @Override
-                    public void set(String string) {
-                        try {
-                            setter.set(fromString(string));
-                        } catch (ParseException e) {
-                            throw new WrongValueException(
-                                    dateTextBox,
-                                    _("Date format is wrong. Please, use the following format: {0}", asString(new Date())));
-                        }
-                    }
-                });
-
+  private Date fromString(String string) throws ParseException {
+    if (StringUtils.isBlank(string)) {
+      return null;
     }
+    return dateFormat.parse(StringUtils.trim(string));
+  }
 
-    private void findComponents(Hbox hbox) {
-        List<Component> children = hbox.getChildren();
-        assert children.size() == 1;
-        dateTextBox = findTextBoxOfCell(children);
-    }
+  public Textbox getDateTextBox() {
+    return dateTextBox;
+  }
 
-    private static Textbox findTextBoxOfCell(List<Component> children) {
-        return ComponentsFinder.findComponentsOfType(Textbox.class, children).get(0);
-    }
+  public void setDateTextBox(Textbox dateTextBox) {
+    this.dateTextBox = dateTextBox;
+  }
 
-    private void registerOnChange(Component component) {
-        component.addEventListener("onChange", new EventListener() {
-            @Override
-            public void onEvent(Event event) {
-                updateBean();
-                updateComponents();
-            }
-        });
-    }
+  public boolean isDisabled() {
+    return disabled;
+  }
 
-    private void registerOnEnterListener(final Textbox textBox) {
-        textBox.addEventListener("onOK", new EventListener() {
-            @Override
-            public void onEvent(Event event) {
-                userWantsDateBox(textBox);
-            }
-        });
-    }
+  public void setDisabled(boolean disabled) {
+    this.disabled = disabled;
+    applyDisabledToElements(disabled);
+  }
 
-    private void registerOnEnterOpenDateBox(final Datebox currentDatebox) {
-        currentDatebox.addEventListener("onOK", new EventListener() {
-            @Override
-            public void onEvent(Event event) {
-                currentDatebox.setOpen(true);
-            }
-        });
+  private void applyDisabledToElements(boolean disabled) {
+    if (dateTextBox != null) {
+      dateTextBox.setDisabled(disabled);
     }
+  }
 
-    private void registerBlurListener(final Datebox currentDatebox) {
-        currentDatebox.addEventListener("onBlur", new EventListener() {
-            @Override
-            public void onEvent(Event event) {
-                dateBoxHasLostFocus(currentDatebox);
-            }
-        });
-    }
+  public interface Getter<Date> {
+    /**
+     * Typical get method that returns a variable.
+     *
+     * @return A variable of type Date.
+     */
+    Date get();
+  }
 
-    public interface Getter<Date> {
-        /**
-         * Typical get method that returns a variable.
-         *
-         * @return A variable of type Date.
-         */
-        Date get();
-    }
-
-    public interface Setter<Date> {
-        /**
-         * Typical set method to store a variable.
-         *
-         * @param value
-         *            A variable of type Date to be set.
-         */
-        void set(Date value);
-    }
-
-    private void updateBean() {
-        Date date = getDateBox().getValue();
-        setter.set(date);
-    }
-
-    public void updateComponents() {
-        getDateTextBox().setValue(asString(getter.get()));
-    }
-
-    private String asString(Date date) {
-        if (date == null) {
-            return "";
-        }
-        return dateFormat.format(date);
-    }
-
-    private Date fromString(String string) throws ParseException {
-        if (StringUtils.isBlank(string)) {
-            return null;
-        }
-        return dateFormat.parse(StringUtils.trim(string));
-    }
-
-    public Textbox getDateTextBox() {
-        return dateTextBox;
-    }
-
-    public void setDateTextBox(Textbox dateTextBox) {
-        this.dateTextBox = dateTextBox;
-    }
-
-    public boolean isDisabled() {
-        return disabled;
-    }
-
-    public void setDisabled(boolean disabled) {
-        this.disabled = disabled;
-        applyDisabledToElements(disabled);
-    }
-
-    private void applyDisabledToElements(boolean disabled) {
-        if(dateTextBox != null) {
-            dateTextBox.setDisabled(disabled);
-        }
-    }
+  public interface Setter<Date> {
+    /**
+     * Typical set method to store a variable.
+     *
+     * @param value A variable of type Date to be set.
+     */
+    void set(Date value);
+  }
 }

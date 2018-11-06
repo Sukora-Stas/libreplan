@@ -54,114 +54,114 @@ import org.zkoss.zul.Window;
  */
 class TimSynchronizationController extends GenericForwardComposer {
 
-    private OrderCRUDController orderController;
+  private OrderCRUDController orderController;
 
-    private Window editWindow;
+  private Window editWindow;
 
-    private Groupbox timGroupBox;
+  private Groupbox timGroupBox;
 
-    private Textbox txtProductCode;
+  private Textbox txtProductCode;
 
-    private Label labelProductCode, labelLastSyncDate;
+  private Label labelProductCode, labelLastSyncDate;
 
-    private IExportTimesheetsToTim exportTimesheetsToTim;
+  private IExportTimesheetsToTim exportTimesheetsToTim;
 
-    private IConnectorDAO connectorDAO;
+  private IConnectorDAO connectorDAO;
 
-    private Component messagesContainer;
+  private Component messagesContainer;
 
-    private IMessagesForUser messagesForUser;
+  private IMessagesForUser messagesForUser;
 
-    @Override
-    public void doAfterCompose(Component comp) throws Exception {
-        super.doAfterCompose(comp);
+  @Override
+  public void doAfterCompose(Component comp) throws Exception {
+    super.doAfterCompose(comp);
 
-        exportTimesheetsToTim = (IExportTimesheetsToTim) SpringUtil.getBean("exportTimesheetsToTim");
-        connectorDAO = (IConnectorDAO) SpringUtil.getBean("connectorDAO");
+    exportTimesheetsToTim = (IExportTimesheetsToTim) SpringUtil.getBean("exportTimesheetsToTim");
+    connectorDAO = (IConnectorDAO) SpringUtil.getBean("connectorDAO");
 
-        comp.setAttribute("timSynchronizationController", this, true);
-        loadComponentsEditWindow(comp);
-        showOrHideTimEditWindow();
-        updateOrderLastSyncInfoScreen();
+    comp.setAttribute("timSynchronizationController", this, true);
+    loadComponentsEditWindow(comp);
+    showOrHideTimEditWindow();
+    updateOrderLastSyncInfoScreen();
+  }
+
+  public void setOrderController(OrderCRUDController orderController) {
+    this.orderController = orderController;
+  }
+
+  /**
+   * Returns current {@link Order}
+   */
+  private Order getOrder() {
+    return orderController.getOrder();
+  }
+
+  private void loadComponentsEditWindow(Component comp) {
+    txtProductCode = (Textbox) comp.getFellowIfAny("txtProductCode");
+    labelLastSyncDate = (Label) comp.getFellowIfAny("labelLastSyncDate");
+    labelProductCode = (Label) comp.getFellowIfAny("labelProductCode");
+    timGroupBox = (Groupbox) comp.getFellowIfAny("timGroupBox");
+
+    messagesForUser = new MessagesForUser(messagesContainer);
+  }
+
+  /**
+   * Show or hide <code>TimEditWindow</code> based on Tim
+   * {@link Connector#isActivated()}
+   */
+  private void showOrHideTimEditWindow() {
+    timGroupBox.setVisible(isTimActivated());
+  }
+
+  /**
+   * Updates the UI text last synchronized date and the text product code
+   */
+  private void updateOrderLastSyncInfoScreen() {
+    OrderSyncInfo orderSyncInfo = exportTimesheetsToTim.getOrderLastSyncInfo(getOrder());
+    if (orderSyncInfo != null) {
+      labelLastSyncDate.setValue(Util.formatDateTime(orderSyncInfo.getLastSyncDate()));
+      labelProductCode.setValue("(" + orderSyncInfo.getKey() + ")");
     }
+  }
 
-    public void setOrderController(OrderCRUDController orderController) {
-        this.orderController = orderController;
+  /**
+   * Returns true if Tim is Activated. Used to show/hide Tim edit window
+   */
+  public boolean isTimActivated() {
+    Connector connector = connectorDAO.findUniqueByName(PredefinedConnectors.TIM.getName());
+
+    return connector != null && connector.isActivated();
+  }
+
+
+  public void startExportToTim() {
+    txtProductCode.setConstraint("no empty:" + _("cannot be empty"));
+    try {
+      exportTimesheetsToTim.exportTimesheets(txtProductCode.getValue(), getOrder());
+
+      updateOrderLastSyncInfoScreen();
+
+      shwoImpExpInfo();
+
+    } catch (ConnectorException e) {
+      messagesForUser.showMessage(Level.ERROR, _("Exporting timesheets to Tim failed. Check the Tim connector"));
     }
+  }
 
-    /**
-     * Returns current {@link Order}
-     */
-    private Order getOrder() {
-        return orderController.getOrder();
+  private void shwoImpExpInfo() {
+    Map<String, Object> args = new HashMap<>();
+
+    SynchronizationInfo synchronizationInfo = exportTimesheetsToTim.getSynchronizationInfo();
+    args.put("action", synchronizationInfo.getAction());
+    args.put("showSuccess", synchronizationInfo.isSuccessful());
+    args.put("failedReasons", new SimpleListModel<>(synchronizationInfo.getFailedReasons()));
+
+    Window timImpExpInfoWindow = (Window) Executions.createComponents("/orders/_timImpExpInfo.zul", null, args);
+
+    try {
+      timImpExpInfoWindow.doModal();
+    } catch (SuspendNotAllowedException e) {
+      throw new RuntimeException(e);
     }
-
-    private void loadComponentsEditWindow(Component comp) {
-        txtProductCode = (Textbox) comp.getFellowIfAny("txtProductCode");
-        labelLastSyncDate = (Label) comp.getFellowIfAny("labelLastSyncDate");
-        labelProductCode = (Label) comp.getFellowIfAny("labelProductCode");
-        timGroupBox = (Groupbox) comp.getFellowIfAny("timGroupBox");
-
-        messagesForUser = new MessagesForUser(messagesContainer);
-    }
-
-    /**
-     * Show or hide <code>TimEditWindow</code> based on Tim
-     * {@link Connector#isActivated()}
-     */
-    private void showOrHideTimEditWindow() {
-        timGroupBox.setVisible(isTimActivated());
-    }
-
-    /**
-     * Updates the UI text last synchronized date and the text product code
-     */
-    private void updateOrderLastSyncInfoScreen() {
-        OrderSyncInfo orderSyncInfo = exportTimesheetsToTim.getOrderLastSyncInfo(getOrder());
-        if ( orderSyncInfo != null ) {
-            labelLastSyncDate.setValue(Util.formatDateTime(orderSyncInfo.getLastSyncDate()));
-            labelProductCode.setValue("(" + orderSyncInfo.getKey() + ")");
-        }
-    }
-
-    /**
-     * Returns true if Tim is Activated. Used to show/hide Tim edit window
-     */
-    public boolean isTimActivated() {
-        Connector connector = connectorDAO.findUniqueByName(PredefinedConnectors.TIM.getName());
-
-        return connector != null && connector.isActivated();
-    }
-
-
-    public void startExportToTim() {
-        txtProductCode.setConstraint("no empty:" + _("cannot be empty"));
-        try {
-            exportTimesheetsToTim.exportTimesheets(txtProductCode.getValue(), getOrder());
-
-            updateOrderLastSyncInfoScreen();
-
-            shwoImpExpInfo();
-
-        } catch (ConnectorException e) {
-            messagesForUser.showMessage(Level.ERROR, _("Exporting timesheets to Tim failed. Check the Tim connector"));
-        }
-    }
-
-    private void shwoImpExpInfo() {
-        Map<String, Object> args = new HashMap<>();
-
-        SynchronizationInfo synchronizationInfo = exportTimesheetsToTim.getSynchronizationInfo();
-        args.put("action", synchronizationInfo.getAction());
-        args.put("showSuccess", synchronizationInfo.isSuccessful());
-        args.put("failedReasons", new SimpleListModel<>(synchronizationInfo.getFailedReasons()));
-
-        Window timImpExpInfoWindow = (Window) Executions.createComponents("/orders/_timImpExpInfo.zul", null, args);
-
-        try {
-            timImpExpInfoWindow.doModal();
-        } catch (SuspendNotAllowedException e) {
-            throw new RuntimeException(e);
-        }
-    }
+  }
 }

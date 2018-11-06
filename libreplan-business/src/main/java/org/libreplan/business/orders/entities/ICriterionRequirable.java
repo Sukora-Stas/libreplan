@@ -31,10 +31,10 @@ import org.libreplan.business.requirements.entities.CriterionRequirement;
  */
 public interface ICriterionRequirable {
 
-    Set<CriterionRequirement> getCriterionRequirements();
+  Set<CriterionRequirement> getCriterionRequirements();
 
-    void addCriterionRequirement(CriterionRequirement requirement);
+  void addCriterionRequirement(CriterionRequirement requirement);
 
-    void removeCriterionRequirement(CriterionRequirement requirement);
+  void removeCriterionRequirement(CriterionRequirement requirement);
 
 }

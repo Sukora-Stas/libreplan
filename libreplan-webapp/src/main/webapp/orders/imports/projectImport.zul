@@ -32,7 +32,7 @@
             apply="org.libreplan.web.importers.ProjectImportController"
             title="${i18n:_('Import Project')}">
 
-        <vbox id="messagesContainer" />
+        <vbox id="messagesContainer"/>
 
         <label value="${i18n:_('The formats supported for import are MPP and PLANNER files.')}"/>
         <label value="${i18n:_('The imported data are Gantt projects with their tasks, constraints,
@@ -42,15 +42,13 @@
         </hbox>
 
 
-
-
         <groupbox closable="false" style="padding:10px; margin:10px;">
-            <caption label="Options" />
+            <caption label="Options"/>
             <label value="${i18n:_('Select the elements to import into LibrePlan')}:"/>
             <vbox style="padding:10px;" align="pack">
                 <radiogroup>
                     <radio id="importCalendars" label="${i18n:_('Calendars')}"/>
-                    <radio id="importTasks" label="${i18n:_('Gantt charts')}" />
+                    <radio id="importTasks" label="${i18n:_('Gantt charts')}"/>
                     <radio id="importAll" label="${i18n:_('Both calendars and gantt charts')}" selected="true"/>
                 </radiogroup>
             </vbox>
@@ -58,7 +56,8 @@
 
         <hbox>
             <button id="btnImportProject" label="${i18n:_('Upload Project')}" upload="true,maxsize=9000"
-                    onUpload="projectImportController.importProject(event.getMedia())" sclass="create-button global-action"/>
+                    onUpload="projectImportController.importProject(event.getMedia())"
+                    sclass="create-button global-action"/>
         </hbox>
     </window>
 </zk>

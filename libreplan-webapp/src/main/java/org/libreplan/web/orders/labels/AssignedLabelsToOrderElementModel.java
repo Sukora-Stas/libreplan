@@ -43,58 +43,58 @@ public class AssignedLabelsToOrderElementModel extends
         AssignedLabelsModel<OrderElement> implements
         IAssignedLabelsToOrderElementModel {
 
-    @Autowired
-    private IOrderElementDAO orderDAO;
+  @Autowired
+  private IOrderElementDAO orderDAO;
 
-    private IOrderModel orderModel;
+  private IOrderModel orderModel;
 
-    @Override
-    protected OrderElement getParent(OrderElement element) {
-        return element.getParent();
+  @Override
+  protected OrderElement getParent(OrderElement element) {
+    return element.getParent();
+  }
+
+  @Override
+  protected List<OrderElement> getChildren(OrderElement element) {
+    return element.getChildren();
+  }
+
+  @Override
+  protected List<Label> getLabels(OrderElement orderElement) {
+    return new ArrayList<Label>(orderElement.getLabels());
+  }
+
+  @Override
+  public void setOrderModel(IOrderModel orderModel) {
+    this.orderModel = orderModel;
+  }
+
+  @Override
+  protected void addLabelToConversation(Label label) {
+    orderModel.addLabel(label);
+  }
+
+  @Override
+  protected void addLabelToElement(OrderElement element, Label label) {
+    element.addLabel(label);
+  }
+
+  @Override
+  protected List<Label> getLabelsOnConversation() {
+    if (orderModel == null) {
+      return Collections.emptyList();
     }
+    return orderModel.getLabels();
+  }
 
-    @Override
-    protected List<OrderElement> getChildren(OrderElement element) {
-        return element.getChildren();
-    }
+  @Override
+  protected void reattach(OrderElement element) {
+    orderDAO.reattach(element);
+    element.getName();
+  }
 
-    @Override
-    protected List<Label> getLabels(OrderElement orderElement) {
-        return new ArrayList<Label>(orderElement.getLabels());
-    }
-
-    @Override
-    public void setOrderModel(IOrderModel orderModel) {
-        this.orderModel = orderModel;
-    }
-
-    @Override
-    protected void addLabelToConversation(Label label) {
-        orderModel.addLabel(label);
-    }
-
-    @Override
-    protected void addLabelToElement(OrderElement element, Label label) {
-        element.addLabel(label);
-    }
-
-    @Override
-    protected List<Label> getLabelsOnConversation() {
-        if (orderModel == null) {
-            return Collections.emptyList();
-        }
-        return orderModel.getLabels();
-    }
-
-    @Override
-    protected void reattach(OrderElement element) {
-        orderDAO.reattach(element);
-        element.getName();
-    }
-
-    @Override
-    protected void removeLabel(OrderElement element, Label label) {
-        element.removeLabel(label);
-    }
+  @Override
+  protected void removeLabel(OrderElement element, Label label) {
+    element.removeLabel(label);
+  }
 
 }

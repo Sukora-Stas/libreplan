@@ -23,8 +23,10 @@ import java.util.Date;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.Validate;
+
 import javax.validation.constraints.AssertTrue;
 import javax.validation.constraints.NotNull;
+
 import org.libreplan.business.common.BaseEntity;
 import org.libreplan.business.common.Registry;
 import org.libreplan.business.common.entities.Connector;
@@ -35,7 +37,7 @@ import org.libreplan.business.orders.daos.IOrderSyncInfoDAO;
  * that order synchronization is successfully completed, an instance of this
  * entity is created or updated and saved to DB to hold the synchronized info.
  * This info is then displayed in UI.
- *
+ * <p>
  * This entity contains the following fields:
  * <ul>
  * <li>lastSyncDate: last date where synchronization took place</li>
@@ -49,82 +51,82 @@ import org.libreplan.business.orders.daos.IOrderSyncInfoDAO;
  */
 public class OrderSyncInfo extends BaseEntity {
 
-    private Date lastSyncDate;
-    private String key;
-    private String connectorName;
-    private Order order;
+  private Date lastSyncDate;
+  private String key;
+  private String connectorName;
+  private Order order;
 
-    public static OrderSyncInfo create(String key, Order order,
-            String connectorName) {
-        Validate.notEmpty(key);
-        Validate.notNull(order);
-        Validate.notEmpty(connectorName);
-        return create(new OrderSyncInfo(key, order, connectorName));
-    }
+  /**
+   * Constructor for Hibernate. Do not use!
+   */
+  protected OrderSyncInfo() {
+  }
 
-    /**
-     * Constructor for Hibernate. Do not use!
-     */
-    protected OrderSyncInfo() {
-    }
+  private OrderSyncInfo(String key, Order order, String connectorName) {
+    this.lastSyncDate = new Date();
+    this.key = key;
+    this.order = order;
+    this.connectorName = connectorName;
+  }
 
-    private OrderSyncInfo(String key, Order order, String connectorName) {
-        this.lastSyncDate = new Date();
-        this.key = key;
-        this.order = order;
-        this.connectorName = connectorName;
-    }
+  public static OrderSyncInfo create(String key, Order order,
+                                     String connectorName) {
+    Validate.notEmpty(key);
+    Validate.notNull(order);
+    Validate.notEmpty(connectorName);
+    return create(new OrderSyncInfo(key, order, connectorName));
+  }
 
-    @NotNull(message = "last synchronized date not specified")
-    public Date getLastSyncDate() {
-        return lastSyncDate;
-    }
+  @NotNull(message = "last synchronized date not specified")
+  public Date getLastSyncDate() {
+    return lastSyncDate;
+  }
 
-    public void setLastSyncDate(Date lastSyncDate) {
-        this.lastSyncDate = lastSyncDate;
-    }
+  public void setLastSyncDate(Date lastSyncDate) {
+    this.lastSyncDate = lastSyncDate;
+  }
 
-    @NotNull(message = "key not specified")
-    public String getKey() {
-        return key;
-    }
+  @NotNull(message = "key not specified")
+  public String getKey() {
+    return key;
+  }
 
-    public void setKey(String key) {
-        this.key = key;
-    }
+  public void setKey(String key) {
+    this.key = key;
+  }
 
-    @NotNull(message = "connector name not specified")
-    public String getConnectorName() {
-        return connectorName;
-    }
+  @NotNull(message = "connector name not specified")
+  public String getConnectorName() {
+    return connectorName;
+  }
 
-    public void setConnectorName(String connectorName) {
-        this.connectorName = connectorName;
-    }
+  public void setConnectorName(String connectorName) {
+    this.connectorName = connectorName;
+  }
 
-    public Order getOrder() {
-        return order;
-    }
+  public Order getOrder() {
+    return order;
+  }
 
-    public void setOrder(Order order) {
-        this.order = order;
-    }
+  public void setOrder(Order order) {
+    this.order = order;
+  }
 
-    @AssertTrue(message = "project sync info is already being used")
-    public boolean isUniqueOrderSyncInfoConstraint() {
-        if (StringUtils.isBlank(key) && order == null
-                && StringUtils.isBlank(connectorName)) {
-            return true;
-        }
-        IOrderSyncInfoDAO orderSyncInfoDAO = Registry.getOrderSyncInfoDAO();
-        if (isNewObject()) {
-            return !orderSyncInfoDAO
-                    .existsByKeyOrderAndConnectorNameAnotherTransaction(this);
-        } else {
-            OrderSyncInfo found = orderSyncInfoDAO
-                    .findUniqueByKeyOrderAndConnectorNameAnotherTransaction(
-                            key, order, connectorName);
-            return found == null || found.getId().equals(getId());
-        }
+  @AssertTrue(message = "project sync info is already being used")
+  public boolean isUniqueOrderSyncInfoConstraint() {
+    if (StringUtils.isBlank(key) && order == null
+            && StringUtils.isBlank(connectorName)) {
+      return true;
     }
+    IOrderSyncInfoDAO orderSyncInfoDAO = Registry.getOrderSyncInfoDAO();
+    if (isNewObject()) {
+      return !orderSyncInfoDAO
+              .existsByKeyOrderAndConnectorNameAnotherTransaction(this);
+    } else {
+      OrderSyncInfo found = orderSyncInfoDAO
+              .findUniqueByKeyOrderAndConnectorNameAnotherTransaction(
+                      key, order, connectorName);
+      return found == null || found.getId().equals(getId());
+    }
+  }
 }

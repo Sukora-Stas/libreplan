@@ -31,9 +31,9 @@ import java.util.List;
 
 public interface IOrderFileDAO extends IGenericDAO<OrderFile, Long> {
 
-    List<OrderFile> getAll();
+  List<OrderFile> getAll();
 
-    void delete(OrderFile file);
+  void delete(OrderFile file);
 
-    List<OrderFile> findByParent(OrderElement parent);
+  List<OrderFile> findByParent(OrderElement parent);
 }

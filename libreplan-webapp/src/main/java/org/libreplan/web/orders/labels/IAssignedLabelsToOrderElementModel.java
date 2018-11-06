@@ -29,10 +29,9 @@ import org.libreplan.web.orders.IOrderModel;
  */
 public interface IAssignedLabelsToOrderElementModel extends
         IAssignedLabelsModel<OrderElement> {
-    /**
-     *
-     * @param orderModel
-     */
-    void setOrderModel(IOrderModel orderModel);
+  /**
+   * @param orderModel
+   */
+  void setOrderModel(IOrderModel orderModel);
 
 }

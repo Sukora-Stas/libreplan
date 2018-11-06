@@ -42,199 +42,199 @@ import org.zkoss.ganttz.IPredicate;
  */
 public class OrderElementPredicate implements IPredicate {
 
-    private List<FilterPair> filters;
+  private List<FilterPair> filters;
 
-    private Date startDate;
+  private Date startDate;
 
-    private Date finishDate;
+  private Date finishDate;
 
-    private String name;
+  private String name;
 
-    private boolean ignoreLabelsInheritance;
+  private boolean ignoreLabelsInheritance;
 
-    public OrderElementPredicate(List<FilterPair> filters, Date startDate,
-            Date finishDate, String name, boolean ignoreLabelsInheritance) {
-        this.filters = filters;
-        this.startDate = startDate;
-        this.finishDate = finishDate;
-        this.name = name;
-        this.ignoreLabelsInheritance = ignoreLabelsInheritance;
+  public OrderElementPredicate(List<FilterPair> filters, Date startDate,
+                               Date finishDate, String name, boolean ignoreLabelsInheritance) {
+    this.filters = filters;
+    this.startDate = startDate;
+    this.finishDate = finishDate;
+    this.name = name;
+    this.ignoreLabelsInheritance = ignoreLabelsInheritance;
+  }
+
+  @Override
+  public boolean accepts(Object object) {
+    final OrderElement orderElement = (OrderElement) object;
+    return accepts(orderElement) || accepts(orderElement.getAllChildren());
+  }
+
+  public boolean isEmpty() {
+    return (filters.isEmpty() && startDate == null && finishDate == null && name
+            .isEmpty());
+  }
+
+  private boolean accepts(OrderElement orderElement) {
+    if (orderElement == null) {
+      return false;
     }
-
-    @Override
-    public boolean accepts(Object object) {
-        final OrderElement orderElement = (OrderElement) object;
-        return accepts(orderElement) || accepts(orderElement.getAllChildren());
+    if (orderElement.isNewObject() || orderElement.isConvertedToContainer()) {
+      return true;
     }
-
-    public boolean isEmpty() {
-        return (filters.isEmpty() && startDate == null && finishDate == null && name
-                .isEmpty());
+    if (acceptFilters(orderElement) && acceptFiltersDates(orderElement)
+            && acceptFilterName(orderElement)) {
+      return true;
     }
+    return false;
+  }
 
-    private boolean accepts(OrderElement orderElement) {
-        if (orderElement == null) {
-            return false;
-        }
-        if (orderElement.isNewObject() || orderElement.isConvertedToContainer()) {
-            return true;
-        }
-        if (acceptFilters(orderElement) && acceptFiltersDates(orderElement)
-                && acceptFilterName(orderElement)) {
-            return true;
-        }
-        return false;
-    }
-
-    private boolean accepts(List<OrderElement> orderElements) {
-        for (OrderElement orderElement : orderElements) {
-            if (accepts(orderElement)) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    private boolean acceptFilters(OrderElement orderElement) {
-        if ((filters == null) || (filters.isEmpty())) {
-            return true;
-        }
-        for (FilterPair filter : filters) {
-            if (!acceptFilter(filter, orderElement)) {
-                return false;
-            }
-        }
+  private boolean accepts(List<OrderElement> orderElements) {
+    for (OrderElement orderElement : orderElements) {
+      if (accepts(orderElement)) {
         return true;
+      }
     }
+    return false;
+  }
 
-    private boolean acceptFilter(FilterPair filter, OrderElement orderElement) {
-        switch ((OrderElementFilterEnum) filter.getType()) {
-        case Criterion:
-            return acceptCriterion(filter, orderElement);
-        case Label:
-            return acceptLabel(filter, orderElement);
-        }
+  private boolean acceptFilters(OrderElement orderElement) {
+    if ((filters == null) || (filters.isEmpty())) {
+      return true;
+    }
+    for (FilterPair filter : filters) {
+      if (!acceptFilter(filter, orderElement)) {
         return false;
+      }
     }
+    return true;
+  }
 
-    private boolean acceptCriterion(FilterPair filter, OrderElement orderElement) {
-        Criterion filterCriterion = (Criterion) filter.getValue();
-        return existCriterionInOrderElementOrHoursGroups(filterCriterion,
-                orderElement);
+  private boolean acceptFilter(FilterPair filter, OrderElement orderElement) {
+    switch ((OrderElementFilterEnum) filter.getType()) {
+      case Criterion:
+        return acceptCriterion(filter, orderElement);
+      case Label:
+        return acceptLabel(filter, orderElement);
     }
+    return false;
+  }
 
-    private boolean existCriterionInOrderElementOrHoursGroups(
-            Criterion filterCriterion,
-            OrderElement orderElement) {
-        for (CriterionRequirement criterionRequirement : orderElement
-                .getCriterionRequirements()) {
-            if (acceptsCriterionRequrirement(filterCriterion,
-                    criterionRequirement)) {
-                return true;
-            }
+  private boolean acceptCriterion(FilterPair filter, OrderElement orderElement) {
+    Criterion filterCriterion = (Criterion) filter.getValue();
+    return existCriterionInOrderElementOrHoursGroups(filterCriterion,
+            orderElement);
+  }
+
+  private boolean existCriterionInOrderElementOrHoursGroups(
+          Criterion filterCriterion,
+          OrderElement orderElement) {
+    for (CriterionRequirement criterionRequirement : orderElement
+            .getCriterionRequirements()) {
+      if (acceptsCriterionRequrirement(filterCriterion,
+              criterionRequirement)) {
+        return true;
+      }
+    }
+    return existCriterionInHoursGroups(filterCriterion, orderElement
+            .getHoursGroups());
+  }
+
+  private boolean existCriterionInHoursGroups(Criterion filterCriterion,
+                                              List<HoursGroup> hoursGroups) {
+    for (HoursGroup hoursGroup : hoursGroups) {
+      for (CriterionRequirement criterionRequirement : hoursGroup
+              .getCriterionRequirements()) {
+        if (acceptsCriterionRequrirement(filterCriterion,
+                criterionRequirement)) {
+          return true;
         }
-        return existCriterionInHoursGroups(filterCriterion, orderElement
-                .getHoursGroups());
+      }
+    }
+    return false;
+  }
+
+  private boolean acceptsCriterionRequrirement(Criterion filterCriterion,
+                                               CriterionRequirement criterionRequirement) {
+    return criterionRequirement.isValid()
+            && criterionRequirement.getCriterion().getId().equals(
+            filterCriterion.getId());
+  }
+
+  private boolean acceptLabel(FilterPair filter, OrderElement orderElement) {
+    Label filterLabel = (Label) filter.getValue();
+    return existLabelInOrderElement(filterLabel, orderElement);
+  }
+
+  private boolean existLabelInOrderElement(Label filterLabel,
+                                           OrderElement order) {
+    Set<Label> labels;
+    if (ignoreLabelsInheritance) {
+      labels = order.getLabels();
+    } else {
+      labels = order.getAllLabels();
+    }
+    for (Label label : labels) {
+      if (label.getId().equals(filterLabel.getId())) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  private boolean acceptFiltersDates(OrderElement orderElement) {
+    return (acceptStartDate(orderElement.getInitDate()) && (acceptFinishDate(orderElement
+            .getDeadline())));
+  }
+
+  private boolean acceptStartDate(Date initDate) {
+    if ((initDate == null) && (startDate == null)) {
+      return true;
+    }
+    return isInTheRangeFilterDates(initDate);
+  }
+
+  private boolean acceptFinishDate(Date deadLine) {
+    if ((deadLine == null) && (finishDate == null)) {
+      return true;
+    }
+    return isInTheRangeFilterDates(deadLine);
+  }
+
+  private boolean isInTheRangeFilterDates(Date date) {
+    // Check if date is into interval between the startdate and finish date
+    return (isGreaterToStartDate(date, startDate) && isLowerToFinishDate(
+            date, finishDate));
+  }
+
+  private boolean isGreaterToStartDate(Date date, Date startDate) {
+    if (startDate == null) {
+      return true;
     }
 
-    private boolean existCriterionInHoursGroups(Criterion filterCriterion,
-            List<HoursGroup> hoursGroups) {
-        for (HoursGroup hoursGroup : hoursGroups) {
-            for (CriterionRequirement criterionRequirement : hoursGroup
-                    .getCriterionRequirements()) {
-                if (acceptsCriterionRequrirement(filterCriterion,
-                        criterionRequirement)) {
-                    return true;
-                }
-            }
-        }
-        return false;
+    if (date != null && (date.compareTo(startDate) >= 0)) {
+      return true;
     }
+    return false;
+  }
 
-    private boolean acceptsCriterionRequrirement(Criterion filterCriterion,
-            CriterionRequirement criterionRequirement) {
-        return criterionRequirement.isValid()
-                && criterionRequirement.getCriterion().getId().equals(
-                        filterCriterion.getId());
+  private boolean isLowerToFinishDate(Date date, Date finishDate) {
+    if (finishDate == null) {
+      return true;
     }
-
-    private boolean acceptLabel(FilterPair filter, OrderElement orderElement) {
-        Label filterLabel = (Label) filter.getValue();
-        return existLabelInOrderElement(filterLabel, orderElement);
+    if (date != null && (date.compareTo(finishDate) <= 0)) {
+      return true;
     }
+    return false;
+  }
 
-    private boolean existLabelInOrderElement(Label filterLabel,
-            OrderElement order) {
-        Set<Label> labels;
-        if (ignoreLabelsInheritance) {
-            labels = order.getLabels();
-        } else {
-            labels = order.getAllLabels();
-        }
-        for (Label label : labels) {
-            if(label.getId().equals(filterLabel.getId())){
-                return true;
-            }
-        }
-        return false;
+  private boolean acceptFilterName(OrderElement orderElement) {
+    if (name == null) {
+      return true;
     }
-
-    private boolean acceptFiltersDates(OrderElement orderElement) {
-        return (acceptStartDate(orderElement.getInitDate()) && (acceptFinishDate(orderElement
-                .getDeadline())));
+    if ((orderElement.getName() != null)
+            && (StringUtils
+            .containsIgnoreCase(orderElement.getName(), name))) {
+      return true;
     }
-
-    private boolean acceptStartDate(Date initDate) {
-        if ((initDate == null) && (startDate == null)) {
-            return true;
-        }
-        return isInTheRangeFilterDates(initDate);
-    }
-
-    private boolean acceptFinishDate(Date deadLine) {
-        if ((deadLine == null) && (finishDate == null)) {
-            return true;
-        }
-        return isInTheRangeFilterDates(deadLine);
-    }
-
-    private boolean isInTheRangeFilterDates(Date date) {
-        // Check if date is into interval between the startdate and finish date
-        return (isGreaterToStartDate(date, startDate) && isLowerToFinishDate(
-                date, finishDate));
-    }
-
-    private boolean isGreaterToStartDate(Date date, Date startDate) {
-        if (startDate == null) {
-            return true;
-        }
-
-        if (date != null && (date.compareTo(startDate) >= 0)) {
-            return true;
-        }
-        return false;
-    }
-
-    private boolean isLowerToFinishDate(Date date, Date finishDate) {
-        if (finishDate == null) {
-            return true;
-        }
-        if (date != null && (date.compareTo(finishDate) <= 0)) {
-            return true;
-        }
-        return false;
-    }
-
-    private boolean acceptFilterName(OrderElement orderElement) {
-        if (name == null) {
-            return true;
-        }
-        if ((orderElement.getName() != null)
-                && (StringUtils
-                        .containsIgnoreCase(orderElement.getName(), name))) {
-            return true;
-        }
-        return false;
-    }
+    return false;
+  }
 
 }

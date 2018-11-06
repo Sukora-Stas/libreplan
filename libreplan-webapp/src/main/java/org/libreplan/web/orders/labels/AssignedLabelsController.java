@@ -43,137 +43,137 @@ import org.zkoss.zul.Textbox;
  */
 public abstract class AssignedLabelsController<T, M> extends GenericForwardComposer {
 
-    private Autocomplete cbLabelType;
+  private Autocomplete cbLabelType;
 
-    private Grid directLabels;
+  private Grid directLabels;
 
-    private Textbox txtLabelName;
+  private Textbox txtLabelName;
 
-    private BandboxSearch bdLabels;
+  private BandboxSearch bdLabels;
 
-    private Button buttonCreateAndAssign;
+  private Button buttonCreateAndAssign;
 
-    public void openWindow(M model) {
-        setOuterModel(model);
-        openElement(getElement());
+  public void openWindow(M model) {
+    setOuterModel(model);
+    openElement(getElement());
+  }
+
+  protected abstract IAssignedLabelsModel<T> getModel();
+
+  private void openElement(T element) {
+    getModel().init(element);
+
+    // Clear components
+    bdLabels.clear();
+    txtLabelName.setValue("");
+
+    Util.createBindingsFor(self);
+    Util.reloadBindings(self);
+  }
+
+  protected abstract void setOuterModel(M orderElementModel);
+
+  protected abstract T getElement();
+
+  /**
+   * Executed on pressing Assign button Adds selected label to direct labels list.
+   */
+  public void onAssignLabel() {
+    Label label = (Label) bdLabels.getSelectedElement();
+    if (label == null) {
+      throw new WrongValueException(bdLabels, _("please, select a label"));
+    }
+    if (isAssigned(label)) {
+      throw new WrongValueException(bdLabels, _("already assigned"));
+    }
+    try {
+      assignLabel(label);
+    } catch (IllegalArgumentException e) {
+      throw new WrongValueException(bdLabels, e.getMessage());
+    }
+    bdLabels.clear();
+  }
+
+  /**
+   * Executed on pressing createAndAssign button Creates a new label for a
+   * type, in case it does not exist, and added it to the list of direct labels.
+   */
+  public void onCreateAndAssign() {
+
+    // Check if user has permissions to create labels
+    if (!SecurityUtils.isSuperuserOrUserInRoles(UserRole.ROLE_LABELS)) {
+      throw new WrongValueException(buttonCreateAndAssign,
+              _("you do not have permissions to create new labels"));
     }
 
-    protected abstract IAssignedLabelsModel<T> getModel();
-
-    private void openElement(T element) {
-        getModel().init(element);
-
-        // Clear components
-        bdLabels.clear();
-        txtLabelName.setValue("");
-
-        Util.createBindingsFor(self);
-        Util.reloadBindings(self);
+    // Check LabelType is not null
+    final Comboitem comboitem = cbLabelType.getSelectedItem();
+    if (comboitem == null || comboitem.getValue() == null) {
+      throw new WrongValueException(cbLabelType, _("please, select an item"));
     }
 
-    protected abstract void setOuterModel(M orderElementModel);
-
-    protected abstract T getElement();
-
-    /**
-     * Executed on pressing Assign button Adds selected label to direct labels list.
-     */
-    public void onAssignLabel() {
-        Label label = (Label) bdLabels.getSelectedElement();
-        if (label == null) {
-            throw new WrongValueException(bdLabels, _("please, select a label"));
-        }
-        if (isAssigned(label)) {
-            throw new WrongValueException(bdLabels, _("already assigned"));
-        }
-        try {
-            assignLabel(label);
-        } catch (IllegalArgumentException e) {
-            throw new WrongValueException(bdLabels, e.getMessage());
-        }
-        bdLabels.clear();
+    // Check Label is not null or empty
+    final String labelName = txtLabelName.getValue();
+    if (labelName == null || labelName.isEmpty()) {
+      throw new WrongValueException(txtLabelName, _("cannot be empty"));
     }
 
-    /**
-     * Executed on pressing createAndAssign button Creates a new label for a
-     * type, in case it does not exist, and added it to the list of direct labels.
-     */
-    public void onCreateAndAssign() {
-
-        // Check if user has permissions to create labels
-        if (!SecurityUtils.isSuperuserOrUserInRoles(UserRole.ROLE_LABELS)) {
-            throw new WrongValueException(buttonCreateAndAssign,
-                    _("you do not have permissions to create new labels"));
-        }
-
-        // Check LabelType is not null
-        final Comboitem comboitem = cbLabelType.getSelectedItem();
-        if (comboitem == null || comboitem.getValue() == null) {
-            throw new WrongValueException(cbLabelType, _("please, select an item"));
-        }
-
-        // Check Label is not null or empty
-        final String labelName = txtLabelName.getValue();
-        if (labelName == null || labelName.isEmpty()) {
-            throw new WrongValueException(txtLabelName, _("cannot be empty"));
-        }
-
-        // Label does not exist, create
-        final LabelType labelType = comboitem.getValue();
-        Label label = getModel().findLabelByNameAndType(labelName, labelType);
-        if (label == null) {
-            label = addLabel(labelName, labelType);
-        } else {
-            if (isAssigned(label)) {
-                throw new WrongValueException(txtLabelName, _("already assigned"));
-            }
-        }
-        try {
-            assignLabel(label);
-        } catch (IllegalArgumentException e) {
-            throw new WrongValueException(txtLabelName, e.getMessage());
-        }
-        clear(txtLabelName);
+    // Label does not exist, create
+    final LabelType labelType = comboitem.getValue();
+    Label label = getModel().findLabelByNameAndType(labelName, labelType);
+    if (label == null) {
+      label = addLabel(labelName, labelType);
+    } else {
+      if (isAssigned(label)) {
+        throw new WrongValueException(txtLabelName, _("already assigned"));
+      }
     }
-
-    private Label addLabel(String labelName, LabelType labelType) {
-        Label label = createLabel(labelName, labelType);
-        bdLabels.addElement(label);
-        return label;
+    try {
+      assignLabel(label);
+    } catch (IllegalArgumentException e) {
+      throw new WrongValueException(txtLabelName, e.getMessage());
     }
+    clear(txtLabelName);
+  }
 
-    private Label createLabel(String labelName, LabelType labelType) {
-        return getModel().createLabel(labelName, labelType);
-    }
+  private Label addLabel(String labelName, LabelType labelType) {
+    Label label = createLabel(labelName, labelType);
+    bdLabels.addElement(label);
+    return label;
+  }
 
-    private void clear(Textbox textbox) {
-        textbox.setValue("");
-    }
+  private Label createLabel(String labelName, LabelType labelType) {
+    return getModel().createLabel(labelName, labelType);
+  }
 
-    private void assignLabel(Label label) {
-        getModel().assignLabel(label);
-        Util.reloadBindings(directLabels);
-    }
+  private void clear(Textbox textbox) {
+    textbox.setValue("");
+  }
 
-    private boolean isAssigned(Label label) {
-        return getModel().isAssigned(label);
-    }
+  private void assignLabel(Label label) {
+    getModel().assignLabel(label);
+    Util.reloadBindings(directLabels);
+  }
 
-    public void deleteLabel(Label label) {
-        getModel().deleteLabel(label);
-        Util.reloadBindings(directLabels);
-    }
+  private boolean isAssigned(Label label) {
+    return getModel().isAssigned(label);
+  }
 
-    public List<Label> getLabels() {
-        return getModel().getLabels();
-    }
+  public void deleteLabel(Label label) {
+    getModel().deleteLabel(label);
+    Util.reloadBindings(directLabels);
+  }
 
-    public List<Label> getInheritedLabels() {
-        return getModel().getInheritedLabels();
-    }
+  public List<Label> getLabels() {
+    return getModel().getLabels();
+  }
 
-    public List<Label> getAllLabels() {
-        return getModel().getAllLabels();
-    }
+  public List<Label> getInheritedLabels() {
+    return getModel().getInheritedLabels();
+  }
+
+  public List<Label> getAllLabels() {
+    return getModel().getAllLabels();
+  }
 
 }

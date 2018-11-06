@@ -38,20 +38,20 @@ import java.util.List;
 
 @Service
 @Scope(BeanDefinition.SCOPE_PROTOTYPE)
-public class ProjectScheduleModel implements IProjectScheduleModel{
+public class ProjectScheduleModel implements IProjectScheduleModel {
 
-    @Autowired
-    private IProjectScheduleDAO projectScheduleDAO;
+  @Autowired
+  private IProjectScheduleDAO projectScheduleDAO;
 
-    @Override
-    @Transactional
-    public void confirmSave(ProjectSchedule projectSchedule) {
-        projectScheduleDAO.save(projectSchedule);
-    }
+  @Override
+  @Transactional
+  public void confirmSave(ProjectSchedule projectSchedule) {
+    projectScheduleDAO.save(projectSchedule);
+  }
 
-    @Override
-    @Transactional
-    public List<ProjectSchedule> getProjectSchedule() {
-        return projectScheduleDAO.getAll();
-    }
+  @Override
+  @Transactional
+  public List<ProjectSchedule> getProjectSchedule() {
+    return projectScheduleDAO.getAll();
+  }
 }

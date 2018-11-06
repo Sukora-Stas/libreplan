@@ -14,32 +14,31 @@ import java.util.List;
  */
 public interface IOrderFileModel {
 
-    void confirmSave();
+  void confirmSave();
 
-    void setFileName(String name);
+  void setFileName(String name);
 
-    void setFileType(String type);
+  void setFileType(String type);
 
-    void setUploadDate(Date date);
+  void setUploadDate(Date date);
 
-    void setUploader(User user);
+  void setUploader(User user);
 
-    void setParent(OrderElement project);
+  void setParent(OrderElement project);
 
-    void createNewFileObject();
+  void createNewFileObject();
 
-    List<OrderFile> getAll();
+  List<OrderFile> getAll();
 
-    /**
-     * This method is used to delete OrderFile and physical file asociated with it
-     *
-     * @param file {@link OrderFile} that need to be deleted
-     * @return true if file was deleted successfully.
-     * @return false if file was not deleted successfully.
-     */
-    boolean delete(OrderFile file);
+  /**
+   * This method is used to delete OrderFile and physical file asociated with it
+   *
+   * @param file {@link OrderFile} that need to be deleted
+   * @return false if file was not deleted successfully.
+   */
+  boolean delete(OrderFile file);
 
-    List<OrderFile> findByParent(OrderElement parent);
+  List<OrderFile> findByParent(OrderElement parent);
 
-    OrderFile getOrderFile();
+  OrderFile getOrderFile();
 }

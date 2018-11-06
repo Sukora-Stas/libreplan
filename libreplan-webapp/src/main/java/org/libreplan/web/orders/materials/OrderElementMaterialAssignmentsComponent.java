@@ -22,16 +22,15 @@ package org.libreplan.web.orders.materials;
 
 /**
  * @author Óscar González Fernández <ogonzalez@igalia.com>
- *
  */
 public class OrderElementMaterialAssignmentsComponent extends
         MaterialAssignmentsComponent {
 
-    private AssignedMaterialsToOrderElementController controller = new AssignedMaterialsToOrderElementController();
+  private AssignedMaterialsToOrderElementController controller = new AssignedMaterialsToOrderElementController();
 
-    @Override
-    public AssignedMaterialsToOrderElementController getController() {
-        return controller;
-    }
+  @Override
+  public AssignedMaterialsToOrderElementController getController() {
+    return controller;
+  }
 
 }

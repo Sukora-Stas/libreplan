@@ -30,21 +30,21 @@ import org.zkoss.zk.ui.util.GenericForwardComposer;
  */
 public class OrderProjectCharterController extends GenericForwardComposer {
 
-    private Component window;
+  private Component window;
 
-    /**
-     * Auto forward events and wire accessible variables of the specified
-     * component into a controller Java object; a subclass that
-     * override this method should remember to call super.doAfterCompose(comp)
-     * or it will not work.
-     *
-     * @param comp
-     */
-    @Override
-    public void doAfterCompose(Component comp) throws Exception {
-        super.doAfterCompose(comp);
+  /**
+   * Auto forward events and wire accessible variables of the specified
+   * component into a controller Java object; a subclass that
+   * override this method should remember to call super.doAfterCompose(comp)
+   * or it will not work.
+   *
+   * @param comp
+   */
+  @Override
+  public void doAfterCompose(Component comp) throws Exception {
+    super.doAfterCompose(comp);
 
-        comp.setAttribute("orderProjectCharterController", this, true);
-        this.window = comp;
-    }
+    comp.setAttribute("orderProjectCharterController", this, true);
+    this.window = comp;
+  }
 }

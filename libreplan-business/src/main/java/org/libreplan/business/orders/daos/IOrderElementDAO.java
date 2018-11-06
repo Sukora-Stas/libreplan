@@ -35,107 +35,106 @@ import org.libreplan.business.workingday.EffortDuration;
 
 /**
  * Contract for {@link OrderElementDAO}
+ *
  * @author Manuel Rego Casasnovas <mrego@igalia.com>
  * @author Diego Pino García <dpino@igalia.com>
  * @author Susana Montes Pedreira <smontes@wirelessgalicia.com>
  */
 public interface IOrderElementDAO extends IIntegrationEntityDAO<OrderElement> {
 
-    public List<OrderElement> findWithoutParent();
+  public List<OrderElement> findWithoutParent();
 
-    public OrderElement findUniqueByCode(String code)
-            throws InstanceNotFoundException;
+  public OrderElement findUniqueByCode(String code)
+          throws InstanceNotFoundException;
 
-    public List<OrderElement> findByCodeAndParent(OrderElement parent,
-            String code);
+  public List<OrderElement> findByCodeAndParent(OrderElement parent,
+                                                String code);
 
-    /**
-     * Find an order element with the <code>code</code> passed as parameter
-     * and which is a son of the <code>parent</code> {@link OrderElement}
-     *
-     * @param parent Parent {@link OrderElement}
-     * @param code code of the {@link OrderElement} to find
-     * @return the {@link OrderElement} found
-     */
-    public OrderElement findUniqueByCodeAndParent(OrderElement parent,
-            String code) throws InstanceNotFoundException;
+  /**
+   * Find an order element with the <code>code</code> passed as parameter
+   * and which is a son of the <code>parent</code> {@link OrderElement}
+   *
+   * @param parent Parent {@link OrderElement}
+   * @param code   code of the {@link OrderElement} to find
+   * @return the {@link OrderElement} found
+   */
+  public OrderElement findUniqueByCodeAndParent(OrderElement parent,
+                                                String code) throws InstanceNotFoundException;
 
-    /**
-     * Returns the number of directly assigned effort for an
-     * {@link OrderElement}. It means that the hours assigned to its children
-     * aren't included.
-     *
-     * It is recommended to use {@link OrderElement}.getSumChargedEffort().
-     * getDirectChargedEffort() instead, because getAssignedHours calculates
-     * that number iterating on the element's WorkReporLines.
-     *
-     * @param orderElement
-     *            must be attached
-     * @return The direct effort
-     */
-    EffortDuration getAssignedDirectEffort(OrderElement orderElement);
+  /**
+   * Returns the number of directly assigned effort for an
+   * {@link OrderElement}. It means that the hours assigned to its children
+   * aren't included.
+   * <p>
+   * It is recommended to use {@link OrderElement}.getSumChargedEffort().
+   * getDirectChargedEffort() instead, because getAssignedHours calculates
+   * that number iterating on the element's WorkReporLines.
+   *
+   * @param orderElement must be attached
+   * @return The direct effort
+   */
+  EffortDuration getAssignedDirectEffort(OrderElement orderElement);
 
-    /**
-     * Returns the advance percentage in hours for an {@link OrderElement}
-     *
-     * @param orderElement
-     *            must be attached
-     * @return The advance percentage (a {@link BigDecimal} between 0-1)
-     */
-    BigDecimal getHoursAdvancePercentage(OrderElement orderElement);
+  /**
+   * Returns the advance percentage in hours for an {@link OrderElement}
+   *
+   * @param orderElement must be attached
+   * @return The advance percentage (a {@link BigDecimal} between 0-1)
+   */
+  BigDecimal getHoursAdvancePercentage(OrderElement orderElement);
 
-    OrderElement findUniqueByCodeAnotherTransaction(String code)
-            throws InstanceNotFoundException;
+  OrderElement findUniqueByCodeAnotherTransaction(String code)
+          throws InstanceNotFoundException;
 
-    List<OrderElement> getAll();
+  List<OrderElement> getAll();
 
-    public List<OrderElement> findOrderElementsWithExternalCode();
+  public List<OrderElement> findOrderElementsWithExternalCode();
 
-    List<OrderElement> findByTemplate(OrderElementTemplate template);
+  List<OrderElement> findByTemplate(OrderElementTemplate template);
 
-    BigDecimal calculateAverageEstimatedHours(final List<OrderElement> list);
+  BigDecimal calculateAverageEstimatedHours(final List<OrderElement> list);
 
-    EffortDuration calculateAverageWorkedHours(final List<OrderElement> list);
+  EffortDuration calculateAverageWorkedHours(final List<OrderElement> list);
 
-    BigDecimal calculateMaxEstimatedHours(final List<OrderElement> list);
+  BigDecimal calculateMaxEstimatedHours(final List<OrderElement> list);
 
-    BigDecimal calculateMinEstimatedHours(final List<OrderElement> list);
+  BigDecimal calculateMinEstimatedHours(final List<OrderElement> list);
 
-    EffortDuration calculateMaxWorkedHours(final List<OrderElement> list);
+  EffortDuration calculateMaxWorkedHours(final List<OrderElement> list);
 
-    EffortDuration calculateMinWorkedHours(final List<OrderElement> list);
+  EffortDuration calculateMinWorkedHours(final List<OrderElement> list);
 
-    boolean isAlreadyInUse(OrderElement orderElement);
+  boolean isAlreadyInUse(OrderElement orderElement);
 
-    boolean isAlreadyInUseThisOrAnyOfItsChildren(OrderElement orderElement);
+  boolean isAlreadyInUseThisOrAnyOfItsChildren(OrderElement orderElement);
 
-    /**
-     * Returns codes in DB searching in all order elements but excluding orderElements
-     *
-     * @param orderElements
-     * @return
-     */
-    Set<String> getAllCodesExcluding(List<OrderElement> orderElements);
+  /**
+   * Returns codes in DB searching in all order elements but excluding orderElements
+   *
+   * @param orderElements
+   * @return
+   */
+  Set<String> getAllCodesExcluding(List<OrderElement> orderElements);
 
-    /**
-     * Checks if there's another {@link OrderElement} in DB which code is the same as
-     * some of the ones in order (and its children)
-     *
-     * @param order
-     * @return
-     */
-    OrderElement findRepeatedOrderCodeInDB(OrderElement order);
+  /**
+   * Checks if there's another {@link OrderElement} in DB which code is the same as
+   * some of the ones in order (and its children)
+   *
+   * @param order
+   * @return
+   */
+  OrderElement findRepeatedOrderCodeInDB(OrderElement order);
 
-    boolean hasImputedExpenseSheet(Long id) throws InstanceNotFoundException;
+  boolean hasImputedExpenseSheet(Long id) throws InstanceNotFoundException;
 
-    boolean hasImputedExpenseSheetThisOrAnyOfItsChildren(Long id) throws InstanceNotFoundException;
+  boolean hasImputedExpenseSheetThisOrAnyOfItsChildren(Long id) throws InstanceNotFoundException;
 
-    OrderElement findByExternalCode(String code) throws InstanceNotFoundException;
+  OrderElement findByExternalCode(String code) throws InstanceNotFoundException;
 
-    public List<OrderElement> findByLabelsAndCriteria(Set<Label> labels,
-            Set<Criterion> criteria);
+  public List<OrderElement> findByLabelsAndCriteria(Set<Label> labels,
+                                                    Set<Criterion> criteria);
 
-    boolean existsByCodeInAnotherOrderAnotherTransaction(
-            OrderElement orderElement);
+  boolean existsByCodeInAnotherOrderAnotherTransaction(
+          OrderElement orderElement);
 
 }

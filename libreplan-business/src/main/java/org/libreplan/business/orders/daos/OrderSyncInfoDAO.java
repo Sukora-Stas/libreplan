@@ -42,72 +42,71 @@ import org.springframework.transaction.annotation.Transactional;
 public class OrderSyncInfoDAO extends GenericDAOHibernate<OrderSyncInfo, Long>
         implements IOrderSyncInfoDAO {
 
-    @Override
-    public OrderSyncInfo findLastSynchronizedInfoByOrderAndConnectorName(
-            Order order, String connectorName) {
-        List<OrderSyncInfo> orderSyncInfoList = findLastSynchronizedInfosByOrderAndConnectorName(
-                order, connectorName);
-        if (orderSyncInfoList == null || orderSyncInfoList.isEmpty()) {
-            return null;
-        }
-        return orderSyncInfoList.get(0);
+  @Override
+  public OrderSyncInfo findLastSynchronizedInfoByOrderAndConnectorName(
+          Order order, String connectorName) {
+    List<OrderSyncInfo> orderSyncInfoList = findLastSynchronizedInfosByOrderAndConnectorName(
+            order, connectorName);
+    if (orderSyncInfoList == null || orderSyncInfoList.isEmpty()) {
+      return null;
     }
+    return orderSyncInfoList.get(0);
+  }
 
-    @Override
-    @SuppressWarnings("unchecked")
-    public List<OrderSyncInfo> findLastSynchronizedInfosByOrderAndConnectorName(
-            Order order, String connectorName) {
-        Criteria criteria = getSession().createCriteria(OrderSyncInfo.class);
-        criteria.add(Restrictions.eq("order", order));
-        criteria.add(Restrictions.eq("connectorName", connectorName));
-        criteria.addOrder(org.hibernate.criterion.Order.desc("lastSyncDate"));
-        return criteria.list();
-    }
+  @Override
+  @SuppressWarnings("unchecked")
+  public List<OrderSyncInfo> findLastSynchronizedInfosByOrderAndConnectorName(
+          Order order, String connectorName) {
+    Criteria criteria = getSession().createCriteria(OrderSyncInfo.class);
+    criteria.add(Restrictions.eq("order", order));
+    criteria.add(Restrictions.eq("connectorName", connectorName));
+    criteria.addOrder(org.hibernate.criterion.Order.desc("lastSyncDate"));
+    return criteria.list();
+  }
 
-    @Override
-    public OrderSyncInfo findByKeyOrderAndConnectorName(String key,
-            Order order, String connectorName) {
-        Criteria criteria = getSession().createCriteria(OrderSyncInfo.class);
-        criteria.add(Restrictions.eq("key", key));
-        criteria.add(Restrictions.eq("order", order));
-        criteria.add(Restrictions.eq("connectorName", connectorName));
-        return (OrderSyncInfo) criteria.uniqueResult();
-    }
+  @Override
+  public OrderSyncInfo findByKeyOrderAndConnectorName(String key,
+                                                      Order order, String connectorName) {
+    Criteria criteria = getSession().createCriteria(OrderSyncInfo.class);
+    criteria.add(Restrictions.eq("key", key));
+    criteria.add(Restrictions.eq("order", order));
+    criteria.add(Restrictions.eq("connectorName", connectorName));
+    return (OrderSyncInfo) criteria.uniqueResult();
+  }
 
-    @Override
-    public List<OrderSyncInfo> findByConnectorName(String connectorName) {
-        Criteria criteria = getSession().createCriteria(OrderSyncInfo.class);
-        criteria.add(Restrictions.eq("connectorName", connectorName));
-        return criteria.list();
-    }
+  @Override
+  public List<OrderSyncInfo> findByConnectorName(String connectorName) {
+    Criteria criteria = getSession().createCriteria(OrderSyncInfo.class);
+    criteria.add(Restrictions.eq("connectorName", connectorName));
+    return criteria.list();
+  }
 
-    @Override
-    @Transactional(readOnly = true, propagation = Propagation.REQUIRES_NEW)
-    public boolean existsByKeyOrderAndConnectorNameAnotherTransaction(
-            OrderSyncInfo orderSyncInfo) {
-        return existsOtherOrderSyncInfoByKeyOrderAndConnectorName(orderSyncInfo);
-    }
+  @Override
+  @Transactional(readOnly = true, propagation = Propagation.REQUIRES_NEW)
+  public boolean existsByKeyOrderAndConnectorNameAnotherTransaction(
+          OrderSyncInfo orderSyncInfo) {
+    return existsOtherOrderSyncInfoByKeyOrderAndConnectorName(orderSyncInfo);
+  }
 
-    /**
-     * Returns true if other {@link OrderSyncInfo} which is the same
-     * as the given <code>{@link OrderSyncInfo}</code> already exists
-     *
-     * @param orderSyncInfo
-     *            the {@link OrderSyncInfo}
-     */
-    private boolean existsOtherOrderSyncInfoByKeyOrderAndConnectorName(
-            OrderSyncInfo orderSyncInfo) {
-        OrderSyncInfo found = findByKeyOrderAndConnectorName(
-                orderSyncInfo.getKey(), orderSyncInfo.getOrder(),
-                orderSyncInfo.getConnectorName());
-        return found != null && found != orderSyncInfo;
-    }
+  /**
+   * Returns true if other {@link OrderSyncInfo} which is the same
+   * as the given <code>{@link OrderSyncInfo}</code> already exists
+   *
+   * @param orderSyncInfo the {@link OrderSyncInfo}
+   */
+  private boolean existsOtherOrderSyncInfoByKeyOrderAndConnectorName(
+          OrderSyncInfo orderSyncInfo) {
+    OrderSyncInfo found = findByKeyOrderAndConnectorName(
+            orderSyncInfo.getKey(), orderSyncInfo.getOrder(),
+            orderSyncInfo.getConnectorName());
+    return found != null && found != orderSyncInfo;
+  }
 
-    @Override
-    @Transactional(readOnly = true, propagation = Propagation.REQUIRES_NEW)
-    public OrderSyncInfo findUniqueByKeyOrderAndConnectorNameAnotherTransaction(
-            String key, Order order, String connectorName) {
-        return findByKeyOrderAndConnectorName(key, order, connectorName);
-    }
+  @Override
+  @Transactional(readOnly = true, propagation = Propagation.REQUIRES_NEW)
+  public OrderSyncInfo findUniqueByKeyOrderAndConnectorNameAnotherTransaction(
+          String key, Order order, String connectorName) {
+    return findByKeyOrderAndConnectorName(key, order, connectorName);
+  }
 
 }

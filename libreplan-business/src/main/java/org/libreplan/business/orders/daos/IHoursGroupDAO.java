@@ -35,17 +35,17 @@ import org.libreplan.business.orders.entities.HoursGroup;
  */
 public interface IHoursGroupDAO extends IIntegrationEntityDAO<HoursGroup> {
 
-    boolean existsByCodeAnotherTransaction(HoursGroup hoursGroup);
+  boolean existsByCodeAnotherTransaction(HoursGroup hoursGroup);
 
-    HoursGroup findUniqueByCodeAnotherTransaction(HoursGroup hoursGroup)
-            throws InstanceNotFoundException;
+  HoursGroup findUniqueByCodeAnotherTransaction(HoursGroup hoursGroup)
+          throws InstanceNotFoundException;
 
-    /**
-     * Checks if there's another {@link HoursGroup} in DB which code is the same as
-     * some of the ones in order.hoursGroups
-     *
-     * @param order
-     * @return
-     */
-    HoursGroup findRepeatedHoursGroupCodeInDB(List<HoursGroup> hoursGroupList);
+  /**
+   * Checks if there's another {@link HoursGroup} in DB which code is the same as
+   * some of the ones in order.hoursGroups
+   *
+   * @param order
+   * @return
+   */
+  HoursGroup findRepeatedHoursGroupCodeInDB(List<HoursGroup> hoursGroupList);
 }

@@ -48,82 +48,82 @@ import org.springframework.transaction.annotation.Transactional;
 public class HoursGroupDAO extends IntegrationEntityDAO<HoursGroup>
         implements IHoursGroupDAO {
 
-    @Override
-    @Transactional(readOnly = true, propagation = Propagation.REQUIRES_NEW)
-    public boolean existsByCodeAnotherTransaction(HoursGroup hoursGroup) {
-        return existsByCode(hoursGroup);
+  @Override
+  @Transactional(readOnly = true, propagation = Propagation.REQUIRES_NEW)
+  public boolean existsByCodeAnotherTransaction(HoursGroup hoursGroup) {
+    return existsByCode(hoursGroup);
+  }
+
+  private boolean existsByCode(HoursGroup hoursGroup) {
+    try {
+      HoursGroup result = findUniqueByCode(hoursGroup);
+      return result != null && result != hoursGroup;
+    } catch (InstanceNotFoundException e) {
+      return false;
+    }
+  }
+
+  @Override
+  @Transactional(readOnly = true, propagation = Propagation.REQUIRES_NEW)
+  public HoursGroup findUniqueByCodeAnotherTransaction(HoursGroup hoursGroup)
+          throws InstanceNotFoundException {
+    return findUniqueByCode(hoursGroup);
+  }
+
+  private HoursGroup findUniqueByCode(HoursGroup hoursGroup)
+          throws InstanceNotFoundException {
+    Validate.notNull(hoursGroup);
+    Validate.notNull(hoursGroup.getCode());
+
+    Criteria c = getSession().createCriteria(HoursGroup.class);
+    c.add(Restrictions.eq("code", hoursGroup.getCode()));
+
+    HoursGroup result;
+    try {
+      result = (HoursGroup) c.uniqueResult();
+    } catch (HibernateException e) {
+      result = (HoursGroup) c.list().get(0);
     }
 
-    private boolean existsByCode(HoursGroup hoursGroup) {
-        try {
-            HoursGroup result = findUniqueByCode(hoursGroup);
-            return result != null && result != hoursGroup;
-        } catch (InstanceNotFoundException e) {
-            return false;
-        }
+    if (result == null) {
+      throw new InstanceNotFoundException(hoursGroup.getCode(),
+              HoursGroup.class.getName());
+    } else {
+      return result;
     }
+  }
 
-    @Override
-    @Transactional(readOnly = true, propagation = Propagation.REQUIRES_NEW)
-    public HoursGroup findUniqueByCodeAnotherTransaction(HoursGroup hoursGroup)
-            throws InstanceNotFoundException {
-        return findUniqueByCode(hoursGroup);
+  @Override
+  @Transactional(readOnly = true, propagation = Propagation.REQUIRES_NEW)
+  public HoursGroup findRepeatedHoursGroupCodeInDB(List<HoursGroup> hoursGroupList) {
+    final Map<String, HoursGroup> hoursGroups = createMapByCode(hoursGroupList);
+    final Map<String, HoursGroup> hoursGroupsInDB = createMapByCode(getAll());
+
+    for (String code : hoursGroups.keySet()) {
+      HoursGroup hoursGroup = hoursGroups.get(code);
+      HoursGroup hoursGroupInDB = hoursGroupsInDB.get(code);
+
+      // There's an element in the DB with the same code and it's a
+      // different element
+      if (hoursGroupInDB != null
+              && !hoursGroupInDB.getId().equals(hoursGroup.getId())) {
+        return hoursGroup;
+      }
     }
+    return null;
+  }
 
-    private HoursGroup findUniqueByCode(HoursGroup hoursGroup)
-            throws InstanceNotFoundException {
-        Validate.notNull(hoursGroup);
-        Validate.notNull(hoursGroup.getCode());
+  private List<HoursGroup> getAll() {
+    return list(HoursGroup.class);
+  }
 
-        Criteria c = getSession().createCriteria(HoursGroup.class);
-        c.add(Restrictions.eq("code", hoursGroup.getCode()));
-
-        HoursGroup result;
-        try {
-            result = (HoursGroup) c.uniqueResult();
-        } catch (HibernateException e) {
-            result = (HoursGroup) c.list().get(0);
-        }
-
-        if (result == null) {
-            throw new InstanceNotFoundException(hoursGroup.getCode(),
-                    HoursGroup.class.getName());
-        } else {
-            return result;
-        }
+  private Map<String, HoursGroup> createMapByCode(List<HoursGroup> hoursGroups) {
+    Map<String, HoursGroup> result = new HashMap<String, HoursGroup>();
+    for (HoursGroup each : hoursGroups) {
+      final String code = each.getCode();
+      result.put(code, each);
     }
-
-    @Override
-    @Transactional(readOnly= true, propagation = Propagation.REQUIRES_NEW)
-    public HoursGroup findRepeatedHoursGroupCodeInDB(List<HoursGroup> hoursGroupList) {
-        final Map<String, HoursGroup> hoursGroups = createMapByCode(hoursGroupList);
-        final Map<String, HoursGroup> hoursGroupsInDB = createMapByCode(getAll());
-
-        for (String code : hoursGroups.keySet()) {
-            HoursGroup hoursGroup = hoursGroups.get(code);
-            HoursGroup hoursGroupInDB = hoursGroupsInDB.get(code);
-
-            // There's an element in the DB with the same code and it's a
-            // different element
-            if (hoursGroupInDB != null
-                    && !hoursGroupInDB.getId().equals(hoursGroup.getId())) {
-                return hoursGroup;
-            }
-        }
-        return null;
-    }
-
-    private List<HoursGroup> getAll() {
-        return list(HoursGroup.class);
-    }
-
-    private Map<String, HoursGroup> createMapByCode(List<HoursGroup> hoursGroups) {
-        Map<String, HoursGroup> result = new HashMap<String, HoursGroup>();
-        for (HoursGroup each: hoursGroups) {
-            final String code = each.getCode();
-            result.put(code, each);
-        }
-        return result;
-    }
+    return result;
+  }
 
 }

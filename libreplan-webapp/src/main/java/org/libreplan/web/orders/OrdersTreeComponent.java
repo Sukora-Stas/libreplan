@@ -38,88 +38,88 @@ import org.zkoss.zul.Treeitem;
  */
 public class OrdersTreeComponent extends TreeComponent {
 
-    protected boolean resourcesBudgetEnabled =
-            Registry.getConfigurationDAO().getConfigurationWithReadOnlyTransaction().isEnabledAutomaticBudget();
+  protected boolean resourcesBudgetEnabled =
+          Registry.getConfigurationDAO().getConfigurationWithReadOnlyTransaction().isEnabledAutomaticBudget();
 
-    abstract class OrdersTreeColumn extends Column {
-        OrdersTreeColumn(String label, String cssClass, String tooltip) {
-            super(label, cssClass, tooltip);
-        }
+  public List<Column> getColumns() {
+    List<Column> columns = new ArrayList<>();
 
+    columns.add(schedulingStateColumn);
+    columns.add(codeColumn);
+    columns.add(nameAndDescriptionColumn);
+
+    columns.add(new OrdersTreeColumn(_("Hours"), "hours", _("Total task hours")) {
+      @Override
+      protected void doCell(OrderElementTreeitemRenderer treeRenderer, OrderElement currentElement) {
+        treeRenderer.addHoursCell(currentElement);
+      }
+    });
+
+    columns.add(new OrdersTreeColumn(_("Budget"), "budget", _("Total task budget")) {
+      @Override
+      protected void doCell(OrderElementTreeitemRenderer treeRenderer, OrderElement currentElement) {
+        treeRenderer.addBudgetCell(currentElement);
+      }
+    });
+
+    if (resourcesBudgetEnabled) {
+      columns.add(new OrdersTreeColumn(_("Expenses"), "budget", _("Budget minus resources costs")) {
         @Override
-        public <T extends ITreeNode<T>> void doCell(TreeController<T>.Renderer renderer,
-                                                    Treeitem item,
-                                                    T currentElement) {
-
-            OrderElementTreeitemRenderer treeRenderer = OrderElementTreeitemRenderer.class.cast(renderer);
-            doCell(treeRenderer, OrderElement.class.cast(currentElement));
+        protected void doCell(OrderElementTreeitemRenderer treeRenderer, OrderElement currentElement) {
+          treeRenderer.addResourcesBudgetCell(currentElement);
         }
-
-        protected abstract void doCell(OrderElementTreeitemRenderer treeRenderer, OrderElement currentElement);
-
+      });
     }
 
-    public List<Column> getColumns() {
-        List<Column> columns = new ArrayList<>();
+    columns.add(new OrdersTreeColumn(
+            _("Must start after"),
+            "estimated_init",
+            _("Estimated start date for the task " +
+                    "(press enter in textbox to open calendar popup or type in date directly)")) {
 
-        columns.add(schedulingStateColumn);
-        columns.add(codeColumn);
-        columns.add(nameAndDescriptionColumn);
+      @Override
+      protected void doCell(OrderElementTreeitemRenderer treeRenderer, OrderElement currentElement) {
+        treeRenderer.addInitDateCell(currentElement);
+      }
+    });
 
-        columns.add(new OrdersTreeColumn(_("Hours"), "hours", _("Total task hours")) {
-            @Override
-            protected void doCell(OrderElementTreeitemRenderer treeRenderer, OrderElement currentElement) {
-                treeRenderer.addHoursCell(currentElement);
-            }
-        });
+    columns.add(new OrdersTreeColumn(
+            _("Deadline"),
+            "estimated_end",
+            _("Estimated end date for the task " +
+                    "(press enter in textbox to open calendar popup or type in date directly)")) {
 
-        columns.add(new OrdersTreeColumn(_("Budget"), "budget", _("Total task budget")) {
-            @Override
-            protected void doCell(OrderElementTreeitemRenderer treeRenderer, OrderElement currentElement) {
-                treeRenderer.addBudgetCell(currentElement);
-            }
-        });
+      @Override
+      protected void doCell(OrderElementTreeitemRenderer treeRenderer, OrderElement currentElement) {
+        treeRenderer.addEndDateCell(currentElement);
+      }
+    });
 
-        if (resourcesBudgetEnabled) {
-            columns.add(new OrdersTreeColumn(_("Expenses"), "budget", _("Budget minus resources costs")) {
-                @Override
-                protected void doCell(OrderElementTreeitemRenderer treeRenderer, OrderElement currentElement) {
-                    treeRenderer.addResourcesBudgetCell(currentElement);
-                }
-            });
-        }
+    columns.add(operationsColumn);
 
-        columns.add(new OrdersTreeColumn(
-                _("Must start after"),
-                "estimated_init",
-                _("Estimated start date for the task " +
-                        "(press enter in textbox to open calendar popup or type in date directly)")) {
+    return columns;
+  }
 
-            @Override
-            protected void doCell(OrderElementTreeitemRenderer treeRenderer, OrderElement currentElement) {
-                treeRenderer.addInitDateCell(currentElement);
-            }
-        });
+  @Override
+  public boolean isCreateFromTemplateEnabled() {
+    return true;
+  }
 
-        columns.add(new OrdersTreeColumn(
-                _("Deadline"),
-                "estimated_end",
-                _("Estimated end date for the task " +
-                        "(press enter in textbox to open calendar popup or type in date directly)")) {
-
-            @Override
-            protected void doCell(OrderElementTreeitemRenderer treeRenderer, OrderElement currentElement) {
-                treeRenderer.addEndDateCell(currentElement);
-            }
-        });
-
-        columns.add(operationsColumn);
-
-        return columns;
+  abstract class OrdersTreeColumn extends Column {
+    OrdersTreeColumn(String label, String cssClass, String tooltip) {
+      super(label, cssClass, tooltip);
     }
 
     @Override
-    public boolean isCreateFromTemplateEnabled() {
-        return true;
+    public <T extends ITreeNode<T>> void doCell(TreeController<T>.Renderer renderer,
+                                                Treeitem item,
+                                                T currentElement) {
+
+      OrderElementTreeitemRenderer treeRenderer = OrderElementTreeitemRenderer.class.cast(renderer);
+      doCell(treeRenderer, OrderElement.class.cast(currentElement));
     }
+
+    protected abstract void doCell(OrderElementTreeitemRenderer treeRenderer, OrderElement currentElement);
+
+  }
 }

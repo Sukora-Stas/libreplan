@@ -45,140 +45,140 @@ import java.util.List;
 @Controller
 public class OrderResourceApprovalSheetController extends GenericForwardComposer {
 
-    private Component window;
+  private Component window;
 
-    private Textbox textBUnit;
+  private Textbox textBUnit;
 
-    private Textbox textBProjectRole;
+  private Textbox textBProjectRole;
 
-    private Textbox textBFIO;
+  private Textbox textBFIO;
 
-    private Textbox textBPosition;
+  private Textbox textBPosition;
 
-    private Datebox dateBStart;
+  private Datebox dateBStart;
 
-    private Datebox dateBEnd;
+  private Datebox dateBEnd;
 
-    private Textbox textBDuration;//auto
+  private Textbox textBDuration;//auto
 
-    private Textbox textBPercentLoad;
+  private Textbox textBPercentLoad;
 
-    private Textbox textBPeopleDay;//auto
+  private Textbox textBPeopleDay;//auto
 
-    private Grid appSheetGrid;
-
-
-    private IResourceApprovalSheetModel resourceApprovalSheetModel;
+  private Grid appSheetGrid;
 
 
-    /**
-     * Auto forward events and wire accessible variables of the specified
-     * component into a controller Java object; a subclass that
-     * override this method should remember to call super.doAfterCompose(comp)
-     * or it will not work.
-     *
-     * @param comp
-     */
-    @Override
-    public void doAfterCompose(Component comp) throws Exception {
-        super.doAfterCompose(comp);
+  private IResourceApprovalSheetModel resourceApprovalSheetModel;
 
-        comp.setAttribute("orderResourceApprovalSheetController", this, true);
-        this.window = comp;
 
-        resourceApprovalSheetModel = (IResourceApprovalSheetModel) SpringUtil.getBean("resourceApprovalSheetModel");
+  /**
+   * Auto forward events and wire accessible variables of the specified
+   * component into a controller Java object; a subclass that
+   * override this method should remember to call super.doAfterCompose(comp)
+   * or it will not work.
+   *
+   * @param comp
+   */
+  @Override
+  public void doAfterCompose(Component comp) throws Exception {
+    super.doAfterCompose(comp);
 
-        initGrid();
+    comp.setAttribute("orderResourceApprovalSheetController", this, true);
+    this.window = comp;
+
+    resourceApprovalSheetModel = (IResourceApprovalSheetModel) SpringUtil.getBean("resourceApprovalSheetModel");
+
+    initGrid();
+  }
+
+  private void initGrid() {
+    appSheetGrid.setModel(new ListModelList<ResourceApprovalSheet>
+            (resourceApprovalSheetModel.getApprovalSheet()));
+
+    appSheetGrid.setRowRenderer(getGridResAppRenderer());
+  }
+
+
+  private RowRenderer<ResourceApprovalSheet> getGridResAppRenderer() {
+    return (row, o, i) -> {
+      row.appendChild(new Label(o.getUnit()));
+      row.appendChild(new Label(o.getProjectRole()));
+      row.appendChild(new Label(o.getFIO()));
+      row.appendChild(new Label(o.getPosition()));
+      row.appendChild(new Label(o.getDateStart().toString()));
+      row.appendChild(new Label(o.getDateEnd().toString()));
+      row.appendChild(new Label(o.getDuration()));
+      row.appendChild(new Label(o.getPercentLoad()));
+      row.appendChild(new Label(o.getPeopleDay()));
+    };
+  }
+
+
+  public void saveApprovalSheet() {
+
+    ResourceApprovalSheet resourceApprovalSheet =
+            new ResourceApprovalSheet(
+                    textBUnit.getValue(),
+                    textBProjectRole.getValue(),
+                    textBFIO.getValue(),
+                    textBPosition.getValue(),
+                    dateBStart.getValue(),
+                    dateBEnd.getValue(),
+                    textBDuration.getValue(),
+                    textBPercentLoad.getValue(),
+                    textBPeopleDay.getValue());
+
+    resourceApprovalSheetModel.confirmSave(resourceApprovalSheet);
+
+    initGrid();
+    //TODO: add mesage "done" and clear all value in view
+  }
+
+  public void onChange$dateBEnd(Event event) {
+    textBDuration.setValue(
+            String.valueOf(
+                    getDuration(dateBEnd.getValue(),
+                            dateBStart.getValue())));
+    textBPeopleDay.setValue(
+            getPeopleDay(
+                    textBDuration.getValue(),
+                    textBPercentLoad.getValue()));
+  }
+
+  public void onChange$textBPercentLoad(Event event) {
+    textBPeopleDay.setValue(
+            getPeopleDay(
+                    textBDuration.getValue(),
+                    textBPercentLoad.getValue()));
+  }
+
+  private int getDuration(Date first, Date second) {
+    Calendar firstCal = Calendar.getInstance();
+    firstCal.setTime(first);
+
+    Calendar secondCal = Calendar.getInstance();
+    secondCal.setTime(second);
+
+    long fullMiliSecond = firstCal.getTimeInMillis() - secondCal.getTimeInMillis();
+
+    fullMiliSecond = fullMiliSecond / 1000 / 60 / 60 / 24;
+
+    return (int) fullMiliSecond;
+    //TODO: add bias method
+  }
+
+  private String getPeopleDay(String percent, String duration) {
+    if (percent.equals("") || percent.isEmpty()) {
+      return null;
+    }
+    if (duration.equals("") || duration.isEmpty()) {
+      return null;
     }
 
-    private void initGrid(){
-        appSheetGrid.setModel(new ListModelList<ResourceApprovalSheet>
-                (resourceApprovalSheetModel.getApprovalSheet()));
+    double IPercent = new Double(percent);
+    double IDuratiom = new Double(duration);
 
-        appSheetGrid.setRowRenderer(getGridResAppRenderer());
-    }
-
-
-    private RowRenderer<ResourceApprovalSheet> getGridResAppRenderer() {
-        return (row, o, i) -> {
-            row.appendChild(new Label(o.getUnit()));
-            row.appendChild(new Label(o.getProjectRole()));
-            row.appendChild(new Label(o.getFIO()));
-            row.appendChild(new Label(o.getPosition()));
-            row.appendChild(new Label(o.getDateStart().toString()));
-            row.appendChild(new Label(o.getDateEnd().toString()));
-            row.appendChild(new Label(o.getDuration()));
-            row.appendChild(new Label(o.getPercentLoad()));
-            row.appendChild(new Label(o.getPeopleDay()));
-        };
-    }
-
-
-    public void saveApprovalSheet() {
-
-        ResourceApprovalSheet resourceApprovalSheet =
-                new ResourceApprovalSheet(
-                        textBUnit.getValue(),
-                        textBProjectRole.getValue(),
-                        textBFIO.getValue(),
-                        textBPosition.getValue(),
-                        dateBStart.getValue(),
-                        dateBEnd.getValue(),
-                        textBDuration.getValue(),
-                        textBPercentLoad.getValue(),
-                        textBPeopleDay.getValue());
-
-        resourceApprovalSheetModel.confirmSave(resourceApprovalSheet);
-
-        initGrid();
-        //TODO: add mesage "done" and clear all value in view
-    }
-
-    public void onChange$dateBEnd(Event event) {
-        textBDuration.setValue(
-                String.valueOf(
-                        getDuration(dateBEnd.getValue(),
-                                dateBStart.getValue())));
-        textBPeopleDay.setValue(
-                getPeopleDay(
-                        textBDuration.getValue(),
-                        textBPercentLoad.getValue()));
-    }
-
-    public void onChange$textBPercentLoad(Event event) {
-        textBPeopleDay.setValue(
-                getPeopleDay(
-                        textBDuration.getValue(),
-                        textBPercentLoad.getValue()));
-    }
-
-    private int getDuration(Date first, Date second) {
-        Calendar firstCal = Calendar.getInstance();
-        firstCal.setTime(first);
-
-        Calendar secondCal = Calendar.getInstance();
-        secondCal.setTime(second);
-
-        long fullMiliSecond = firstCal.getTimeInMillis() - secondCal.getTimeInMillis();
-
-        fullMiliSecond = fullMiliSecond / 1000 / 60 / 60 / 24;
-
-        return (int) fullMiliSecond;
-        //TODO: add bias method
-    }
-
-    private String getPeopleDay(String percent, String duration) {
-        if (percent.equals("") || percent.isEmpty()) {
-            return null;
-        }
-        if (duration.equals("") || duration.isEmpty()) {
-            return null;
-        }
-
-        double IPercent = new Double(percent);
-        double IDuratiom = new Double(duration);
-
-        return String.valueOf((IPercent * IDuratiom) / 100);
-    }
+    return String.valueOf((IPercent * IDuratiom) / 100);
+  }
 
 }

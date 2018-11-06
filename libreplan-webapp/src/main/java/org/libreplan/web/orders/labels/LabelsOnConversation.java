@@ -32,58 +32,57 @@ import org.libreplan.business.labels.entities.Label;
 
 /**
  * @author Óscar González Fernández <ogonzalez@igalia.com>
- *
  */
 public class LabelsOnConversation {
 
-    private final ILabelDAO labelDAO;
+  private final ILabelDAO labelDAO;
 
-    private Set<Label> labels = null;
+  private Set<Label> labels = null;
 
-    public LabelsOnConversation(ILabelDAO labelDAO) {
-        this.labelDAO = labelDAO;
+  public LabelsOnConversation(ILabelDAO labelDAO) {
+    this.labelDAO = labelDAO;
+  }
+
+  public List<Label> getLabels() {
+    loadLabelsIfDontExist();
+    return new ArrayList<Label>(labels);
+  }
+
+  public void addLabel(Label label) {
+    loadLabelsIfDontExist();
+    Validate.notNull(label);
+    labels.add(label);
+  }
+
+  private void loadLabelsIfDontExist() {
+    if (this.labels != null) {
+      return;
     }
+    initializeLabels();
+  }
 
-    public List<Label> getLabels() {
-        loadLabelsIfDontExist();
-        return new ArrayList<Label>(labels);
-    }
+  public void initializeLabels() {
+    final List<Label> labels = labelDAO.getAll();
+    initializeLabels(labels);
+    this.labels = new HashSet<Label>(labels);
+  }
 
-    public void addLabel(Label label) {
-        loadLabelsIfDontExist();
-        Validate.notNull(label);
-        labels.add(label);
+  private void initializeLabels(Collection<Label> labels) {
+    for (Label label : labels) {
+      initializeLabel(label);
     }
+  }
 
-    private void loadLabelsIfDontExist() {
-        if (this.labels != null) {
-            return;
-        }
-        initializeLabels();
-    }
+  private void initializeLabel(Label label) {
+    label.getName();
+    label.getType().getName();
+  }
 
-    public void initializeLabels() {
-        final List<Label> labels = labelDAO.getAll();
-        initializeLabels(labels);
-        this.labels = new HashSet<Label>(labels);
+  public void reattachLabels() {
+    loadLabelsIfDontExist();
+    for (Label each : labels) {
+      labelDAO.reattach(each);
     }
-
-    private void initializeLabels(Collection<Label> labels) {
-        for (Label label : labels) {
-            initializeLabel(label);
-        }
-    }
-
-    private void initializeLabel(Label label) {
-        label.getName();
-        label.getType().getName();
-    }
-
-    public void reattachLabels() {
-        loadLabelsIfDontExist();
-        for (Label each : labels) {
-            labelDAO.reattach(each);
-        }
-    }
+  }
 
 }

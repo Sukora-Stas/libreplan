@@ -52,156 +52,156 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 @Scope(BeanDefinition.SCOPE_PROTOTYPE)
 public class AssignedCriterionRequirementToOrderElementModel extends
-    AssignedCriterionRequirementModel<OrderElement, IOrderModel> implements
-    IAssignedCriterionRequirementToOrderElementModel {
+        AssignedCriterionRequirementModel<OrderElement, IOrderModel> implements
+        IAssignedCriterionRequirementToOrderElementModel {
 
-    @Autowired
-    private IOrderElementDAO orderElementDAO;
+  @Autowired
+  private IOrderElementDAO orderElementDAO;
 
-    private IOrderModel orderModel;
+  private IOrderModel orderModel;
 
-    private OrderElement orderElement;
+  private OrderElement orderElement;
 
-    @Override
-    public IOrderModel getModel() {
-        return orderModel;
+  @Override
+  public IOrderModel getModel() {
+    return orderModel;
+  }
+
+  @Override
+  public void setModel(IOrderModel model) {
+    orderModel = model;
+  }
+
+  @Override
+  public OrderElement getElement() {
+    return orderElement;
+  }
+
+  @Override
+  public void setElement(OrderElement orderElement) {
+    this.orderElement = orderElement;
+  }
+
+  @Override
+  @Transactional(readOnly = true)
+  public void init(OrderElement element) {
+    setElement(element);
+    if (element != null) {
+      reattachOrderElement();
+      initializeWrappers();
+      initializeCriterionWithItsType();
+      reloadHoursGroupWrappers();
     }
+  }
 
-    @Override
-    public OrderElement getElement() {
-        return orderElement;
-    }
-
-    @Override
-    public void setElement(OrderElement orderElement) {
-        this.orderElement = orderElement;
-    }
-
-    @Override
-    public void setModel(IOrderModel model) {
-        orderModel = model;
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public void init(OrderElement element) {
-        setElement(element);
-        if(element != null){
-            reattachOrderElement();
-            initializeWrappers();
-            initializeCriterionWithItsType();
-            reloadHoursGroupWrappers();
+  private void reattachOrderElement() {
+    orderElementDAO.reattach(orderElement);
+    for (OrderElement child : orderElement.getAllChildren()) {
+      child.getName();
+      reattachCriterionRequirement(child.getCriterionRequirements());
+      if (child instanceof OrderLine) {
+        for (HoursGroup hoursGroup : child.getHoursGroups()) {
+          hoursGroup.getWorkingHours();
+          reattachCriterionRequirement(hoursGroup.getCriterionRequirements());
         }
+      }
     }
+  }
 
-    private void reattachOrderElement() {
-        orderElementDAO.reattach(orderElement);
-        for (OrderElement child : orderElement.getAllChildren()) {
-            child.getName();
-            reattachCriterionRequirement(child.getCriterionRequirements());
-            if (child instanceof OrderLine) {
-                for (HoursGroup hoursGroup : child.getHoursGroups()) {
-                    hoursGroup.getWorkingHours();
-                    reattachCriterionRequirement(hoursGroup.getCriterionRequirements());
-                }
-            }
+  private void reattachCriterionRequirement(Set<CriterionRequirement> list) {
+    for (CriterionRequirement requirement : list) {
+      requirement.getCriterion().getName();
+      requirement.getCriterion().getType().getName();
+    }
+  }
+
+  private void initializeWrappers() {
+    criterionRequirementWrappers = new ArrayList<CriterionRequirementWrapper>();
+    for (CriterionRequirement requirement :
+            orderElement.getCriterionRequirements()) {
+      CriterionRequirementWrapper Wrapper = new CriterionRequirementWrapper(
+              requirement, null, false);
+      criterionRequirementWrappers.add(Wrapper);
+    }
+  }
+
+  private void initializeCriterionWithItsType() {
+    criterionWithItsTypes = new ArrayList<CriterionWithItsType>();
+    for (CriterionType type : getTypes()) {
+      if (type.isEnabled()) {
+        for (Criterion criterion : getModel().getCriterionsFor(type)) {
+          if (criterion.isActive()) {
+            CriterionWithItsType criterionAndType =
+                    new CriterionWithItsType(type, criterion);
+            criterionWithItsTypes.add(criterionAndType);
+          }
         }
+      }
     }
+  }
 
-    private void reattachCriterionRequirement(Set<CriterionRequirement> list){
-        for (CriterionRequirement requirement : list) {
-            requirement.getCriterion().getName();
-            requirement.getCriterion().getType().getName();
-        }
+  private void reloadHoursGroupWrappers() {
+    hoursGroupsWrappers = new ArrayList<HoursGroupWrapper>();
+    for (HoursGroup hoursGroup : orderElement.getHoursGroups()) {
+      if (!existIntohoursGroupsWrappers(hoursGroup)) {
+        addNewHoursGroupWrapper(hoursGroup, false);
+      }
     }
+  }
 
-    private void initializeWrappers() {
-        criterionRequirementWrappers = new ArrayList<CriterionRequirementWrapper>();
-        for(CriterionRequirement requirement :
-            orderElement.getCriterionRequirements()){
-            CriterionRequirementWrapper Wrapper = new CriterionRequirementWrapper(
-                    requirement, null, false);
-            criterionRequirementWrappers.add(Wrapper);
-        }
+  private boolean existIntohoursGroupsWrappers(HoursGroup hoursGroup) {
+    for (HoursGroupWrapper hoursGroupWrapper : hoursGroupsWrappers) {
+      if (hoursGroupWrapper.getHoursGroup().equals(hoursGroup)) {
+        return true;
+      }
     }
+    return false;
+  }
 
-    private void  initializeCriterionWithItsType() {
-        criterionWithItsTypes = new ArrayList<CriterionWithItsType>();
-        for(CriterionType type : getTypes()){
-            if (type.isEnabled()) {
-                for (Criterion criterion : getModel().getCriterionsFor(type)) {
-                    if(criterion.isActive()){
-                        CriterionWithItsType criterionAndType =
-                                new CriterionWithItsType(type,criterion);
-                        criterionWithItsTypes.add(criterionAndType);
-                    }
-                }
-            }
-        }
-    }
+  @Override
+  @Transactional(readOnly = true)
+  public void confirm() throws ValidationException {
+    reattachOrderElement();
+  }
 
-    private void reloadHoursGroupWrappers() {
-        hoursGroupsWrappers = new ArrayList<HoursGroupWrapper>();
-        for (HoursGroup hoursGroup : orderElement.getHoursGroups()) {
-            if (!existIntohoursGroupsWrappers(hoursGroup)) {
-                addNewHoursGroupWrapper(hoursGroup, false);
-            }
-        }
-    }
+  public Set<CriterionType> getTypes() {
+    return getMapCriterions().keySet();
+  }
 
-    private boolean existIntohoursGroupsWrappers(HoursGroup hoursGroup) {
-        for (HoursGroupWrapper hoursGroupWrapper : hoursGroupsWrappers) {
-            if (hoursGroupWrapper.getHoursGroup().equals(hoursGroup)) {
-                return true;
-            }
-        }
-        return false;
-    }
+  private Map<CriterionType, List<Criterion>> getMapCriterions() {
+    return getModel().getMapCriterions();
+  }
 
-    @Override
-    @Transactional(readOnly = true)
-    public void confirm() throws ValidationException{
-        reattachOrderElement();
-    }
+  public Integer getTotalHours() {
+    return (getElement() != null) ? getElement().getWorkHours() : 0;
+  }
 
-    public Set<CriterionType> getTypes() {
-        return getMapCriterions().keySet();
-    }
+  protected void addDirectCriterionRequirement(DirectCriterionRequirement requirement) {
+    getElement().addDirectCriterionRequirement(requirement);
+  }
 
-    private Map<CriterionType, List<Criterion>> getMapCriterions() {
-        return getModel().getMapCriterions();
-    }
+  protected void removeDirectCriterionRequirement(DirectCriterionRequirement requirement) {
+    getElement().removeDirectCriterionRequirement(requirement);
+  }
 
-    public Integer getTotalHours() {
-        return (getElement() != null) ? getElement().getWorkHours() : 0;
-    }
+  protected void setValidCriterionRequirement(IndirectCriterionRequirement requirement, boolean valid) {
+    getElement().setValidCriterionRequirement(requirement, valid);
+  }
 
-    protected void addDirectCriterionRequirement(DirectCriterionRequirement requirement) {
-        getElement().addDirectCriterionRequirement(requirement);
-    }
+  @Override
+  protected void addNewHoursGroupWrapper(HoursGroup newHoursGroup,
+                                         boolean newObject) {
+    HoursGroupWrapper newHoursGroupWrapper = new HoursGroupWrapper(
+            newHoursGroup, getElement(), newObject);
+    hoursGroupsWrappers.add(newHoursGroupWrapper);
+  }
 
-    protected void removeDirectCriterionRequirement(DirectCriterionRequirement requirement) {
-        getElement().removeDirectCriterionRequirement(requirement);
+  @Override
+  public boolean isCodeAutogenerated() {
+    if (getElement() != null && getElement().getOrder() != null) {
+      return getElement().getOrder().isCodeAutogenerated();
     }
-
-    protected void setValidCriterionRequirement(IndirectCriterionRequirement requirement, boolean valid) {
-        getElement().setValidCriterionRequirement(requirement, valid);
-    }
-
-    @Override
-    protected void addNewHoursGroupWrapper(HoursGroup newHoursGroup,
-            boolean newObject) {
-        HoursGroupWrapper newHoursGroupWrapper = new HoursGroupWrapper(
-                newHoursGroup, getElement(), newObject);
-        hoursGroupsWrappers.add(newHoursGroupWrapper);
-    }
-
-    @Override
-    public boolean isCodeAutogenerated() {
-        if (getElement() != null && getElement().getOrder() != null) {
-            return getElement().getOrder().isCodeAutogenerated();
-        }
-        return false;
-    }
+    return false;
+  }
 
 }

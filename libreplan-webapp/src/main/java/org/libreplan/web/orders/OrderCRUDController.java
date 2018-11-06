@@ -392,142 +392,6 @@ public class OrderCRUDController extends GenericForwardComposer {
     Util.reloadBindings(editWindow);
   }
 
-  private class OrderDatesHandler {
-
-    private final Combobox schedulingMode;
-
-    private final Datebox initDate;
-
-    private final Datebox deadline;
-
-    public OrderDatesHandler(Window editWindow) {
-      schedulingMode = Util.findComponentAt(editWindow, "schedulingMode");
-      initDate = Util.findComponentAt(editWindow, "initDate");
-      deadline = Util.findComponentAt(editWindow, "deadline");
-      initializeSchedulingModeCombobox();
-    }
-
-    private void initializeSchedulingModeCombobox() {
-      fillSchedulingModes();
-      listenToChangeOfMode();
-    }
-
-    private void fillSchedulingModes() {
-      List options = schedulingMode.getChildren();
-      if (options != null && options.isEmpty()) {
-
-        schedulingMode.appendChild(createCombo(
-                SchedulingMode.FORWARD, _("Forward"), _("Schedule from start to deadline")));
-
-        schedulingMode.appendChild(createCombo(
-                SchedulingMode.BACKWARDS, _("Backwards"), _("Schedule from deadline to start")));
-      }
-    }
-
-    void chooseCurrentSchedulingMode() {
-      @SuppressWarnings("unchecked")
-      List<Comboitem> items = schedulingMode.getItems();
-
-      SchedulingMode currentMode = getOrder().getSchedulingMode();
-
-      for (Comboitem each : items) {
-        if (each.getValue().equals(currentMode)) {
-          schedulingMode.setSelectedItem(each);
-          setConstraintsFor(currentMode);
-
-          return;
-        }
-      }
-    }
-
-    private void listenToChangeOfMode() {
-      schedulingMode.addEventListener(Events.ON_SELECT, event -> {
-        SchedulingMode chosen = schedulingMode.getSelectedItem().getValue();
-        if (chosen != null) {
-          getOrder().setSchedulingMode(chosen);
-          setConstraintsFor(chosen);
-          changeFocusAccordingTo(chosen);
-        }
-      });
-    }
-
-    private Comboitem createCombo(SchedulingMode value, String label, String description) {
-      Comboitem result = new Comboitem();
-      result.setValue(value);
-      result.setLabel(label);
-      result.setDescription(description);
-
-      return result;
-    }
-
-    private void setConstraintsFor(final SchedulingMode mode) {
-      initDate.setConstraint((comp, value) -> {
-        if (value == null) {
-
-          if (mode == SchedulingMode.FORWARD) {
-            throw new WrongValueException(comp, _("Starting date cannot be empty in forward mode"));
-          }
-
-          if (orderModel.isAnyTaskWithConstraint(PositionConstraintType.AS_SOON_AS_POSSIBLE)) {
-            throw new WrongValueException(
-                    comp,
-                    _("Starting date cannot be empty because there is a task with constraint " +
-                            "\"as soon as possible\""));
-          }
-        }
-      });
-
-      deadline.setConstraint((comp, value) -> {
-        if (value == null) {
-          if (mode == SchedulingMode.BACKWARDS) {
-            throw new WrongValueException(comp, _("Deadline cannot be empty in backwards mode"));
-          }
-
-          if (orderModel.isAnyTaskWithConstraint(PositionConstraintType.AS_LATE_AS_POSSIBLE)) {
-            throw new WrongValueException(
-                    comp,
-                    _("Deadline cannot be empty because there is a task with constraint " +
-                            "\"as late as possible\""));
-          }
-        }
-      });
-    }
-
-    private void changeFocusAccordingTo(SchedulingMode chosen) {
-      initDate.setFocus(SchedulingMode.FORWARD == chosen);
-      deadline.setFocus(SchedulingMode.BACKWARDS == chosen);
-    }
-
-    public Constraint getCheckConstraintFinishDate() {
-      return (comp, value) -> {
-        Date finishDate = (Date) value;
-
-        if ((finishDate != null) && (initDate.getValue() != null) &&
-                (finishDate.compareTo(initDate.getValue()) < 0)) {
-
-          deadline.setValue(null);
-          getOrder().setDeadline(null);
-          throw new WrongValueException(comp, _("must be after start date"));
-        }
-      };
-    }
-
-    public Constraint checkConstraintStartDate() {
-      return (comp, value) -> {
-        Date startDate = (Date) value;
-
-        if ((startDate != null) && (deadline.getValue() != null) &&
-                (startDate.compareTo(deadline.getValue()) > 0)) {
-
-          initDate.setValue(null);
-          getOrder().setInitDate(null);
-          throw new WrongValueException(comp, _("must be lower than end date"));
-        }
-      };
-    }
-
-  }
-
   private void bindListOrderStatusSelectToOnStatusChange() {
     Listbox listOrderStatus = (Listbox) editWindow.getFellow("listOrderStatus");
     listOrderStatus.addEventListener(Events.ON_SELECT, event -> updateDisabilitiesOnInterface());
@@ -1269,12 +1133,12 @@ public class OrderCRUDController extends GenericForwardComposer {
     showCreateButtons(false);
   }
 
-  public void setPlanningControllerEntryPoints(IOrderPlanningGate planningControllerEntryPoints) {
-    this.planningControllerEntryPoints = planningControllerEntryPoints;
-  }
-
   public IOrderPlanningGate getPlanningControllerEntryPoints() {
     return this.planningControllerEntryPoints;
+  }
+
+  public void setPlanningControllerEntryPoints(IOrderPlanningGate planningControllerEntryPoints) {
+    this.planningControllerEntryPoints = planningControllerEntryPoints;
   }
 
   public void setActionOnUp(Runnable onUp) {
@@ -1287,21 +1151,6 @@ public class OrderCRUDController extends GenericForwardComposer {
 
   public BaseCalendarsComboitemRenderer getBaseCalendarsComboitemRenderer() {
     return baseCalendarsComboitemRenderer;
-  }
-
-  private class BaseCalendarsComboitemRenderer implements ComboitemRenderer {
-    @Override
-    public void render(Comboitem comboitem, Object o, int i) throws Exception {
-      BaseCalendar calendar = (BaseCalendar) o;
-      comboitem.setLabel(calendar.getName());
-      comboitem.setValue(calendar);
-
-      BaseCalendar current = orderModel.getCalendar();
-      if ((current != null) && calendar.getId().equals(current.getId())) {
-        Combobox combobox = (Combobox) comboitem.getParent();
-        combobox.setSelectedItem(comboitem);
-      }
-    }
   }
 
   public void setBaseCalendar(BaseCalendar calendar) {
@@ -1338,114 +1187,6 @@ public class OrderCRUDController extends GenericForwardComposer {
 
   public OrdersRowRenderer getOrdersRowRender() {
     return ordersRowRenderer;
-  }
-
-  public class OrdersRowRenderer implements RowRenderer {
-    @Override
-    public void render(Row row, Object o, int i) throws Exception {
-      final Order order = (Order) o;
-      row.setValue(order);
-
-      appendLabel(row, order.getName());
-      appendLabel(row, order.getCode());
-      appendDate(row, order.getInitDate());
-      appendDate(row, order.getDeadline());
-      appendCustomer(row, order.getCustomer());
-      appendObject(row, Util.addCurrencySymbol(order.getTotalManualBudget()));
-      appendObject(row, Util.addCurrencySymbol(order.getTotalBudget()));
-      appendObject(row, order.getTotalHours());
-      appendObject(row, _(order.getState().toString()));
-      appendOperations(row, order);
-
-      row.setTooltiptext(getTooltipText(order));
-      row.addEventListener(ON_CLICK_EVENT, event -> goToEditForm(order));
-    }
-
-    private void appendObject(final Row row, Serializable object) {
-      String text = "";
-      if (object != null) {
-        text = object.toString();
-      }
-      appendLabel(row, text);
-    }
-
-    private void appendCustomer(final Row row, ExternalCompany externalCompany) {
-      String customerName = "";
-      if (externalCompany != null) {
-        customerName = externalCompany.getName();
-      }
-      appendLabel(row, customerName);
-    }
-
-    private void appendDate(final Row row, Date date) {
-      String labelDate = "";
-      if (date != null) {
-        labelDate = Util.formatDate(date);
-      }
-      appendLabel(row, labelDate);
-    }
-
-    private void appendOperations(final Row row, final Order order) {
-      Hbox hbox = new Hbox();
-      appendButtonEdit(hbox, order);
-      appendButtonDelete(hbox, order);
-      appendButtonPlan(hbox, order);
-      appendButtonDerived(hbox, order);
-      row.appendChild(hbox);
-    }
-
-    private void appendLabel(final Row row, String value) {
-      Label label = new Label(value);
-      row.appendChild(label);
-    }
-
-    private void appendButtonEdit(final Hbox hbox, final Order order) {
-      Button buttonEdit = new Button();
-      buttonEdit.setSclass(ICONO_CLASS);
-      buttonEdit.setImage("/common/img/ico_editar1.png");
-      buttonEdit.setHoverImage("/common/img/ico_editar.png");
-      buttonEdit.setTooltiptext(_("Edit"));
-      buttonEdit.addEventListener(ON_CLICK_EVENT, event -> goToEditForm(order));
-      hbox.appendChild(buttonEdit);
-    }
-
-    private void appendButtonDelete(final Hbox hbox, final Order order) {
-      if (orderModel.userCanWrite(order)) {
-        Button buttonDelete = new Button();
-        buttonDelete.setSclass(ICONO_CLASS);
-        buttonDelete.setImage("/common/img/ico_borrar1.png");
-        buttonDelete.setHoverImage("/common/img/ico_borrar.png");
-        buttonDelete.setTooltiptext(_(DELETE));
-        buttonDelete.addEventListener(ON_CLICK_EVENT, event -> confirmRemove(order));
-        hbox.appendChild(buttonDelete);
-      }
-    }
-
-    private void appendButtonPlan(final Hbox hbox, final Order order) {
-      Button buttonPlan = new Button();
-      buttonPlan.setSclass(ICONO_CLASS);
-      buttonPlan.setImage("/common/img/ico_planificador1.png");
-      buttonPlan.setHoverImage("/common/img/ico_planificador.png");
-      buttonPlan.setTooltiptext(_("See scheduling"));
-      buttonPlan.addEventListener(ON_CLICK_EVENT, event -> schedule(order));
-      hbox.appendChild(buttonPlan);
-    }
-
-    private void appendButtonDerived(final Hbox hbox, final Order order) {
-      Button buttonDerived = new Button();
-      buttonDerived.setSclass(ICONO_CLASS);
-      buttonDerived.setImage("/common/img/ico_derived1.png");
-      buttonDerived.setHoverImage("/common/img/ico_derived.png");
-      buttonDerived.setTooltiptext(_("Create Template"));
-      buttonDerived.addEventListener(ON_CLICK_EVENT, event -> createTemplate(order));
-
-      if (!SecurityUtils.isSuperuserOrUserInRoles(UserRole.ROLE_TEMPLATES)) {
-        buttonDerived.setDisabled(true);
-        buttonDerived.setTooltiptext(_("Not enough permissions to create templates"));
-      }
-
-      hbox.appendChild(buttonDerived);
-    }
   }
 
   public String getTooltipText(final Order order) {
@@ -1777,50 +1518,6 @@ public class OrderCRUDController extends GenericForwardComposer {
     return this.endDatesRenderer;
   }
 
-  private class EndDatesRenderer implements RowRenderer {
-    @Override
-    public void render(Row row, Object o, int i) throws Exception {
-      EndDateCommunication endDate = (EndDateCommunication) o;
-      row.setValue(endDate);
-
-      appendLabel(row, Util.formatDateTime(endDate.getSaveDate()));
-      appendLabel(row, Util.formatDate(endDate.getEndDate()));
-      appendLabel(row, Util.formatDateTime(endDate.getCommunicationDate()));
-      appendOperations(row, endDate);
-    }
-
-    private void appendLabel(Row row, String label) {
-      row.appendChild(new Label(label));
-    }
-
-    private void appendOperations(Row row, EndDateCommunication endDate) {
-      Hbox hbox = new Hbox();
-      hbox.appendChild(getDeleteButton(endDate));
-      row.appendChild(hbox);
-    }
-
-    private Button getDeleteButton(final EndDateCommunication endDate) {
-      Button deleteButton = new Button();
-      deleteButton.setDisabled(isNotUpdate(endDate));
-      deleteButton.setSclass(ICONO_CLASS);
-      deleteButton.setImage("/common/img/ico_borrar1.png");
-      deleteButton.setHoverImage("/common/img/ico_borrar.png");
-      deleteButton.setTooltiptext(_(DELETE));
-      deleteButton.addEventListener(Events.ON_CLICK, event -> removeAskedEndDate(endDate));
-
-      return deleteButton;
-    }
-
-    private boolean isNotUpdate(final EndDateCommunication endDate) {
-      EndDateCommunication lastAskedEndDate = getOrder().getEndDateCommunicationToCustomer().first();
-
-      return !((lastAskedEndDate != null) &&
-              (lastAskedEndDate.equals(endDate))) ||
-              (lastAskedEndDate.getCommunicationDate() != null);
-
-    }
-  }
-
   public void removeAskedEndDate(EndDateCommunication endDate) {
     orderModel.removeAskedEndDate(endDate);
     reloadGridAskedEndDates();
@@ -1908,6 +1605,309 @@ public class OrderCRUDController extends GenericForwardComposer {
     }
     listing.setModel(new SimpleListModel<>(orderModel.getOrders()));
     listing.invalidate();
+  }
+
+  private class OrderDatesHandler {
+
+    private final Combobox schedulingMode;
+
+    private final Datebox initDate;
+
+    private final Datebox deadline;
+
+    public OrderDatesHandler(Window editWindow) {
+      schedulingMode = Util.findComponentAt(editWindow, "schedulingMode");
+      initDate = Util.findComponentAt(editWindow, "initDate");
+      deadline = Util.findComponentAt(editWindow, "deadline");
+      initializeSchedulingModeCombobox();
+    }
+
+    private void initializeSchedulingModeCombobox() {
+      fillSchedulingModes();
+      listenToChangeOfMode();
+    }
+
+    private void fillSchedulingModes() {
+      List options = schedulingMode.getChildren();
+      if (options != null && options.isEmpty()) {
+
+        schedulingMode.appendChild(createCombo(
+                SchedulingMode.FORWARD, _("Forward"), _("Schedule from start to deadline")));
+
+        schedulingMode.appendChild(createCombo(
+                SchedulingMode.BACKWARDS, _("Backwards"), _("Schedule from deadline to start")));
+      }
+    }
+
+    void chooseCurrentSchedulingMode() {
+      @SuppressWarnings("unchecked")
+      List<Comboitem> items = schedulingMode.getItems();
+
+      SchedulingMode currentMode = getOrder().getSchedulingMode();
+
+      for (Comboitem each : items) {
+        if (each.getValue().equals(currentMode)) {
+          schedulingMode.setSelectedItem(each);
+          setConstraintsFor(currentMode);
+
+          return;
+        }
+      }
+    }
+
+    private void listenToChangeOfMode() {
+      schedulingMode.addEventListener(Events.ON_SELECT, event -> {
+        SchedulingMode chosen = schedulingMode.getSelectedItem().getValue();
+        if (chosen != null) {
+          getOrder().setSchedulingMode(chosen);
+          setConstraintsFor(chosen);
+          changeFocusAccordingTo(chosen);
+        }
+      });
+    }
+
+    private Comboitem createCombo(SchedulingMode value, String label, String description) {
+      Comboitem result = new Comboitem();
+      result.setValue(value);
+      result.setLabel(label);
+      result.setDescription(description);
+
+      return result;
+    }
+
+    private void setConstraintsFor(final SchedulingMode mode) {
+      initDate.setConstraint((comp, value) -> {
+        if (value == null) {
+
+          if (mode == SchedulingMode.FORWARD) {
+            throw new WrongValueException(comp, _("Starting date cannot be empty in forward mode"));
+          }
+
+          if (orderModel.isAnyTaskWithConstraint(PositionConstraintType.AS_SOON_AS_POSSIBLE)) {
+            throw new WrongValueException(
+                    comp,
+                    _("Starting date cannot be empty because there is a task with constraint " +
+                            "\"as soon as possible\""));
+          }
+        }
+      });
+
+      deadline.setConstraint((comp, value) -> {
+        if (value == null) {
+          if (mode == SchedulingMode.BACKWARDS) {
+            throw new WrongValueException(comp, _("Deadline cannot be empty in backwards mode"));
+          }
+
+          if (orderModel.isAnyTaskWithConstraint(PositionConstraintType.AS_LATE_AS_POSSIBLE)) {
+            throw new WrongValueException(
+                    comp,
+                    _("Deadline cannot be empty because there is a task with constraint " +
+                            "\"as late as possible\""));
+          }
+        }
+      });
+    }
+
+    private void changeFocusAccordingTo(SchedulingMode chosen) {
+      initDate.setFocus(SchedulingMode.FORWARD == chosen);
+      deadline.setFocus(SchedulingMode.BACKWARDS == chosen);
+    }
+
+    public Constraint getCheckConstraintFinishDate() {
+      return (comp, value) -> {
+        Date finishDate = (Date) value;
+
+        if ((finishDate != null) && (initDate.getValue() != null) &&
+                (finishDate.compareTo(initDate.getValue()) < 0)) {
+
+          deadline.setValue(null);
+          getOrder().setDeadline(null);
+          throw new WrongValueException(comp, _("must be after start date"));
+        }
+      };
+    }
+
+    public Constraint checkConstraintStartDate() {
+      return (comp, value) -> {
+        Date startDate = (Date) value;
+
+        if ((startDate != null) && (deadline.getValue() != null) &&
+                (startDate.compareTo(deadline.getValue()) > 0)) {
+
+          initDate.setValue(null);
+          getOrder().setInitDate(null);
+          throw new WrongValueException(comp, _("must be lower than end date"));
+        }
+      };
+    }
+
+  }
+
+  private class BaseCalendarsComboitemRenderer implements ComboitemRenderer {
+    @Override
+    public void render(Comboitem comboitem, Object o, int i) throws Exception {
+      BaseCalendar calendar = (BaseCalendar) o;
+      comboitem.setLabel(calendar.getName());
+      comboitem.setValue(calendar);
+
+      BaseCalendar current = orderModel.getCalendar();
+      if ((current != null) && calendar.getId().equals(current.getId())) {
+        Combobox combobox = (Combobox) comboitem.getParent();
+        combobox.setSelectedItem(comboitem);
+      }
+    }
+  }
+
+  public class OrdersRowRenderer implements RowRenderer {
+    @Override
+    public void render(Row row, Object o, int i) throws Exception {
+      final Order order = (Order) o;
+      row.setValue(order);
+
+      appendLabel(row, order.getName());
+      appendLabel(row, order.getCode());
+      appendDate(row, order.getInitDate());
+      appendDate(row, order.getDeadline());
+      appendCustomer(row, order.getCustomer());
+      appendObject(row, Util.addCurrencySymbol(order.getTotalManualBudget()));
+      appendObject(row, Util.addCurrencySymbol(order.getTotalBudget()));
+      appendObject(row, order.getTotalHours());
+      appendObject(row, _(order.getState().toString()));
+      appendOperations(row, order);
+
+      row.setTooltiptext(getTooltipText(order));
+      row.addEventListener(ON_CLICK_EVENT, event -> goToEditForm(order));
+    }
+
+    private void appendObject(final Row row, Serializable object) {
+      String text = "";
+      if (object != null) {
+        text = object.toString();
+      }
+      appendLabel(row, text);
+    }
+
+    private void appendCustomer(final Row row, ExternalCompany externalCompany) {
+      String customerName = "";
+      if (externalCompany != null) {
+        customerName = externalCompany.getName();
+      }
+      appendLabel(row, customerName);
+    }
+
+    private void appendDate(final Row row, Date date) {
+      String labelDate = "";
+      if (date != null) {
+        labelDate = Util.formatDate(date);
+      }
+      appendLabel(row, labelDate);
+    }
+
+    private void appendOperations(final Row row, final Order order) {
+      Hbox hbox = new Hbox();
+      appendButtonEdit(hbox, order);
+      appendButtonDelete(hbox, order);
+      appendButtonPlan(hbox, order);
+      appendButtonDerived(hbox, order);
+      row.appendChild(hbox);
+    }
+
+    private void appendLabel(final Row row, String value) {
+      Label label = new Label(value);
+      row.appendChild(label);
+    }
+
+    private void appendButtonEdit(final Hbox hbox, final Order order) {
+      Button buttonEdit = new Button();
+      buttonEdit.setSclass(ICONO_CLASS);
+      buttonEdit.setImage("/common/img/ico_editar1.png");
+      buttonEdit.setHoverImage("/common/img/ico_editar.png");
+      buttonEdit.setTooltiptext(_("Edit"));
+      buttonEdit.addEventListener(ON_CLICK_EVENT, event -> goToEditForm(order));
+      hbox.appendChild(buttonEdit);
+    }
+
+    private void appendButtonDelete(final Hbox hbox, final Order order) {
+      if (orderModel.userCanWrite(order)) {
+        Button buttonDelete = new Button();
+        buttonDelete.setSclass(ICONO_CLASS);
+        buttonDelete.setImage("/common/img/ico_borrar1.png");
+        buttonDelete.setHoverImage("/common/img/ico_borrar.png");
+        buttonDelete.setTooltiptext(_(DELETE));
+        buttonDelete.addEventListener(ON_CLICK_EVENT, event -> confirmRemove(order));
+        hbox.appendChild(buttonDelete);
+      }
+    }
+
+    private void appendButtonPlan(final Hbox hbox, final Order order) {
+      Button buttonPlan = new Button();
+      buttonPlan.setSclass(ICONO_CLASS);
+      buttonPlan.setImage("/common/img/ico_planificador1.png");
+      buttonPlan.setHoverImage("/common/img/ico_planificador.png");
+      buttonPlan.setTooltiptext(_("See scheduling"));
+      buttonPlan.addEventListener(ON_CLICK_EVENT, event -> schedule(order));
+      hbox.appendChild(buttonPlan);
+    }
+
+    private void appendButtonDerived(final Hbox hbox, final Order order) {
+      Button buttonDerived = new Button();
+      buttonDerived.setSclass(ICONO_CLASS);
+      buttonDerived.setImage("/common/img/ico_derived1.png");
+      buttonDerived.setHoverImage("/common/img/ico_derived.png");
+      buttonDerived.setTooltiptext(_("Create Template"));
+      buttonDerived.addEventListener(ON_CLICK_EVENT, event -> createTemplate(order));
+
+      if (!SecurityUtils.isSuperuserOrUserInRoles(UserRole.ROLE_TEMPLATES)) {
+        buttonDerived.setDisabled(true);
+        buttonDerived.setTooltiptext(_("Not enough permissions to create templates"));
+      }
+
+      hbox.appendChild(buttonDerived);
+    }
+  }
+
+  private class EndDatesRenderer implements RowRenderer {
+    @Override
+    public void render(Row row, Object o, int i) throws Exception {
+      EndDateCommunication endDate = (EndDateCommunication) o;
+      row.setValue(endDate);
+
+      appendLabel(row, Util.formatDateTime(endDate.getSaveDate()));
+      appendLabel(row, Util.formatDate(endDate.getEndDate()));
+      appendLabel(row, Util.formatDateTime(endDate.getCommunicationDate()));
+      appendOperations(row, endDate);
+    }
+
+    private void appendLabel(Row row, String label) {
+      row.appendChild(new Label(label));
+    }
+
+    private void appendOperations(Row row, EndDateCommunication endDate) {
+      Hbox hbox = new Hbox();
+      hbox.appendChild(getDeleteButton(endDate));
+      row.appendChild(hbox);
+    }
+
+    private Button getDeleteButton(final EndDateCommunication endDate) {
+      Button deleteButton = new Button();
+      deleteButton.setDisabled(isNotUpdate(endDate));
+      deleteButton.setSclass(ICONO_CLASS);
+      deleteButton.setImage("/common/img/ico_borrar1.png");
+      deleteButton.setHoverImage("/common/img/ico_borrar.png");
+      deleteButton.setTooltiptext(_(DELETE));
+      deleteButton.addEventListener(Events.ON_CLICK, event -> removeAskedEndDate(endDate));
+
+      return deleteButton;
+    }
+
+    private boolean isNotUpdate(final EndDateCommunication endDate) {
+      EndDateCommunication lastAskedEndDate = getOrder().getEndDateCommunicationToCustomer().first();
+
+      return !((lastAskedEndDate != null) &&
+              (lastAskedEndDate.equals(endDate))) ||
+              (lastAskedEndDate.getCommunicationDate() != null);
+
+    }
   }
 
 }

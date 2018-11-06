@@ -21,7 +21,7 @@ package org.libreplan.business.orders.entities;
 
 /**
  * Interface to recalculate {@link SumExpenses} for an {@link Order}.<br />
- *
+ * <p>
  * This is needed to be called when some elements are moved in the {@link Order}
  * .
  *
@@ -29,11 +29,11 @@ package org.libreplan.business.orders.entities;
  */
 public interface ISumExpensesRecalculator {
 
-    /**
-     * Mark {@link Order} to recalculate {@link SumExpenses}.<br />
-     *
-     * @param orderId
-     */
-    void recalculate(Long orderId);
+  /**
+   * Mark {@link Order} to recalculate {@link SumExpenses}.<br />
+   *
+   * @param orderId
+   */
+  void recalculate(Long orderId);
 
 }

@@ -30,8 +30,8 @@
         <newdatasortablecolumn label="${i18n:_('Units')}" align="center" width="11%"/>
         <newdatasortablecolumn label="${i18n:_('Unit type')}" align="center" width="7%"/>
         <newdatasortablecolumn label="${i18n:_('Unit price')}" align="center" width="11%"/>
-        <newdatasortablecolumn label="${i18n:_('Total price')}" align="center" width="11%" />
-        <newdatasortablecolumn label="${i18n:_('Status')}" align="center" width="13%" />
+        <newdatasortablecolumn label="${i18n:_('Total price')}" align="center" width="11%"/>
+        <newdatasortablecolumn label="${i18n:_('Status')}" align="center" width="13%"/>
         <newdatasortablecolumn label="${i18n:_('Op.')}" width="10%"/>
     </columns>
 
@@ -39,31 +39,31 @@
         <row self="@{each='assignedMaterial'}" value="@{assignedMaterial}"
              tooltiptext="@{assignedMaterial.material.category.name}">
 
-            <label value="@{assignedMaterial.material.code}" hflex="true" />
+            <label value="@{assignedMaterial.material.code}" hflex="true"/>
 
-            <label value="@{assignedMaterial.material.description}" hflex="true" />
+            <label value="@{assignedMaterial.material.description}" hflex="true"/>
 
-            <datebox value="@{assignedMaterial.estimatedAvailability}" />
+            <datebox value="@{assignedMaterial.estimatedAvailability}"/>
 
             <doublebox value="@{assignedMaterial.units}"
                        onChange="assignedMaterialsController.updateTotalPrice(self.parent)"
-                       style="text-align:right" />
+                       style="text-align:right"/>
 
             <label value="@{assignedMaterial.material.unitType.measure}"/>
 
             <decimalbox value="@{assignedMaterial.unitPrice}"
                         onChange="assignedMaterialsController.updateTotalPrice(self.parent)"
                         style="text-align:right"
-                        format="@{assignedMaterialsController.moneyFormat}" />
+                        format="@{assignedMaterialsController.moneyFormat}"/>
 
             <decimalbox value="@{assignedMaterial.totalPrice}"
                         style="text-align:right"
                         disabled="true"
-                        format="@{assignedMaterialsController.moneyFormat}" />
+                        format="@{assignedMaterialsController.moneyFormat}"/>
 
             <listbox mold="select" model="@{materialStatus}"
                      selectedItem="@{assignedMaterial.status}"
-                     itemRenderer="org.libreplan.web.common.EnumsListitemRenderer" />
+                     itemRenderer="org.libreplan.web.common.EnumsListitemRenderer"/>
 
             <hbox>
                 <button sclass="icono"

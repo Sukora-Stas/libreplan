@@ -41,202 +41,202 @@ import org.libreplan.business.resources.entities.ResourceEnum;
  *
  * @author Susana Montes Pedreira <smontes@wirelessgalicia.com>
  */
-public class CriterionRequirementWrapper  implements INewObject {
+public class CriterionRequirementWrapper implements INewObject {
 
-    private final String DIRECT = _("Direct");
+  private final String DIRECT = _("Direct");
 
-    private String type;
+  private String type;
 
-    private String criterionAndType;
+  private String criterionAndType;
 
-    private Boolean newObject = false;
+  private Boolean newObject = false;
 
-    private CriterionRequirement criterionRequirement;
+  private CriterionRequirement criterionRequirement;
 
-    private Boolean valid = true;
+  private Boolean valid = true;
 
-    private Boolean newException = false;
+  private Boolean newException = false;
 
-    private CriterionWithItsType criterionWithItsType;
+  private CriterionWithItsType criterionWithItsType;
 
-    private HoursGroupWrapper hoursGroupWrapper;
+  private HoursGroupWrapper hoursGroupWrapper;
 
-    public CriterionRequirementWrapper(String type) {
-        this.newObject = true;
-        this.type = type;
+  public CriterionRequirementWrapper(String type) {
+    this.newObject = true;
+    this.type = type;
+  }
+
+  public CriterionRequirementWrapper(
+          CriterionRequirement criterionRequirement, HoursGroupWrapper hoursGroupWrapper, boolean isNewObject) {
+
+    this.criterionAndType = "";
+    this.criterionRequirement = criterionRequirement;
+    this.hoursGroupWrapper = hoursGroupWrapper;
+    this.initType(criterionRequirement);
+    this.initValid();
+    this.setNewObject(isNewObject);
+
+    if (!isNewObject) {
+      Criterion criterion = criterionRequirement.getCriterion();
+      CriterionType type = criterion.getType();
+      setCriterionWithItsType(new CriterionWithItsType(type, criterion));
     }
+  }
 
-    public CriterionRequirementWrapper(
-            CriterionRequirement criterionRequirement, HoursGroupWrapper hoursGroupWrapper, boolean isNewObject) {
+  public static String getIndirectTypeLabel() {
+    return _("Inherited");
+  }
 
-        this.criterionAndType = "";
-        this.criterionRequirement = criterionRequirement;
-        this.hoursGroupWrapper = hoursGroupWrapper;
-        this.initType(criterionRequirement);
-        this.initValid();
-        this.setNewObject(isNewObject);
+  public CriterionWithItsType getCriterionWithItsType() {
+    return criterionWithItsType;
+  }
 
-        if (!isNewObject) {
-            Criterion criterion = criterionRequirement.getCriterion();
-            CriterionType type = criterion.getType();
-            setCriterionWithItsType(new CriterionWithItsType(type, criterion));
-        }
+  public void setCriterionWithItsType(CriterionWithItsType criterionWithItsType) {
+    this.criterionWithItsType = criterionWithItsType;
+
+    if (criterionRequirement != null) {
+      if (criterionWithItsType != null) {
+        criterionRequirement.setCriterion(criterionWithItsType.getCriterion());
+      } else {
+        criterionRequirement.setCriterion(null);
+      }
     }
+  }
 
-    public static String getIndirectTypeLabel() {
-        return _("Inherited");
+  public String getCriterionAndType() {
+    if (criterionWithItsType == null) {
+      return criterionAndType;
     }
+    return criterionWithItsType.getNameAndType();
+  }
 
-    public CriterionWithItsType getCriterionWithItsType() {
-        return criterionWithItsType;
+  public void setCriterionAndType(String criterionAndType) {
+    this.criterionAndType = criterionAndType;
+  }
+
+  public boolean isOldObject() {
+    return !isNewObject();
+  }
+
+  @Override
+  public boolean isNewObject() {
+    return newObject == null ? false : newObject;
+  }
+
+  public void setNewObject(Boolean isNewObject) {
+    this.newObject = isNewObject;
+  }
+
+  public CriterionRequirement getCriterionRequirement() {
+    return criterionRequirement;
+  }
+
+  public void setCriterionRequirement(CriterionRequirement criterionRequirement) {
+    this.criterionRequirement = criterionRequirement;
+    this.initValid();
+  }
+
+  public String getType() {
+    return type;
+  }
+
+  public void setType(String type) {
+    this.type = type;
+  }
+
+  private void initType(CriterionRequirement criterionRequirement) {
+    if (criterionRequirement instanceof DirectCriterionRequirement) {
+      type = DIRECT;
+    } else if (criterionRequirement instanceof IndirectCriterionRequirement) {
+      type = getIndirectTypeLabel();
     }
+  }
 
-    public void setCriterionWithItsType(CriterionWithItsType criterionWithItsType) {
-        this.criterionWithItsType = criterionWithItsType;
-
-        if (criterionRequirement != null) {
-            if (criterionWithItsType != null) {
-                criterionRequirement.setCriterion(criterionWithItsType.getCriterion());
-            } else {
-                criterionRequirement.setCriterion(null);
-            }
-        }
+  public String getTypeToHoursGroup() {
+    if (isDirect()) {
+      return type;
     }
+    return "Exception " + type;
+  }
 
-    public void setCriterionAndType(String criterionAndType) {
-        this.criterionAndType = criterionAndType;
-    }
+  public boolean isDirect() {
+    return type.equals(DIRECT);
+  }
 
-    public String getCriterionAndType() {
-        if (criterionWithItsType == null) {
-            return criterionAndType;
-        }
-        return criterionWithItsType.getNameAndType();
-    }
+  public ResourceEnum getResourceTypeHoursGroup() {
+    return hoursGroupWrapper != null ? hoursGroupWrapper.getResourceType() : null;
+  }
 
-    public void setNewObject(Boolean isNewObject) {
-        this.newObject = isNewObject;
-    }
+  public boolean isNewDirectAndItsHoursGroupIsWorker() {
+    return isNewDirect() &&
+            getResourceTypeHoursGroup() != null &&
+            getResourceTypeHoursGroup().equals(ResourceEnum.WORKER);
+  }
 
-    public boolean isOldObject() {
-        return !isNewObject();
-    }
+  public boolean isNewDirectAndItsHoursGroupIsMachine() {
+    return isNewDirect() &&
+            getResourceTypeHoursGroup() != null &&
+            getResourceTypeHoursGroup().equals(ResourceEnum.MACHINE);
+  }
 
-    @Override
-    public boolean isNewObject() {
-        return newObject == null ? false : newObject;
-    }
+  public boolean isIndirectValid() {
+    return (!isDirect()) && (isValid());
+  }
 
-    public void setCriterionRequirement(CriterionRequirement criterionRequirement) {
-        this.criterionRequirement = criterionRequirement;
-        this.initValid();
-    }
+  public boolean isIndirectInvalid() {
+    return (!isDirect()) && (isInvalid());
+  }
 
-    public CriterionRequirement getCriterionRequirement() {
-        return criterionRequirement;
+  private void initValid() {
+    this.valid = true;
+    if (criterionRequirement instanceof IndirectCriterionRequirement) {
+      this.valid = criterionRequirement.isValid();
     }
+  }
 
-    public void setType(String type) {
-        this.type = type;
+  public boolean isValid() {
+    if ((criterionRequirement != null) && (criterionRequirement instanceof IndirectCriterionRequirement)) {
+      return criterionRequirement.isValid();
     }
+    return valid == null ? false : valid;
+  }
 
-    public String getType() {
-        return type;
+  public void setValid(Boolean valid) {
+    this.valid = valid;
+    if ((criterionRequirement != null) && (criterionRequirement instanceof IndirectCriterionRequirement)) {
+      ((IndirectCriterionRequirement) criterionRequirement).setValid(valid);
     }
+  }
 
-    private void initType(CriterionRequirement criterionRequirement) {
-        if (criterionRequirement instanceof DirectCriterionRequirement) {
-            type = DIRECT;
-        } else if (criterionRequirement instanceof IndirectCriterionRequirement) {
-            type = getIndirectTypeLabel();
-        }
-    }
+  public boolean isInvalid() {
+    return !isValid();
+  }
 
-    public String getTypeToHoursGroup() {
-        if (isDirect()) {
-            return type;
-        }
-        return "Exception " + type;
-    }
+  public String getLabelValidate() {
+    return isValid() ? _("Invalidate") : _("Validate");
+  }
 
-    public boolean isDirect() {
-        return type.equals(DIRECT);
-    }
+  public boolean isUpdatable() {
+    return isNewObject();
+  }
 
-    public ResourceEnum getResourceTypeHoursGroup() {
-        return hoursGroupWrapper != null ? hoursGroupWrapper.getResourceType() : null;
-    }
+  public boolean isUnmodifiable() {
+    return !isUpdatable();
+  }
 
-    public boolean isNewDirectAndItsHoursGroupIsWorker() {
-        return isNewDirect() &&
-                getResourceTypeHoursGroup() != null &&
-                getResourceTypeHoursGroup().equals(ResourceEnum.WORKER);
-    }
+  public boolean isNewDirect() {
+    return (isNewObject() && isDirect());
+  }
 
-    public boolean isNewDirectAndItsHoursGroupIsMachine() {
-        return isNewDirect() &&
-                getResourceTypeHoursGroup() != null &&
-                getResourceTypeHoursGroup().equals(ResourceEnum.MACHINE);
-    }
+  public boolean isNewException() {
+    return newException;
+  }
 
-    public boolean isIndirectValid() {
-        return (!isDirect()) && (isValid());
-    }
+  public void setNewException(boolean newException) {
+    this.newException = newException;
+  }
 
-    public boolean isIndirectInvalid() {
-        return (!isDirect()) && (isInvalid());
-    }
-
-    public void setValid(Boolean valid) {
-        this.valid = valid;
-        if ((criterionRequirement != null) && (criterionRequirement instanceof IndirectCriterionRequirement)) {
-            ((IndirectCriterionRequirement) criterionRequirement).setValid(valid);
-        }
-    }
-
-    private void initValid() {
-        this.valid = true;
-        if (criterionRequirement instanceof IndirectCriterionRequirement) {
-            this.valid = criterionRequirement.isValid();
-        }
-    }
-
-    public boolean isValid() {
-        if ((criterionRequirement != null) && (criterionRequirement instanceof IndirectCriterionRequirement)) {
-            return criterionRequirement.isValid();
-        }
-        return valid == null ? false : valid;
-    }
-
-    public boolean isInvalid(){
-        return !isValid();
-    }
-
-    public String getLabelValidate() {
-        return isValid() ? _("Invalidate") : _("Validate");
-    }
-
-    public boolean isUpdatable(){
-        return isNewObject();
-    }
-
-    public boolean isUnmodifiable() {
-        return !isUpdatable();
-    }
-
-    public boolean isNewDirect() {
-        return (isNewObject() && isDirect());
-    }
-
-    public void setNewException(boolean newException) {
-        this.newException = newException;
-    }
-
-    public boolean isNewException() {
-        return newException;
-    }
-
-    public boolean isOldDirectOrException() {
-        return (!isNewDirect() && !isNewException());
-    }
+  public boolean isOldDirectOrException() {
+    return (!isNewDirect() && !isNewException());
+  }
 }

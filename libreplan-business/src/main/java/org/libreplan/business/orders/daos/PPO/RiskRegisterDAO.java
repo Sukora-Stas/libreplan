@@ -39,10 +39,10 @@ import java.util.List;
 public class RiskRegisterDAO extends GenericDAOHibernate<RiskRegister, Long>
         implements IRiskRegisterDAO {
 
-    @Override
-    public List<RiskRegister> getAll() {
-        return list(RiskRegister.class);
-    }
+  @Override
+  public List<RiskRegister> getAll() {
+    return list(RiskRegister.class);
+  }
 }
 
 

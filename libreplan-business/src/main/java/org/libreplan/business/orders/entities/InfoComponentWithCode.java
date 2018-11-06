@@ -24,22 +24,22 @@ package org.libreplan.business.orders.entities;
  */
 public class InfoComponentWithCode extends InfoComponent {
 
-    private String code;
+  private String code;
 
-    public void setCode(String code) {
-        this.code = code;
-    }
+  public String getCode() {
+    return code;
+  }
 
-    public String getCode() {
-        return code;
-    }
+  public void setCode(String code) {
+    this.code = code;
+  }
 
-    public InfoComponentWithCode copy() {
-        InfoComponentWithCode result = new InfoComponentWithCode();
-        result.setCode(getCode());
-        result.setName(getName());
-        result.setDescription(getDescription());
-        return result;
-    }
+  public InfoComponentWithCode copy() {
+    InfoComponentWithCode result = new InfoComponentWithCode();
+    result.setCode(getCode());
+    result.setName(getName());
+    result.setDescription(getDescription());
+    return result;
+  }
 
 }

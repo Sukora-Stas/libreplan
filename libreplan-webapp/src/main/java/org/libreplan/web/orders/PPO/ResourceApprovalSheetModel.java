@@ -41,19 +41,19 @@ import java.util.List;
 @Scope(BeanDefinition.SCOPE_PROTOTYPE)
 public class ResourceApprovalSheetModel implements IResourceApprovalSheetModel {
 
-    @Autowired
-    private IResourceApprovalSheetDAO resourceApprovalSheetDAO;
+  @Autowired
+  private IResourceApprovalSheetDAO resourceApprovalSheetDAO;
 
-    @Override
-    @Transactional
-    public void confirmSave(ResourceApprovalSheet resourceApprovalSheet) {
+  @Override
+  @Transactional
+  public void confirmSave(ResourceApprovalSheet resourceApprovalSheet) {
 
-        resourceApprovalSheetDAO.save(resourceApprovalSheet);
-    }
+    resourceApprovalSheetDAO.save(resourceApprovalSheet);
+  }
 
-    @Override
-    @Transactional
-    public List<ResourceApprovalSheet> getApprovalSheet() {
-        return resourceApprovalSheetDAO.getAll();
-    }
+  @Override
+  @Transactional
+  public List<ResourceApprovalSheet> getApprovalSheet() {
+    return resourceApprovalSheetDAO.getAll();
+  }
 }
