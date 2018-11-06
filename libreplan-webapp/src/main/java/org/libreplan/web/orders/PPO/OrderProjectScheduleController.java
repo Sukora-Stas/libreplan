@@ -33,76 +33,76 @@ import org.zkoss.zul.*;
  */
 public class OrderProjectScheduleController extends GenericForwardComposer {
 
-    private Component window;
+  private Component window;
 
-    private Textbox textBTask;
+  private Textbox textBTask;
 
-    private Datebox dateBStartSchedule;
+  private Datebox dateBStartSchedule;
 
-    private Datebox dateBFinishSchedule;
+  private Datebox dateBFinishSchedule;
 
-    private Textbox textBResponseSchedule;
+  private Textbox textBResponseSchedule;
 
-    private Textbox textBCostSchedule;
+  private Textbox textBCostSchedule;
 
 
-    private Grid appScheduleGrid;
+  private Grid appScheduleGrid;
 
-    private IProjectScheduleModel projectScheduleModel;
+  private IProjectScheduleModel projectScheduleModel;
 
-    /**
-     * Auto forward events and wire accessible variables of the specified
-     * component into a controller Java object; a subclass that
-     * override this method should remember to call super.doAfterCompose(comp)
-     * or it will not work.
-     *
-     * @param comp
-     */
-    @Override
-    public void doAfterCompose(Component comp) throws Exception {
-        super.doAfterCompose(comp);
+  /**
+   * Auto forward events and wire accessible variables of the specified
+   * component into a controller Java object; a subclass that
+   * override this method should remember to call super.doAfterCompose(comp)
+   * or it will not work.
+   *
+   * @param comp
+   */
+  @Override
+  public void doAfterCompose(Component comp) throws Exception {
+    super.doAfterCompose(comp);
 
-        comp.setAttribute("orderProjectScheduleController", this, true);
-        this.window = comp;
+    comp.setAttribute("orderProjectScheduleController", this, true);
+    this.window = comp;
 
-        projectScheduleModel = (IProjectScheduleModel) SpringUtil.getBean("projectScheduleModel");
+    projectScheduleModel = (IProjectScheduleModel) SpringUtil.getBean("projectScheduleModel");
 
-        initGrid();
-    }
+    initGrid();
+  }
 
-    public void saveSchedule() {
+  public void saveSchedule() {
 
-        ProjectSchedule projectSchedule = new ProjectSchedule();
+    ProjectSchedule projectSchedule = new ProjectSchedule();
 
-        projectSchedule.setTask(textBTask.getValue());
-        projectSchedule.setDateStart(dateBStartSchedule.getValue());
-        projectSchedule.setDateEnd(dateBFinishSchedule.getValue());
-        projectSchedule.setResponse(textBResponseSchedule.getValue());
-        projectSchedule.setCost(Double.valueOf(textBCostSchedule.getValue()));
+    projectSchedule.setTask(textBTask.getValue());
+    projectSchedule.setDateStart(dateBStartSchedule.getValue());
+    projectSchedule.setDateEnd(dateBFinishSchedule.getValue());
+    projectSchedule.setResponse(textBResponseSchedule.getValue());
+    projectSchedule.setCost(Double.valueOf(textBCostSchedule.getValue()));
 //TODO: checked value cost from char ',' to '.'
-        projectScheduleModel.confirmSave(projectSchedule);
+    projectScheduleModel.confirmSave(projectSchedule);
 
-        initGrid();
-        //TODO: add mesage "done" and clear all value in view
+    initGrid();
+    //TODO: add mesage "done" and clear all value in view
 
-    }
+  }
 
-    private void initGrid() {
+  private void initGrid() {
 
-        appScheduleGrid.setModel(new ListModelList<ProjectSchedule>
-                (projectScheduleModel.getProjectSchedule()));
+    appScheduleGrid.setModel(new ListModelList<ProjectSchedule>
+            (projectScheduleModel.getProjectSchedule()));
 
-        appScheduleGrid.setRowRenderer(gridRenderRow());
-    }
+    appScheduleGrid.setRowRenderer(gridRenderRow());
+  }
 
-    private RowRenderer<ProjectSchedule> gridRenderRow() {
-        return ((row, data, index) -> {
-            row.appendChild(new Label(String.valueOf(index)));
-            row.appendChild(new Label(data.getTask()));
-            row.appendChild(new Label(data.getDateStart().toString()));
-            row.appendChild(new Label(data.getDateEnd().toString()));
-            row.appendChild(new Label(data.getResponse()));
-            row.appendChild(new Label(data.getCost().toString()));
-        });
-    }
+  private RowRenderer<ProjectSchedule> gridRenderRow() {
+    return ((row, data, index) -> {
+      row.appendChild(new Label(String.valueOf(index) + 1));
+      row.appendChild(new Label(data.getTask()));
+      row.appendChild(new Label(data.getDateStart().toString()));
+      row.appendChild(new Label(data.getDateEnd().toString()));
+      row.appendChild(new Label(data.getResponse()));
+      row.appendChild(new Label(data.getCost().toString()));
+    });
+  }
 }

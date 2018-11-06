@@ -33,74 +33,74 @@ import org.zkoss.zul.*;
  */
 public class OrderRiskRegisterController extends GenericForwardComposer {
 
-    private Component window;
+  private Component window;
 
-    private Textbox textBDescription;
+  private Textbox textBDescription;
 
-    private Textbox textBResponse;
+  private Textbox textBResponse;
 
-    private Textbox textBExecutor;
+  private Textbox textBExecutor;
 
-    private Datebox dateBEndRisk;
+  private Datebox dateBEndRisk;
 
-    private Textbox textBStatus;
+  private Textbox textBStatus;
 
-    private Grid appRiskGrid;
+  private Grid appRiskGrid;
 
 
-    private IRiskRegisterModel riskRegisterModel;
+  private IRiskRegisterModel riskRegisterModel;
 
-    /**
-     * Auto forward events and wire accessible variables of the specified
-     * component into a controller Java object; a subclass that
-     * override this method should remember to call super.doAfterCompose(comp)
-     * or it will not work.
-     *
-     * @param comp
-     */
-    @Override
-    public void doAfterCompose(Component comp) throws Exception {
-        super.doAfterCompose(comp);
+  /**
+   * Auto forward events and wire accessible variables of the specified
+   * component into a controller Java object; a subclass that
+   * override this method should remember to call super.doAfterCompose(comp)
+   * or it will not work.
+   *
+   * @param comp
+   */
+  @Override
+  public void doAfterCompose(Component comp) throws Exception {
+    super.doAfterCompose(comp);
 
-        comp.setAttribute("orderRiskRegisterController", this, true);
-        this.window = comp;
+    comp.setAttribute("orderRiskRegisterController", this, true);
+    this.window = comp;
 
-        riskRegisterModel = (IRiskRegisterModel) SpringUtil.getBean("riskRegisterModel");
+    riskRegisterModel = (IRiskRegisterModel) SpringUtil.getBean("riskRegisterModel");
 
-        initGrid();
-    }
+    initGrid();
+  }
 
-    public void saveRisk() {
+  public void saveRisk() {
 
-        RiskRegister riskRegister = new RiskRegister();
+    RiskRegister riskRegister = new RiskRegister();
 
-        riskRegister.setDescription(textBDescription.getValue());
-        riskRegister.setResponse(textBResponse.getValue());
-        riskRegister.setExcecutor(textBExecutor.getValue());
-        riskRegister.setDateEndRisk(dateBEndRisk.getValue());
-        riskRegister.setStatus(textBStatus.getValue());
+    riskRegister.setDescription(textBDescription.getValue());
+    riskRegister.setResponse(textBResponse.getValue());
+    riskRegister.setExcecutor(textBExecutor.getValue());
+    riskRegister.setDateEndRisk(dateBEndRisk.getValue());
+    riskRegister.setStatus(textBStatus.getValue());
 
-        riskRegisterModel.confirmSave(riskRegister);
+    riskRegisterModel.confirmSave(riskRegister);
 
-        initGrid();
-        //TODO: add mesage "done" and clear all value in view
-    }
+    initGrid();
+    //TODO: add mesage "done" and clear all value in view
+  }
 
-    private void initGrid() {
-        appRiskGrid.setModel(new ListModelList<RiskRegister>
-                (riskRegisterModel.getRiskRegister()));
+  private void initGrid() {
+    appRiskGrid.setModel(new ListModelList<RiskRegister>
+            (riskRegisterModel.getRiskRegister()));
 
-        appRiskGrid.setRowRenderer(gridRenderRow());
-    }
+    appRiskGrid.setRowRenderer(gridRenderRow());
+  }
 
-    private RowRenderer<RiskRegister> gridRenderRow() {
-        return (row, data, index) -> {
-            row.appendChild(new Label(String.valueOf(index)));
-            row.appendChild(new Label(data.getDescription()));
-            row.appendChild(new Label(data.getResponse()));
-            row.appendChild(new Label(data.getExcecutor()));
-            row.appendChild(new Label(data.getDateEndRisk().toString()));
-            row.appendChild(new Label(data.getStatus()));
-        };
-    }
+  private RowRenderer<RiskRegister> gridRenderRow() {
+    return (row, data, index) -> {
+      row.appendChild(new Label(String.valueOf(index) + 1));
+      row.appendChild(new Label(data.getDescription()));
+      row.appendChild(new Label(data.getResponse()));
+      row.appendChild(new Label(data.getExcecutor()));
+      row.appendChild(new Label(data.getDateEndRisk().toString()));
+      row.appendChild(new Label(data.getStatus()));
+    };
+  }
 }
