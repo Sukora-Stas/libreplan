@@ -865,7 +865,7 @@ span.z-dottree-line {
 
 .z-menubar-horizontal {
     border-top: none;
-    border-bottom: 3px solid #2a83b4;
+    border-bottom: 3px solid #fbb033; /*#2a83b4*/ /*#fbb033*/
     padding: 0;
 }
 
@@ -877,12 +877,12 @@ span.z-dottree-line {
 
 .current-section {
     background-image: none;
-    background-color: #2a83b4 !important;
+    background-color: #fbb033 !important; /*#2a83b4*/ /*#fbb033*/
 }
 
 .current-section .z-menu-content:focus,
 .current-section .z-menu-content:active {
-    background-color: #2a83b4 !important;
+    background-color: #fbb033 !important;  /*#2a83b4*/ /*#fbb033*/
 }
 
 .z-menu-content {
@@ -909,7 +909,7 @@ span.z-dottree-line {
     box-shadow: none;
     border-color: transparent;
     background-image: none;
-    background-color: #2a83b4;
+    background-color: #fbb033; /*#2a83b4*/ /*#fbb033*/
     border-radius: 10px 10px 0 0;
 }
 .submenu {
@@ -917,7 +917,7 @@ span.z-dottree-line {
 }
 
 .current-section .z-menu {
-    background-color: #2a83b4;
+    background-color: #fbb033; /*#2a83b4*/ /*#fbb033*/
     font-weight: normal;
 }
 
@@ -1399,7 +1399,7 @@ tr.z-treerow-over input {
 }
 
 tr.z-tree-row-seld td.z-row-inner {
-    background-color: #2A83B4
+    background-color: #fbb033       /*#2a83b4*/ /*#fbb033*/
 }
 
 tr.z-tree-row-seld .z-row-content {

@@ -1,0 +1,103 @@
+<!--
+  This file is part of LibrePlan
+
+  Copyright (C) 2009-2010 Fundación para o Fomento da Calidade Industrial e
+                          Desenvolvemento Tecnolóxico de Galicia
+  Copyright (C) 2010-2011 Igalia, S.L.
+
+  This program is free software: you can redistribute it and/or modify
+  it under the terms of the GNU Affero General Public License as published by
+  the Free Software Foundation, either version 3 of the License, or
+  (at your option) any later version.
+
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU Affero General Public License for more details.
+
+  You should have received a copy of the GNU Affero General Public License
+  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+-->
+
+<vbox id="VApprovalSheetController"
+      apply="org.libreplan.web.orders.PPO.OrderResourceApprovalSheetController" width="100%">
+
+    <hbox width="100%">
+        <groupbox style="margin-top: 5px" sclass="assignedresources" closable="false" hflex="1">
+            <caption label="Лист согласования ресурсов"/>
+
+            <separator spacing="10px"/>
+
+            <grid fixedLayout="true" width="99%">
+                <columns>
+                    <column width="25%"/>
+                    <column width="35%"/>
+                    <column width="20%"/>
+                    <column width="20%"/>
+                </columns>
+                <rows>
+                    <row>
+                        <label value="Подразделение (наименование подрядчика)"/>
+                        <textbox id="textBUnit" rows="2" width="350px"/>
+
+                        <label value="Срок начала"/>
+                        <datebox id="dateBStart" format="long"
+                                 onCreate="self.value = new Date()" width="150px"/>
+                    </row>
+                    <row>
+                        <label value="Роль в проекте"/>
+                        <textbox id="textBProjectRole" width="350px"/>
+
+                        <label value="Срок окончания"/>
+                        <datebox id="dateBEnd" format="long"
+                                 onCreate="self.value = new Date()" width="150px"/>
+                    </row>
+                    <row>
+                        <label value="ФИО"/>
+                        <textbox id="textBFIO" width="350px"/>
+
+                        <label value="Длительность общая (не считая раб. дни)"/>
+                        <textbox id="textBDuration" width="50px" disabled="true"/>
+                    </row>
+                    <row>
+                        <label value="Должность"/>
+                        <!--<listbox mold="select" rows="1" width="200px"/>-->
+                        <textbox id="textBPosition" width="350px"/>
+
+                        <label value="% загрузки"/>
+                        <textbox id="textBPercentLoad" width="50px"/>
+                    </row>
+
+                    <row>
+                        <cell colspan="2" align="center">
+                            <button id="butSave" label="Сохранить" sclass="add-button"
+                                    onClick="orderResourceApprovalSheetController.saveApprovalSheet()"/>
+                        </cell>
+
+                        <label value="Чел дни"/>
+                        <textbox id="textBPeopleDay" width="50px" disabled="true"/>
+                    </row>
+
+                </rows>
+            </grid>
+            <button id="butLoad" label="Загрузить - тест"
+                    onClick="orderResourceApprovalSheetController.testLoad()"/>
+        </groupbox>
+    </hbox>
+
+
+    <grid id="appSheetGrid"  height="100%" width="100%" style="margin-top: 10px">
+        <columns>
+            <column label="Подразделение (наименование подрятчика)" width="100px"/>
+            <column label="Роль в проекте"/>
+            <column label="ФИО"/>
+            <column label="Должность"/>
+            <column label="Срок начала"/>
+            <column label="Срок окончания"/>
+            <column label="Длительность общая (раб. дни)"/>
+            <column label="% загрузки"/>
+            <column label="Чел/дни"/>
+        </columns>
+    </grid>
+
+</vbox>

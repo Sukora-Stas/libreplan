@@ -159,20 +159,21 @@
                     ${i18n:_('Supported Chrome, Firefox, Safari and Epiphany browsers')}
                 </n:span>
                 <n:div style="float:right;color:green;font-size:10px;">
-                    v${project:version()}
+                    1.6.1 develop
+                    <!--v${project:version()}-->
                 </n:div>
             </n:td>
         </n:tr>
 
-        <n:tr>
-            <n:td height="100">
-                <div align="right">
-                    <n:a href="http://www.libreplan-enterprise.com" target="_blank">
-                        <n:img src="${contextPath}/common/img/login-banner.png" width="750" height="40" />
-                    </n:a>
-                </div>
-            </n:td>
-        </n:tr>
+        <!--<n:tr>-->
+            <!--<n:td height="100">-->
+                <!--<div align="right">-->
+                    <!--<n:a href="http://www.libreplan-enterprise.com" target="_blank">-->
+                        <!--<n:img src="${contextPath}/common/img/login-banner.png" width="750" height="40" />-->
+                    <!--</n:a>-->
+                <!--</div>-->
+            <!--</n:td>-->
+        <!--</n:tr>-->
 
     </n:table>
 

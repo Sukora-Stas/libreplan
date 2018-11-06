@@ -94,6 +94,8 @@ public class OrderElementController extends GenericForwardComposer {
                 SpringUtil.getBean("assignedCriterionRequirementToOrderElementController");
     }
 
+
+
     @Override
     public void doAfterCompose(Component comp) throws Exception {
         super.doAfterCompose(comp);
