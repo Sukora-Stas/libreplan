@@ -422,4 +422,17 @@
 
     </class>
 
+
+    <class name="org.libreplan.business.orders.entities.PPO.ProjectTeamCharter"
+    table="project_team_charter">
+        <id name="id" access="property" type="long">
+            <generator class="increment">
+                <param name="max_lo">100</param>
+            </generator>
+        </id>
+
+        <property name="ref_order" type="string" column="ref_order"/>
+
+    </class>
+
 </hibernate-mapping>
