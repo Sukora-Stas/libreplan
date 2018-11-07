@@ -101,12 +101,13 @@
                         </row>
                         <row>
                             <cell colspan="2" align="center">
-                                <button id="butSaveCommand" label="Сохранить" sclass="add-button"/>
+                                <button id="butSaveCommandCharter" label="Сохранить" sclass="add-button"
+                                onClick="orderProjectCharterController.saveCommandCharter()"/>
                             </cell>
                         </row>
                         <row>
                             <cell colspan="2" align="center">
-                                <grid id="appCommandGrid" height="200px" width="100%">
+                                <grid id="appCommandCharterGrid" height="200px" width="100%">
                                     <columns>
                                         <column label="№ п/п" width="50px"/>
                                         <column label="Должность"/>
