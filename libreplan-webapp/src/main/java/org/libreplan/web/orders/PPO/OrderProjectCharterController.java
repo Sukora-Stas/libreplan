@@ -19,8 +19,11 @@ package org.libreplan.web.orders.PPO;/*
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+import org.libreplan.business.orders.entities.PPO.ProjectTeamCharter;
 import org.zkoss.zk.ui.Component;
 import org.zkoss.zk.ui.util.GenericForwardComposer;
+import org.zkoss.zkplus.spring.SpringUtil;
+import org.zkoss.zul.*;
 
 /**
  * libreplan
@@ -31,6 +34,15 @@ import org.zkoss.zk.ui.util.GenericForwardComposer;
 public class OrderProjectCharterController extends GenericForwardComposer {
 
   private Component window;
+
+  private Textbox textPositionCommandCharter;
+
+  private Textbox textFIOCommandCharter;
+
+  private Grid appCommandCharterGrid;
+
+
+  private IProjectTeamCharterModel projectTeamCharterModel;
 
   /**
    * Auto forward events and wire accessible variables of the specified
@@ -46,5 +58,35 @@ public class OrderProjectCharterController extends GenericForwardComposer {
 
     comp.setAttribute("orderProjectCharterController", this, true);
     this.window = comp;
+
+    projectTeamCharterModel = (IProjectTeamCharterModel) SpringUtil.getBean("projectTeamCharterModel");
+
+    initGridTeam();
+  }
+
+  public void saveCommandCharter() {
+    ProjectTeamCharter projectTeamCharter = new ProjectTeamCharter();
+
+    projectTeamCharter.setFIOPTeam(textFIOCommandCharter.getValue());
+
+    projectTeamCharter.setPositionPTeam(textPositionCommandCharter.getValue());
+
+    projectTeamCharterModel.confirmSave(projectTeamCharter);
+
+    initGridTeam();
+  }
+
+  private void initGridTeam() {
+    appCommandCharterGrid.setModel(new ListModelList<>(projectTeamCharterModel.getProjectTeamCharter()));
+
+    appCommandCharterGrid.setRowRenderer(gridRenderRowTeam());
+  }
+
+  private RowRenderer<ProjectTeamCharter> gridRenderRowTeam() {
+    return ((row, projectTeamCharter, i) -> {
+      row.appendChild(new Label(String.valueOf(i + 1)));
+      row.appendChild(new Label(projectTeamCharter.getFIOPTeam()));
+      row.appendChild(new Label(projectTeamCharter.getPositionPTeam()));
+    });
   }
 }

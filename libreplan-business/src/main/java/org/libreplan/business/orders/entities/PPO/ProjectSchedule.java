@@ -1,4 +1,6 @@
-package org.libreplan.business.orders.entities.PPO;/*
+package org.libreplan.business.orders.entities.PPO;
+
+/*
  * This file is part of LibrePlan
  *
  * Copyright (C) 2009-2010 Fundación para o Fomento da Calidade Industrial e

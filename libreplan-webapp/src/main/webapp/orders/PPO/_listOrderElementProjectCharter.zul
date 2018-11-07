@@ -23,7 +23,7 @@
       apply="org.libreplan.web.orders.PPO.OrderProjectCharterController" width="100%">
 
     <hbox width="100%">
-        <groupbox style="margin-top: 5px" sclass="assignedresources" closable="false" hflex="1">
+        <groupbox style="margin-top: 5px" sclass="assignedresources" hflex="1">
             <caption label="Устав проекта"/>
 
             <separator spacing="10px"/>
@@ -52,8 +52,30 @@
                     </row>
                     <row>
                         <label value="Обоснование инициации проекта"/>
-                        <textbox id="textRationalInitiation" rows="6" width="100%" height="150px"/>
+                        <textbox id="textRationalInitiation" rows="4" width="100%" height="150px"/>
                     </row>
+                    <row>
+                        <label value="Соответсвие стратегии"/>
+                        <textbox width="100%"/>
+                    </row>
+                    <row>
+                        <label value="Критерии успешности проекта"/>
+                        <textbox rows="2" width="100%"/>
+                    </row>
+                    <row>
+                        <label value="Примечание"/>
+                        <textbox width="100%"/>
+                    </row>
+                    <row>
+                        <label value="Влияние на другие проекты"/>
+                        <textbox width="100%"/>
+                    </row>
+                    <row>
+                        <cell colspan="2" align="center">
+                            <button label="Сохранить" sclass="add-button"/>
+                        </cell>
+                    </row>
+
                 </rows>
             </grid>
         </groupbox>
@@ -79,12 +101,13 @@
                         </row>
                         <row>
                             <cell colspan="2" align="center">
-                                <button id="butSaveCommand" label="Сохранить" sclass="add-button"/>
+                                <button id="butSaveCommandCharter" label="Сохранить" sclass="add-button"
+                                onClick="orderProjectCharterController.saveCommandCharter()"/>
                             </cell>
                         </row>
                         <row>
                             <cell colspan="2" align="center">
-                                <grid id="appCommandGrid" height="200px" width="100%">
+                                <grid id="appCommandCharterGrid" height="200px" width="100%">
                                     <columns>
                                         <column label="№ п/п" width="50px"/>
                                         <column label="Должность"/>
@@ -201,7 +224,7 @@
                         <textbox width="100%"/>
                     </row>
                     <row>
-                        <cell colspan="2">
+                        <cell colspan="2" align="center">
                             <button label="Сохранить" sclass="add-button"/>
                         </cell>
                     </row>
