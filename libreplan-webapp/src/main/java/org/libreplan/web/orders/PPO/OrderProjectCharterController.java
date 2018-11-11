@@ -19,7 +19,10 @@ package org.libreplan.web.orders.PPO;/*
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+import org.libreplan.business.orders.entities.Order;
 import org.libreplan.business.orders.entities.PPO.ProjectTeamCharter;
+import org.libreplan.web.orders.IOrderModel;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.zkoss.zk.ui.Component;
 import org.zkoss.zk.ui.util.GenericForwardComposer;
 import org.zkoss.zkplus.spring.SpringUtil;
@@ -44,6 +47,9 @@ public class OrderProjectCharterController extends GenericForwardComposer {
 
   private IProjectTeamCharterModel projectTeamCharterModel;
 
+  @Autowired
+  private IOrderModel orderModel;
+
   /**
    * Auto forward events and wire accessible variables of the specified
    * component into a controller Java object; a subclass that
@@ -65,7 +71,7 @@ public class OrderProjectCharterController extends GenericForwardComposer {
   }
 
   public void saveCommandCharter() {
-    ProjectTeamCharter projectTeamCharter = new ProjectTeamCharter();
+    /*ProjectTeamCharter projectTeamCharter = new ProjectTeamCharter();
 
     projectTeamCharter.setFIOPTeam(textFIOCommandCharter.getValue());
 
@@ -73,7 +79,11 @@ public class OrderProjectCharterController extends GenericForwardComposer {
 
     projectTeamCharterModel.confirmSave(projectTeamCharter);
 
-    initGridTeam();
+    initGridTeam();*/
+
+    Order order = orderModel.getOrder();
+
+    System.out.println(order.getCode());
   }
 
   private void initGridTeam() {

@@ -1,7 +1,6 @@
 package org.libreplan.web.orders.PPO;
 
 import org.libreplan.business.orders.daos.PPO.IProjectTeamCharterDAO;
-import org.libreplan.business.orders.entities.PPO.ProjectSchedule;
 import org.libreplan.business.orders.entities.PPO.ProjectTeamCharter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.config.BeanDefinition;

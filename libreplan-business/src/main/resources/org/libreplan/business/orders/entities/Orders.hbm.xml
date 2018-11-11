@@ -443,13 +443,13 @@
 
         <property name="refOrder" type="string" column="ref_order"/>
 
-        <property name="FIOPTeam" type="string" column="FIO_P_Team"/>
+        <property name="FIOPTeam" type="string" column="fio_p_team"/>
 
-        <property name="FIOPPrepared" type="string" column="FIO_P_Prepared"/>
+        <property name="FIOPPrepared" type="string" column="fio_p_prepared"/>
 
-        <property name="positionPTeam" type="string" column="position_P_Team"/>
+        <property name="positionPTeam" type="string" column="position_p_team"/>
 
-        <property name="positionPPrepared" type="string" column="position_P_Prepared"/>
+        <property name="positionPPrepared" type="string" column="position_p_prepared"/>
 
     </class>
 
