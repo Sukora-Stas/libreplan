@@ -91,33 +91,7 @@ public class ProjectTeamCharter extends BaseEntity {
     this.positionPPrepared = positionPPrepared;
   }
 
-  @Override
-  public boolean equals(Object o) {
-    if (this == o) return true;
-    if (o == null || getClass() != o.getClass()) return false;
-    ProjectTeamCharter that = (ProjectTeamCharter) o;
-    return Objects.equals(refOrder, that.refOrder) &&
-            Objects.equals(FIOPTeam, that.FIOPTeam) &&
-            Objects.equals(FIOPPrepared, that.FIOPPrepared) &&
-            Objects.equals(positionPTeam, that.positionPTeam) &&
-            Objects.equals(positionPPrepared, that.positionPPrepared);
-  }
 
-  @Override
-  public int hashCode() {
-    return Objects.hash(refOrder, FIOPTeam, FIOPPrepared, positionPTeam, positionPPrepared);
-  }
-
-  @Override
-  public String toString() {
-    return "ProjectTeamCharter{" +
-            "refOrder='" + refOrder + '\'' +
-            ", FIOPTeam='" + FIOPTeam + '\'' +
-            ", FIOPPrepared='" + FIOPPrepared + '\'' +
-            ", positionPTeam='" + positionPTeam + '\'' +
-            ", positionPPrepared='" + positionPPrepared + '\'' +
-            '}';
-  }
 }
 
 

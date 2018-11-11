@@ -5,7 +5,7 @@
                    http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.1.xsd">
 
 
-    <changeSet id="add-new-table-project-team-charter" author="SukoraStas">
+    <changeSet id="add-new-table-project-team-charter3" author="SukoraStas">
         <comment>add 2 tables in 1</comment>
 
         <createTable tableName="project_team_charter">
@@ -18,19 +18,19 @@
                 <constraints nullable="false"/>
             </column>
 
-            <column name="FIO_P_Team" type="VARCHAR(255)">
+            <column name="fio_p_team" type="VARCHAR(255)">
                 <constraints nullable="true"/>
             </column>
 
-            <column name="FIO_P_Prepared" type="VARCHAR(255)">
+            <column name="fio_p_prepared" type="VARCHAR(255)">
                 <constraints nullable="true"/>
             </column>
 
-            <column name="position_P_Team" type="VARCHAR(255)">
+            <column name="position_p_team" type="VARCHAR(255)">
                 <constraints nullable="true"/>
             </column>
 
-            <column name="position_P_Prepared" type="VARCHAR(255)">
+            <column name="position_p_prepared" type="VARCHAR(255)">
                 <constraints nullable="true"/>
             </column>
 
